@@ -1,12 +1,28 @@
+'use client';
+
+import RoleGuard from '@/components/RoleGuard';
+
 export default function OrganizerDashboardPage() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-8 bg-gray-50">
-      <div className="w-full max-w-2xl bg-white rounded-lg shadow p-6">
-        <h1 className="text-2xl font-bold text-gray-800 mb-4">Organizer Dashboard</h1>
-        <p className="text-gray-600">
-          Welcome to the organizer dashboard. Manage volunteers and events here.
-        </p>
-      </div>
-    </main>
+    <RoleGuard allowedRole="organizer">
+      {(profile, handleLogout) => (
+        <main className="min-h-screen bg-gray-50 p-8 font-sans">
+          <div className="mx-auto max-w-2xl rounded-xl bg-white p-8 shadow-md">
+            <h1 className="mb-2 text-2xl font-bold text-gray-900">
+              Organizer Dashboard
+            </h1>
+            <p className="text-sm text-gray-600">
+              Signed in as: {profile.email} ({profile.role})
+            </p>
+            <button
+              onClick={handleLogout}
+              className="mt-6 rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-red-700"
+            >
+              Log Out
+            </button>
+          </div>
+        </main>
+      )}
+    </RoleGuard>
   );
 }

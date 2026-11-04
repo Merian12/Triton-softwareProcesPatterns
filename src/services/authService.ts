@@ -8,6 +8,8 @@ export interface UserProfile {
 
 export interface IAuthRepository {
   signIn(email: string, password: string): Promise<UserProfile>;
+  getCurrentUser(): Promise<UserProfile | null>;
+  signOut(): Promise<void>;
 }
 
 export class AuthService {
@@ -27,8 +29,33 @@ export class AuthService {
 
     const redirectUrl = profile.role === 'organizer'
       ? '/organizer-dashboard'
-      : '/volunteer-board';
+      : '/volunteer-dashboard';
 
     return { profile, redirectUrl };
+  }
+  
+  async authorize(allowedRole: UserRole): Promise<{
+    authorized: boolean;
+    profile: UserProfile | null;
+    redirectUrl: string | null;
+  }> {
+    const profile = await this.authRepo.getCurrentUser();
+
+    if (!profile) {
+      return { authorized: false, profile: null, redirectUrl: '/login' };
+    }
+
+    if (profile.role !== allowedRole) {
+      const fallbackUrl = profile.role === 'organizer'
+        ? '/organizer-dashboard'
+        : '/volunteer-dashboard';
+      return { authorized: false, profile, redirectUrl: fallbackUrl };
+    }
+
+    return { authorized: true, profile, redirectUrl: null };
+  }
+
+  async logout(): Promise<void> {
+    await this.authRepo.signOut();
   }
 }

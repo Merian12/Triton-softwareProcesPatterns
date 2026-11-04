@@ -1,12 +1,12 @@
 import { SupabaseClient } from '@supabase/supabase-js';
-import { supabase as defaultSupabase } from '@/lib/supabaseClient';
+import { supabase } from '@/lib/supabaseClient';
 import { IAuthRepository, UserProfile } from '@/services/authService';
 
 export class SupabaseAuthRepository implements IAuthRepository {
   private supabase: SupabaseClient;
 
   constructor(supabaseClient?: SupabaseClient) {
-    this.supabase = supabaseClient || defaultSupabase;
+    this.supabase = supabaseClient || supabase;
   }
 
   async signIn(email: string, password: string): Promise<UserProfile> {
@@ -30,5 +30,29 @@ export class SupabaseAuthRepository implements IAuthRepository {
     }
 
     return profileData as UserProfile;
+  }
+  async getCurrentUser(): Promise<UserProfile | null> {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const user = sessionData.session?.user;
+
+    if (!user) {
+      return null;
+    }
+
+    const { data: profileData, error } = await supabase
+      .from('profiles')
+      .select('id, email, role')
+      .eq('id', user.id)
+      .single();
+
+    if (error || !profileData) {
+      return null;
+    }
+
+    return profileData as UserProfile;
+  }
+
+  async signOut(): Promise<void> {
+    await supabase.auth.signOut();
   }
 }
