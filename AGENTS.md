@@ -25,6 +25,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 | Language    | TypeScript                         | 5.x      |
 | Styling     | Tailwind CSS + plain CSS modules   | 4.x      |
 | Backend/DB  | Supabase (Auth + Postgres)         | ^2.118.0 |
+| Testing     | Vitest + React Testing Library     | ^5.1.0   |
 | Bundler     | Turbopack (via `next dev`)         | built-in |
 
 ## Project Structure
@@ -35,9 +36,17 @@ Triton/
 ├── package.json
 ├── tsconfig.json                      # Path alias: @/* → ./src/*
 ├── next.config.ts                     # Turbopack + Tailwind CSS loader
+├── vitest.config.ts                   # Vitest + jsdom + @/* path alias config
 ├── .env.local                         # NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY
 │
 └── src/
+    ├── __tests__/
+    │   ├── setup.ts                   # Imports @testing-library/jest-dom/vitest
+    │   ├── authService.test.ts        # Unit tests for AuthService
+    │   ├── supabaseAuthRepo.test.ts   # Unit tests for SupabaseAuthRepository
+    │   ├── LoginForm.test.tsx         # Component tests for LoginForm
+    │   └── RoleGuard.test.tsx         # Component tests for RoleGuard
+    │
     ├── app/
     │   ├── globals.css                # Tailwind import + CSS custom properties
     │   ├── layout.tsx                 # Root layout (Geist fonts, LayoutProps<"/">)
@@ -166,11 +175,23 @@ These are defined in `.env.local` (not committed to version control).
 1. Add the method signature to `IAuthRepository` in `src/services/authService.ts`.
 2. Add business logic to `AuthService` in the same file.
 3. Implement the Supabase-specific logic in `src/repositories/supabaseAuthRepo.ts`.
+4. Add corresponding unit tests in `src/__tests__/authService.test.ts` and `src/__tests__/supabaseAuthRepo.test.ts`.
 
-### Running the app
+### Testing
+
+Tests live in `src/__tests__/` and run with **Vitest** (`jsdom` environment) and **React Testing Library**:
+
+- **Service tests (`authService.test.ts`)**: Pass a mocked `IAuthRepository` into `new AuthService(mockRepo)`.
+- **Repository tests (`supabaseAuthRepo.test.ts`)**: Mock `@/lib/supabaseClient` (to avoid `createClient` throwing when env vars are unset) and pass a mocked `SupabaseClient` into `new SupabaseAuthRepository(mockClient)`.
+- **Component tests (`LoginForm.test.tsx`, `RoleGuard.test.tsx`)**: Mock `next/navigation` (`useRouter`) and `@/repositories/supabaseAuthRepo`.
+
+### Running the app & tests
 
 ```bash
-npm run dev    # Start dev server (Turbopack)
-npm run build  # Production build
-npm run start  # Start production server
+npm run dev       # Start dev server (Turbopack)
+npm run build     # Production build
+npm run start     # Start production server
+npm test          # Run Vitest in interactive watch mode
+npm run test:run  # Run all tests once
+npm run lint      # Run ESLint
 ```
