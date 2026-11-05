@@ -58,14 +58,14 @@ export class SupabaseAuthRepository implements IAuthRepository {
     return profileData as UserProfile;
   }
   async getCurrentUser(): Promise<UserProfile | null> {
-    const { data: sessionData } = await supabase.auth.getSession();
+    const { data: sessionData } = await this.supabase.auth.getSession();
     const user = sessionData.session?.user;
 
     if (!user) {
       return null;
     }
 
-    const { data: profileData, error } = await supabase
+    const { data: profileData, error } = await this.supabase
       .from('profiles')
       .select('id, email, role')
       .eq('id', user.id)
@@ -79,6 +79,6 @@ export class SupabaseAuthRepository implements IAuthRepository {
   }
 
   async signOut(): Promise<void> {
-    await supabase.auth.signOut();
+    await this.supabase.auth.signOut();
   }
 }
