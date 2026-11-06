@@ -6,16 +6,7 @@ export interface Volunteer {
   role: UserRole;
   email: string;
   phone: string;
-}
-
-export type ContactType = 'Beredskab' | 'Politi' | 'Ambulance';
-
-export interface EmergencyContact {
-  id: string;
-  name: string;
-  type: ContactType;
-  phone: string;
-  municipality: string;
+  club: string;
 }
 
 export interface EventParticipation {
@@ -24,7 +15,6 @@ export interface EventParticipation {
   date: string;
   location: string;
 }
-
 
 export interface UpcomingEvent {
   id: string;
@@ -35,12 +25,8 @@ export interface UpcomingEvent {
 
 export interface IProfileRepository {
   getCurrentVolunteer(): Promise<Volunteer>;
-  getVolunteers(): Promise<Volunteer[]>;
-  getEmergencyContacts(): Promise<EmergencyContact[]>;
+  getClubs(): Promise<string[]>;
+  getCreditsPerEvent(): Promise<number>;
   getMyEvents(): Promise<EventParticipation[]>;
   getUpcomingEvents(): Promise<UpcomingEvent[]>;
-
 }
-
-
-

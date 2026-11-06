@@ -1,25 +1,23 @@
 import {
-  EmergencyContact,
   EventParticipation,
   IProfileRepository,
-    UpcomingEvent,
+  UpcomingEvent,
   Volunteer,
 } from '@/services/profileService';
 
 // Alt herunder er opdigtet og kun til prototypen.
-const volunteers: Volunteer[] = [
-  { id: '1', name: 'Anna Eksempel', role: 'volunteer', email: 'anna@example.com', phone: '00 00 00 01' },
-  { id: '2', name: 'Peter Prøve', role: 'volunteer', email: 'peter@example.com', phone: '00 00 00 02' },
-  { id: '3', name: 'Sara Test', role: 'organizer', email: 'sara@example.com', phone: '00 00 00 03' },
-];
+const currentVolunteer: Volunteer = {
+  id: '1',
+  name: 'Anna Eksempel',
+  role: 'volunteer',
+  email: 'anna@example.com',
+  phone: '00 00 00 01',
+  club: 'Triton Swim Ballerup',
+};
 
-const emergencyContacts: EmergencyContact[] = [
-  { id: '1', name: 'Beredskab Ballerup', type: 'Beredskab', phone: '00 00 10 01', municipality: 'Ballerup' },
-  { id: '2', name: 'Politi Ballerup', type: 'Politi', phone: '00 00 10 02', municipality: 'Ballerup' },
-  { id: '3', name: 'Beredskab Herlev', type: 'Beredskab', phone: '00 00 10 03', municipality: 'Herlev' },
-  { id: '4', name: 'Ambulance Herlev', type: 'Ambulance', phone: '00 00 10 04', municipality: 'Herlev' },
-  { id: '5', name: 'Politi Furesø', type: 'Politi', phone: '00 00 10 05', municipality: 'Furesø' },
-];
+const clubs: string[] = ['Triton Swim Ballerup', 'Dummy Klub Nord', 'Dummy Klub Syd'];
+
+const creditsPerEvent = 50;
 
 const myEvents: EventParticipation[] = [
   { id: '1', name: 'Sommerstævne', date: '2026-06-14', location: 'Ballerup Svømmehal' },
@@ -32,18 +30,17 @@ const upcomingEvents: UpcomingEvent[] = [
   { id: '2', name: 'Nytårsstævne', date: '2027-01-17', location: 'Herlev Svømmehal' },
 ];
 
-
 export class DummyProfileRepository implements IProfileRepository {
   async getCurrentVolunteer(): Promise<Volunteer> {
-    return volunteers[0];
+    return currentVolunteer;
   }
 
-  async getVolunteers(): Promise<Volunteer[]> {
-    return volunteers;
+  async getClubs(): Promise<string[]> {
+    return clubs;
   }
 
-  async getEmergencyContacts(): Promise<EmergencyContact[]> {
-    return emergencyContacts;
+  async getCreditsPerEvent(): Promise<number> {
+    return creditsPerEvent;
   }
 
   async getMyEvents(): Promise<EventParticipation[]> {
@@ -51,8 +48,6 @@ export class DummyProfileRepository implements IProfileRepository {
   }
 
   async getUpcomingEvents(): Promise<UpcomingEvent[]> {
-  return upcomingEvents;
-}
-
-  
+    return upcomingEvents;
+  }
 }
