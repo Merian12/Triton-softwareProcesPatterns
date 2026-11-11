@@ -8,6 +8,7 @@ describe('AuthService', () => {
   beforeEach(() => {
     mockAuthRepo = {
       signIn: vi.fn(),
+      signUp: vi.fn(),
       getCurrentUser: vi.fn(),
       signOut: vi.fn(),
     };
