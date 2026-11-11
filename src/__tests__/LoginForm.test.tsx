@@ -32,7 +32,7 @@ describe('LoginForm Component', () => {
   it('renders email input, password input, and submit button', () => {
     render(<LoginForm />);
 
-    expect(screen.getByRole('heading', { name: /triton event portal/i })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: /triton volunteerportal logo/i })).toBeInTheDocument();
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /log in/i })).toBeInTheDocument();

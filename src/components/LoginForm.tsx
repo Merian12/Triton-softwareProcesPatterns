@@ -16,6 +16,7 @@ export const LoginForm: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSpinning, setIsSpinning] = useState(false);
 
   const authService = useMemo(() => {
     return new AuthService(new SupabaseAuthRepository());
@@ -40,6 +41,8 @@ export const LoginForm: React.FC = () => {
     setError(null);
     setSuccessMessage(null);
     setIsLoading(true);
+    setIsSpinning(true);
+    setTimeout(() => setIsSpinning(false), 1800);
 
     try {
       if (isSignUp) {
@@ -63,12 +66,12 @@ export const LoginForm: React.FC = () => {
           <div className="login-logo-wrapper">
             <Logo
               variant="full"
-              hoverAnimation={isSignUp ? 'left' : 'both'}
-              loading={isLoading}
+              hoverAnimation="none"
+              loading={isLoading || isSpinning}
               className="login-logo"
             />
           </div>
-          <h1 className="login-title">Triton Event Portal</h1>
+
           <p className="login-subtitle">
             {isSignUp ? 'Create your account' : 'Sign in as a Volunteer or Organizer'}
           </p>
@@ -156,19 +159,9 @@ export const LoginForm: React.FC = () => {
           )}
 
           <button type="submit" disabled={isLoading} className="login-submit-button">
-            <span className="login-button-content">
-              {isLoading && (
-                <Logo
-                  variant="symbol"
-                  loading
-                  className="login-button-spinner"
-                  ariaLabel="Loading"
-                />
-              )}
-              {isLoading
-                ? (isSignUp ? 'Creating account...' : 'Signing in...')
-                : (isSignUp ? 'Sign Up' : 'Log In')}
-            </span>
+            {isLoading
+              ? (isSignUp ? 'Creating account...' : 'Signing in...')
+              : (isSignUp ? 'Sign Up' : 'Log In')}
           </button>
         </form>
 

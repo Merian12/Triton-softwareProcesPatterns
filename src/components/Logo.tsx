@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 
 export type LogoHoverAnimation = 'both' | 'left' | 'right' | 'none';
 
@@ -11,6 +11,8 @@ export interface LogoProps {
   hoverAnimation?: LogoHoverAnimation;
   /** When true, continuously runs the back-to-back left-then-right 360deg spin + 75% scale animation */
   loading?: boolean;
+  /** Incrementing counter to trigger a single 360deg spin + 75% scale animation on click */
+  spinTrigger?: number;
   /** Optional width/size class or CSS className */
   className?: string;
   /** Accessible label */
@@ -58,24 +60,34 @@ const LOGO_KEYFRAMES_CSS = `
 .triton-symbol-loading {
   animation: triton-spin-both 1.8s ease-in-out infinite;
 }
+
+.triton-symbol-spin-once {
+  animation: triton-spin-left 0.75s ease-in-out 1;
+}
 `;
 
 export const Logo: React.FC<LogoProps> = ({
   variant = 'full',
   hoverAnimation = 'both',
   loading = false,
+  spinTrigger = 0,
   className = '',
   ariaLabel = 'Triton VolunteerPortal Logo',
 }) => {
+  const [internalSpin] = useState(0);
+  const totalSpinCount = spinTrigger + internalSpin;
+
   const animClass = loading
     ? 'triton-symbol-loading'
-    : hoverAnimation === 'left'
-      ? 'triton-hover-left'
-      : hoverAnimation === 'right'
-        ? 'triton-hover-right'
-        : hoverAnimation === 'both'
-          ? 'triton-hover-both'
-          : '';
+    : totalSpinCount > 0
+      ? 'triton-symbol-spin-once'
+      : hoverAnimation === 'left'
+        ? 'triton-hover-left'
+        : hoverAnimation === 'right'
+          ? 'triton-hover-right'
+          : hoverAnimation === 'both'
+            ? 'triton-hover-both'
+            : '';
 
   if (variant === 'symbol') {
     return (
@@ -87,6 +99,7 @@ export const Logo: React.FC<LogoProps> = ({
         <style>{LOGO_KEYFRAMES_CSS}</style>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
+          key={totalSpinCount}
           src="/logo-symbol.svg"
           alt=""
           className={`triton-logo-symbol h-full w-full object-contain ${animClass}`}
@@ -105,6 +118,7 @@ export const Logo: React.FC<LogoProps> = ({
       <style>{LOGO_KEYFRAMES_CSS}</style>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
+        key={totalSpinCount}
         src="/logo-symbol.svg"
         alt=""
         className={`triton-logo-symbol w-24 h-24 object-contain ${animClass}`}
