@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { AuthService, UserProfile, UserRole } from '@/services/authService';
 import { SupabaseAuthRepository } from '@/repositories/supabaseAuthRepo';
+import { Logo } from '@/components/Logo';
 
 interface RoleGuardProps {
   allowedRole: UserRole;
@@ -45,7 +46,13 @@ export const RoleGuard = ({ allowedRole, children }: RoleGuardProps) => {
 
   if (checking || !profile) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-gray-50 p-8 font-sans">
+      <main className="flex min-h-screen flex-col items-center justify-center gap-4 bg-gray-50 p-8 font-sans">
+        <Logo
+          variant="symbol"
+          loading
+          className="h-20 w-20"
+          ariaLabel="Loading permissions"
+        />
         <p className="text-sm text-gray-500">Checking permissions...</p>
       </main>
     );

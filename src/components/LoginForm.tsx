@@ -4,6 +4,7 @@ import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { AuthService, UserRole } from '@/services/authService';
 import { SupabaseAuthRepository } from '@/repositories/supabaseAuthRepo';
+import { Logo } from '@/components/Logo';
 
 export const LoginForm: React.FC = () => {
   const router = useRouter();
@@ -59,6 +60,14 @@ export const LoginForm: React.FC = () => {
     <main className="login-container">
       <div className="login-card">
         <header className="login-header">
+          <div className="login-logo-wrapper">
+            <Logo
+              variant="full"
+              hoverAnimation={isSignUp ? 'left' : 'both'}
+              loading={isLoading}
+              className="login-logo"
+            />
+          </div>
           <h1 className="login-title">Triton Event Portal</h1>
           <p className="login-subtitle">
             {isSignUp ? 'Create your account' : 'Sign in as a Volunteer or Organizer'}
@@ -147,9 +156,19 @@ export const LoginForm: React.FC = () => {
           )}
 
           <button type="submit" disabled={isLoading} className="login-submit-button">
-            {isLoading
-              ? (isSignUp ? 'Creating account...' : 'Signing in...')
-              : (isSignUp ? 'Sign Up' : 'Log In')}
+            <span className="login-button-content">
+              {isLoading && (
+                <Logo
+                  variant="symbol"
+                  loading
+                  className="login-button-spinner"
+                  ariaLabel="Loading"
+                />
+              )}
+              {isLoading
+                ? (isSignUp ? 'Creating account...' : 'Signing in...')
+                : (isSignUp ? 'Sign Up' : 'Log In')}
+            </span>
           </button>
         </form>
 
