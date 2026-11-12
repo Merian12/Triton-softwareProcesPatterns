@@ -7,6 +7,8 @@ export type LogoHoverAnimation = 'both' | 'left' | 'right' | 'none';
 export interface LogoProps {
   /** 'full' renders the Six Volunteers symbol + VolunteerPortal wordmark; 'symbol' renders only the icon */
   variant?: 'full' | 'symbol';
+  /** 'default' uses red (#D7142A) + dark navy (#262E40); 'white' uses pure white (#FFFFFF); 'on-red' uses white for red elements */
+  colorScheme?: 'default' | 'white' | 'on-red';
   /** Hover behavior on the icon: 'left' (+360deg + scale 75%), 'right' (-360deg + scale 75%), 'both' (left then right), or 'none' */
   hoverAnimation?: LogoHoverAnimation;
   /** When true, continuously runs the back-to-back left-then-right 360deg spin + 75% scale animation */
@@ -68,6 +70,7 @@ const LOGO_KEYFRAMES_CSS = `
 
 export const Logo: React.FC<LogoProps> = ({
   variant = 'full',
+  colorScheme = 'default',
   hoverAnimation = 'both',
   loading = false,
   spinTrigger = 0,
@@ -76,6 +79,12 @@ export const Logo: React.FC<LogoProps> = ({
 }) => {
   const [internalSpin] = useState(0);
   const totalSpinCount = spinTrigger + internalSpin;
+  const symbolSrc =
+    colorScheme === 'white'
+      ? '/logo-symbol-white.svg'
+      : colorScheme === 'on-red'
+        ? '/logo-symbol-on-red.svg'
+        : '/logo-symbol.svg';
 
   const animClass = loading
     ? 'triton-symbol-loading'
@@ -97,14 +106,18 @@ export const Logo: React.FC<LogoProps> = ({
         aria-label={ariaLabel}
       >
         <style>{LOGO_KEYFRAMES_CSS}</style>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <span
           key={totalSpinCount}
-          src="/logo-symbol.svg"
-          alt=""
-          className={`triton-logo-symbol h-full w-full object-contain ${animClass}`}
-          draggable={false}
-        />
+          className={`triton-logo-symbol flex h-full w-full items-center justify-center ${animClass}`}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={symbolSrc}
+            alt=""
+            className="h-full w-full object-contain pointer-events-none"
+            draggable={false}
+          />
+        </span>
       </span>
     );
   }
@@ -116,17 +129,21 @@ export const Logo: React.FC<LogoProps> = ({
       aria-label={ariaLabel}
     >
       <style>{LOGO_KEYFRAMES_CSS}</style>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
+      <span
         key={totalSpinCount}
-        src="/logo-symbol.svg"
-        alt=""
-        className={`triton-logo-symbol w-24 h-24 object-contain ${animClass}`}
-        draggable={false}
-      />
+        className={`triton-logo-symbol flex w-24 h-24 items-center justify-center ${animClass}`}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={symbolSrc}
+          alt=""
+          className="w-full h-full object-contain pointer-events-none"
+          draggable={false}
+        />
+      </span>
       <span className="mt-1 text-lg font-extrabold tracking-tight">
-        <span style={{ color: '#262E40' }}>Volunteer</span>
-        <span style={{ color: '#D7142A' }}>Portal</span>
+        <span style={{ color: colorScheme === 'white' ? '#FFFFFF' : '#262E40' }}>Volunteer</span>
+        <span style={{ color: colorScheme === 'white' ? '#FFFFFF' : colorScheme === 'on-red' ? '#FFFFFF' : '#D7142A' }}>Portal</span>
       </span>
     </div>
   );

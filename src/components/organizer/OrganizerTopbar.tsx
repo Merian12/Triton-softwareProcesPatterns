@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Logo } from '@/components/Logo';
 
 export type OrganizerView = 'Overview' | 'Find events' | 'My shifts' | 'Messages';
@@ -16,6 +16,7 @@ type Props = {
 export default function OrganizerTopbar({ email, activeView, loggingOut, onNavigate, onLogout }: Props) {
   const dropdown = useRef<HTMLDetailsElement>(null);
   const trigger = useRef<HTMLElement>(null);
+  const [logoSpin, setLogoSpin] = useState(0);
   const emailName = email.split('@')[0].split(/[._+-]/)[0];
   const name = emailName ? emailName[0].toLocaleUpperCase('en-GB') + emailName.slice(1) : 'My account';
 
@@ -30,10 +31,10 @@ export default function OrganizerTopbar({ email, activeView, loggingOut, onNavig
   return <>
     <header className="bg-[#ff0000] text-white">
       <div className="mx-auto flex min-h-16 max-w-6xl items-center justify-between gap-4 px-5 py-2 sm:px-9">
-        <button type="button" onClick={() => onNavigate('Overview')} aria-label="Volunteer Portal home"
+        <button type="button" onClick={() => { setLogoSpin(c => c + 1); onNavigate('Overview'); }} aria-label="Volunteer Portal home"
           className="flex min-h-11 cursor-pointer items-center gap-2.5 rounded-sm text-left focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white">
-          <Logo variant="symbol" hoverAnimation="none" className="size-8 shrink-0 brightness-0 invert" />
-          <span className="text-base font-semibold tracking-tight sm:text-lg">VolunteerPortal</span>
+          <Logo variant="symbol" colorScheme="white" hoverAnimation="none" spinTrigger={logoSpin} className="size-8 shrink-0" />
+          <span className="text-base font-semibold tracking-tight sm:text-lg text-white">VolunteerPortal</span>
         </button>
         <details ref={dropdown} className="group relative border-l border-white/40 pl-4 sm:pl-5"
           onKeyDown={event => {
