@@ -4,6 +4,7 @@ import type { UserProfile } from '@/services/authService';
 import { ClubEvent, EventService, overview, staffing } from '@/services/eventService';
 import { DemoEventRepository } from '@/repositories/demoEventRepo';
 import EventEditor from './EventEditor';
+import OrganizerTopbar from './OrganizerTopbar';
 import { button, primary, panel, dateLabel } from './ui';
 
 export default function OrganizerDashboard({ profile, onLogout }: { profile: UserProfile; onLogout: () => Promise<void> }) {
@@ -28,24 +29,9 @@ export default function OrganizerDashboard({ profile, onLogout }: { profile: Use
   function save(event: ClubEvent) { service.save(event); setEvents(service.list()); setEditor(null); setDirty(false); setView('Arrangementer'); setNotice(event.status === 'draft' ? 'Kladde gemt i denne demo. Den forsvinder, når siden genindlæses.' : 'Arrangement gemt som offentliggjort i denne demo. Intet er sendt til Supabase eller frivillige.'); }
   async function logout() { if (!canLeave()) return; setLoggingOut(true); setError(''); try { await onLogout(); } catch { setError('Kunne ikke logge ud. Prøv igen.'); setLoggingOut(false); } }
   return <div lang="da" className="min-h-screen bg-white text-neutral-900">
+    <a href="#admin-main" className="sr-only focus:not-sr-only focus:block focus:p-4">Gå til indhold</a>
+    <OrganizerTopbar email={profile.email} activeView={editor ? null : view} loggingOut={loggingOut} onNavigate={navigate} onLogout={logout} />
     <div className="mx-auto max-w-6xl px-5 sm:px-9">
-      <a href="#admin-main" className="sr-only focus:not-sr-only focus:block focus:p-4">Gå til indhold</a>
-      <header className="flex flex-wrap items-center gap-5 py-7">
-        <span className="text-lg font-semibold">Volunteer Portal</span>
-        <span className="text-sm text-neutral-600">Triton Swim Ballerup · demo club</span>
-        <div className="ml-auto flex items-center gap-3">
-          <span className="text-sm text-neutral-600">Administrator</span>
-          <button className={button} disabled={loggingOut} onClick={logout}>{loggingOut ? 'Logger ud…' : 'Log ud'}</button>
-        </div>
-      </header>
-      <nav aria-label="Administration" className="flex flex-wrap gap-6 border-b border-neutral-200">
-        {(['Overblik', 'Arrangementer'] as const).map(item => <button
-          key={item}
-          aria-current={!editor && view === item ? 'page' : undefined}
-          onClick={() => navigate(item)}
-          className={`min-h-11 border-b-2 py-3 text-sm focus-visible:outline-2 focus-visible:outline-[#FF0000] ${!editor && view === item ? 'border-[#FF0000] font-semibold' : 'border-transparent text-neutral-600'}`}
-        >{item}</button>)}
-      </nav>
       <main id="admin-main" className="py-9">
         {!editor && <h1 className="text-3xl font-semibold tracking-tight">{view}</h1>}
         <p className={`break-words text-sm text-neutral-600 ${editor ? 'mb-6' : 'mt-3'}`}>Logget ind som {profile.email}</p>
