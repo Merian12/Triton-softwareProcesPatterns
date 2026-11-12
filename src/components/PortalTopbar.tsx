@@ -15,7 +15,7 @@ type Props = {
   onLogout: () => void;
 };
 
-export default function PortalTopbar({ email, activeView, loggingOut, onNavigate, onLogout, roleLabel = 'organizers', onProfile }: Props) {
+export default function PortalTopbar({ email, activeView, loggingOut, onNavigate, onLogout, roleLabel = 'Organizer', onProfile }: Props) {
   const dropdown = useRef<HTMLDetailsElement>(null);
   const trigger = useRef<HTMLElement>(null);
   const emailName = email.split('@')[0].split(/[._+-]/)[0];

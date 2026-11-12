@@ -139,7 +139,7 @@ export default function VolunteerDashboard({
     <div className="min-h-screen bg-white text-neutral-900">
       <PortalTopbar
         email={profile.email}
-        roleLabel="volunteers"
+        roleLabel="Volunteer"
         activeView={view === 'My profile' ? null : view}
         loggingOut={loggingOut}
         onNavigate={navigate}
