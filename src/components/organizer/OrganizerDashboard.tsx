@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import type { UserProfile } from '@/services/authService';
 import { ClubEvent, EventService, overview, staffing } from '@/services/eventService';
 import { DemoEventRepository } from '@/repositories/demoEventRepo';
+import OrganizerManagement from '@/components/OrganizerManagement';
 import ShiftCalendar from '@/components/ShiftCalendar';
 import EventEditor from './EventEditor';
 import OrganizerTopbar, { type OrganizerView } from './OrganizerTopbar';
@@ -87,11 +88,12 @@ export default function OrganizerDashboard({ profile, onLogout }: { profile: Use
 
   return <div lang="en" className="min-h-screen bg-white text-neutral-900">
     <a href="#admin-main" className="sr-only focus:not-sr-only focus:block focus:p-4">Skip to content</a>
-    <OrganizerTopbar email={profile.email} activeView={editor ? null : view} loggingOut={loggingOut} onNavigate={navigate} onLogout={logout} />
+    <OrganizerTopbar roleLabel={profile.role === 'admin' ? 'Admin' : 'Organizer'} email={profile.email} activeView={editor ? null : view} loggingOut={loggingOut} onNavigate={navigate} onLogout={logout} />
     <div className="mx-auto max-w-6xl px-5 sm:px-9">
       <main id="admin-main" className="py-7 sm:py-8">
         {error && <p role="alert" className="mb-5 text-sm text-red-800">{error}</p>}
         {notice && <p role="status" className="mb-5 text-sm text-neutral-700">{notice}</p>}
+        {profile.role === 'admin' && !editor && view === 'Overview' && <OrganizerManagement />}
         {editor ? <EventEditor key={editor.id} initial={editor} existing={events.some(event => event.id === editor.id)} onSave={save}
           onCancel={() => { if (canLeave()) { setEditor(null); setDirty(false); } }} onDirty={setDirty} /> : <>
           <div className="flex flex-wrap items-center justify-between gap-4">

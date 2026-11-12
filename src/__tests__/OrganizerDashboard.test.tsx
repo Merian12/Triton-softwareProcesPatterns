@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import OrganizerDashboard from '@/components/organizer/OrganizerDashboard';
+vi.mock('@/lib/supabaseClient', () => ({ supabase: {} }));
 const profile = { id: 'admin', email: 'admin@example.com', role: 'organizer' as const };
 describe('Organizer dashboard', () => {
   it('shows registrations, filters full shifts and retains form values between steps', () => {

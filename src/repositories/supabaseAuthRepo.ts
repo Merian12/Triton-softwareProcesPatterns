@@ -10,6 +10,7 @@ export class SupabaseAuthRepository implements IAuthRepository {
   }
 
   async signUp(email: string, password: string, role: UserRole): Promise<UserProfile> {
+    if (role !== 'volunteer' && role !== 'organizer') throw new Error('Admin accounts must be assigned by an administrator.');
     const { data: authData, error: authError } = await this.supabase.auth.signUp({
       email,
       password,
