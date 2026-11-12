@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
@@ -70,7 +69,3 @@ export default function OrganizerTopbar({ email, activeView, loggingOut, onNavig
     </div>
   </>;
 }
-=======
-export { default } from '@/components/PortalTopbar';
-export type { PortalView as OrganizerView } from '@/components/PortalTopbar';
->>>>>>> 6f31f41e6eada9b822eb5fa985b6302aee75e9d8
