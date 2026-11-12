@@ -131,7 +131,7 @@ export const LoginForm: React.FC = () => {
                     onClick={() => setRole('volunteer')}
                     disabled={isLoading}
                   >
-                    Volunteer
+                    volunteers
                   </button>
                   <button
                     type="button"
@@ -139,7 +139,7 @@ export const LoginForm: React.FC = () => {
                     onClick={() => setRole('organizer')}
                     disabled={isLoading}
                   >
-                    Organizer
+                    organizers
                   </button>
                 </div>
               </div>
