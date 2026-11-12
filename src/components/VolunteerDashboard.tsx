@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { portalButton as button, portalPrimary as primary } from './portalStyles';
 import type { UserProfile } from '@/services/authService';
 import { Logo } from '@/components/Logo';
 import { volunteerDemoEvents as events } from './volunteerDemoData';
@@ -9,8 +10,8 @@ type View = 'Overview' | 'Find events' | 'My shifts' | 'Messages' | 'My profile'
 type Shift = (typeof events)[number]['shifts'][number];
 type Event = (typeof events)[number];
 type Booking = { event: Event; shift: Shift };
-const button = 'min-h-11 rounded-sm border border-neutral-300 px-4 py-2 text-sm text-neutral-900 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#FF0000] disabled:cursor-not-allowed disabled:opacity-40';
-const primary = `${button} border-[#FF0000] bg-[#FF0000] font-semibold text-black`;
+
+
 
 export default function VolunteerDashboard({ profile, onLogout }: { profile: UserProfile; onLogout: () => Promise<void> }) {
   const [today] = useState(() => new Date());

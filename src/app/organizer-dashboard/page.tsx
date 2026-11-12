@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 'use client';
 
 import { useState } from 'react';
@@ -50,3 +51,11 @@ export default function OrganizerDashboardPage() {
     </RoleGuard>
   );
 }
+=======
+﻿'use client';
+import RoleGuard from '@/components/RoleGuard';
+import OrganizerDashboard from '@/components/organizer/OrganizerDashboard';
+export default function OrganizerDashboardPage() {
+  return <RoleGuard allowedRole="organizer">{(profile, handleLogout) => <OrganizerDashboard profile={profile} onLogout={handleLogout} />}</RoleGuard>;
+}
+>>>>>>> Stashed changes
