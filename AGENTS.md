@@ -141,9 +141,8 @@ The app expects a `profiles` table in Supabase:
 
 ## Styling Conventions
 
-- **Dashboard pages** use **Tailwind CSS** utility classes directly in JSX.
-- **Login page** uses **plain CSS** in `src/app/login/login.css` (class-name-based).
-- Global styles and Tailwind config are in `src/app/globals.css`.
+- **Global Theme Tokens (`src/app/globals.css`)**: Single source of truth for brand colors (`--brand-primary`, `--brand-primary-hover`, `--brand-accent`, `--brand-navy`), surfaces, borders, status colors, login styles, and logo animations, mapped into Tailwind v4 via `@theme inline` (`bg-brand`, `border-brand`, `text-brand`, `outline-brand`, `accent-brand`, etc.).
+- **Shared UI Primitives (`src/components/portalStyles.ts`)**: Central style definitions for buttons (`button`, `primary`, `primarySolid`), layout shells (`portalShell`, `portalContainer`, `portalTopbar`, `portalNav`, `navTab`), cards (`card`, `panel`), and form inputs (`input`, `textarea`, `checkbox`).
 - Fonts: Geist Sans + Geist Mono loaded via `next/font/google` in the root layout.
 
 ## Key Patterns & Conventions

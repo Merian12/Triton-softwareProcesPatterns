@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { AdminService } from '@/services/adminService';
 import { SupabaseAdminRepository } from '@/repositories/supabaseAdminRepo';
 import type { UserProfile } from '@/services/authService';
-import { button } from './organizer/ui';
+import { button } from '@/components/portalStyles';
 
 export default function OrganizerManagement() {
   const service = useMemo(() => new AdminService(new SupabaseAdminRepository()), []);

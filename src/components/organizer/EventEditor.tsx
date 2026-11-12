@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import { affectedShifts, ClubEvent, FieldErrors, Shift, validateEvent } from '@/services/eventService';
-import { button, primary, panel, dateLabel } from './ui';
+import { button, card, checkbox, dateLabel, input, panel, primary, textarea } from '@/components/portalStyles';
 
 type Props = { initial: ClubEvent; existing: boolean; onSave: (event: ClubEvent) => void; onCancel: () => void; onDirty: (dirty: boolean) => void };
 export default function EventEditor({ initial, existing, onSave, onCancel, onDirty }: Props) {
@@ -44,13 +44,13 @@ export default function EventEditor({ initial, existing, onSave, onCancel, onDir
   function field(key: string, label: string, value: string | number, change: (value: string) => void, type = 'text') {
     return <div key={key} className={type === 'textarea' ? 'sm:col-span-2' : ''}>
       <label htmlFor={key} className="mb-2 block text-sm">{label}</label>
-      {type === 'textarea' ? <textarea id={key} rows={4} value={value} aria-invalid={!!errors[key]} aria-describedby={errors[key] ? `${key}-error` : undefined} onChange={e => change(e.target.value)} className="w-full rounded-sm border border-neutral-300 p-3 focus:outline-2 focus:outline-[#FF0000]" /> : <input id={key} type={type} min={type === 'number' ? 1 : undefined} step={type === 'number' ? 1 : undefined} value={Number.isNaN(value) ? '' : value} aria-invalid={!!errors[key]} aria-describedby={errors[key] ? `${key}-error` : undefined} onChange={e => change(e.target.value)} className="min-h-11 w-full rounded-sm border border-neutral-300 bg-white p-3 focus:outline-2 focus:outline-[#FF0000]" />}
+      {type === 'textarea' ? <textarea id={key} rows={4} value={value} aria-invalid={!!errors[key]} aria-describedby={errors[key] ? `${key}-error` : undefined} onChange={e => change(e.target.value)} className={textarea} /> : <input id={key} type={type} min={type === 'number' ? 1 : undefined} step={type === 'number' ? 1 : undefined} value={Number.isNaN(value) ? '' : value} aria-invalid={!!errors[key]} aria-describedby={errors[key] ? `${key}-error` : undefined} onChange={e => change(e.target.value)} className={input} />}
       {errors[key] && <p id={`${key}-error`} className="mt-2 text-sm text-red-800">{errors[key]}</p>}
     </div>;
   }
   return <form className="max-w-3xl" noValidate onSubmit={e => { e.preventDefault(); if (step < 2) checkNext(); else save('published'); }}>
     <div className="mb-7 flex flex-wrap items-start justify-between gap-4"><div><h1 ref={heading} tabIndex={-1} className="text-2xl font-semibold tracking-tight">{existing ? 'Edit event' : 'Create event'}</h1></div><button type="button" className={button} onClick={onCancel}>Close form</button></div>
-    <ol aria-label="Event setup steps" className="mb-8 flex flex-wrap gap-6 border-b border-neutral-200">{['Event details', 'Shifts', 'Review'].map((label, i) => <li key={label} aria-current={step === i ? 'step' : undefined} className={`border-b-2 py-3 text-sm ${step === i ? 'border-[#FF0000] font-semibold' : 'border-transparent text-neutral-600'}`}>{i + 1}. {label}</li>)}</ol>
+    <ol aria-label="Event setup steps" className="mb-8 flex flex-wrap gap-6 border-b border-neutral-200">{['Event details', 'Shifts', 'Review'].map((label, i) => <li key={label} aria-current={step === i ? 'step' : undefined} className={`border-b-2 py-3 text-sm ${step === i ? 'border-brand font-semibold' : 'border-transparent text-neutral-600'}`}>{i + 1}. {label}</li>)}</ol>
     {failure && <p role="alert" className="mb-5 border-b border-neutral-300 py-4 text-red-800">{failure}</p>}
     <section className={panel}>
       {step === 0 ? <><h2 className="mb-5 text-lg font-semibold">Event details</h2><div className="grid gap-5 sm:grid-cols-2">
@@ -63,7 +63,7 @@ export default function EventEditor({ initial, existing, onSave, onCancel, onDir
         {field('contact', 'Contact person', event.contact, contact => update({ ...event, contact }))}
       </div></> : step === 1 ? <><h2 className="text-lg font-semibold">Plan shifts</h2>
         {errors.shifts && <p role="alert" className="text-red-800">{errors.shifts}</p>}
-        {event.shifts.map((s, i) => <fieldset key={s.id} className="my-6 rounded-xl border border-[#FF0000]/40 p-5"><legend className="px-2 font-semibold">Shift {i + 1} · {s.registrations.length} signed up</legend><div className="grid gap-5 sm:grid-cols-2">
+        {event.shifts.map((s, i) => <fieldset key={s.id} className={`my-6 ${card}`}><legend className="px-2 font-semibold">Shift {i + 1} · {s.registrations.length} signed up</legend><div className="grid gap-5 sm:grid-cols-2">
           {field(`shift.${s.id}.task`, 'Task description', s.task, task => updateShift(s.id, { task }))}
           {field(`shift.${s.id}.location`, 'Location', s.location, location => updateShift(s.id, { location }))}
           {field(`shift.${s.id}.date`, 'Date', s.date, date => updateShift(s.id, { date }), 'date')}
@@ -74,7 +74,7 @@ export default function EventEditor({ initial, existing, onSave, onCancel, onDir
         <button type="button" className={`${button} mt-3`} onClick={() => update({ ...event, shifts: [...event.shifts, { id: crypto.randomUUID(), task: '', location: event.location, date: event.startDate, start: '', end: '', capacity: 1, registrations: [] }] })}>+ Add shift</button>
       </> : <><h2 className="mb-5 text-lg font-semibold">Review before saving</h2><h3 className="text-lg font-semibold">{event.name}</h3><p className="mt-3 whitespace-pre-wrap">{event.description}</p><p className="mt-4">{event.location} · {dateLabel(event.startDate)} – {dateLabel(event.endDate)}</p><p className="mt-2">Registration deadline: {dateLabel(event.deadline)}</p><p className="mt-2">Contact: {event.contact}</p><ul className="mt-5 divide-y divide-neutral-200">{event.shifts.map(s => <li key={s.id} className="py-4"><strong>{s.task}</strong><p className="mt-1 text-sm">{s.location} · {dateLabel(s.date)} · {s.start}–{s.end}</p><p className="mt-1 text-sm">{s.registrations.length} signed up / {s.capacity} volunteers needed</p></li>)}</ul>{!event.shifts.length && <p className="mt-4">No shifts yet.</p>}</>}
     </section>
-    {affected.length > 0 && <aside className="mt-6 border-l-2 border-[#FF0000] py-2 pl-5"><h2 className="font-semibold">Changes affect registrations</h2><p className="mt-2 text-sm">Review the volunteers affected by these changes.</p><ul className="my-3 list-inside list-disc text-sm">{affected.map(s => <li key={s.id}>{s.task}: {s.registrations.length} registrations</li>)}</ul><label className="flex items-start gap-3 text-sm"><input type="checkbox" checked={acknowledged} onChange={e => setAcknowledged(e.target.checked)} className="mt-1 size-4 accent-[#FF0000]" />I have reviewed the changes and will inform the affected volunteers.</label></aside>}
+    {affected.length > 0 && <aside className="mt-6 border-l-2 border-brand py-2 pl-5"><h2 className="font-semibold">Changes affect registrations</h2><p className="mt-2 text-sm">Review the volunteers affected by these changes.</p><ul className="my-3 list-inside list-disc text-sm">{affected.map(s => <li key={s.id}>{s.task}: {s.registrations.length} registrations</li>)}</ul><label className="flex items-start gap-3 text-sm"><input type="checkbox" checked={acknowledged} onChange={e => setAcknowledged(e.target.checked)} className={`mt-1 ${checkbox}`} />I have reviewed the changes and will inform the affected volunteers.</label></aside>}
     <div className="mt-6 flex flex-wrap gap-3">{step > 0 && <button type="button" className={button} onClick={() => go(step - 1)}>Back</button>}{initial.status === 'draft' && <button type="button" className={button} onClick={() => save('draft')}>Save draft</button>}<button className={`${primary} sm:ml-auto`} type="submit">{step < 2 ? 'Continue' : initial.status === 'published' ? 'Save changes' : 'Publish event'}</button></div>
   </form>;
 }

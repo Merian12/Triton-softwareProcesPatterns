@@ -9,7 +9,7 @@ import ShiftCalendar from '@/components/ShiftCalendar';
 import EventEditor from './EventEditor';
 import OrganizerTopbar, { type OrganizerView } from './OrganizerTopbar';
 import StaffingIcons from './StaffingIcons';
-import { button, primary, panel, dateLabel } from './ui';
+import { button, card, checkbox, dateLabel, panel, portalContainer, portalShell, primary } from '@/components/portalStyles';
 
 export default function OrganizerDashboard({ profile, onLogout }: { profile: UserProfile; onLogout: () => Promise<void> }) {
   const service = useMemo(() => new EventService(new DemoEventRepository()), []);
@@ -57,7 +57,7 @@ export default function OrganizerDashboard({ profile, onLogout }: { profile: Use
   }
   function openFilter() {
     return <label className="my-5 flex items-center gap-3 text-sm">
-      <input type="checkbox" checked={onlyOpen} onChange={event => setOnlyOpen(event.target.checked)} className="size-4 accent-[#ff0000]" />
+      <input type="checkbox" checked={onlyOpen} onChange={event => setOnlyOpen(event.target.checked)} className={checkbox} />
       Only shifts with available places
     </label>;
   }
@@ -74,7 +74,7 @@ export default function OrganizerDashboard({ profile, onLogout }: { profile: Use
           <StaffingIcons filled={shift.registrations.length} capacity={shift.capacity} label={`${shift.task} volunteer places`} />
         </div>
         <details className="mt-3">
-          <summary className="min-h-10 cursor-pointer py-2 text-sm hover:underline focus-visible:outline-2 focus-visible:outline-[#ff0000]">View volunteers ({shift.registrations.length})</summary>
+          <summary className="min-h-10 cursor-pointer py-2 text-sm hover:underline focus-visible:outline-2 focus-visible:outline-brand">View volunteers ({shift.registrations.length})</summary>
           {shift.registrations.length ? <ul className="divide-y divide-neutral-200">
             {shift.registrations.map(registration => <li key={registration.id} className="flex flex-wrap justify-between gap-2 py-3 text-sm">
               <span>{registration.name}</span><span className="break-all text-neutral-600">{registration.email}</span>
@@ -86,10 +86,10 @@ export default function OrganizerDashboard({ profile, onLogout }: { profile: Use
     </>;
   }
 
-  return <div lang="en" className="min-h-screen bg-white text-neutral-900">
+  return <div lang="en" className={portalShell}>
     <a href="#admin-main" className="sr-only focus:not-sr-only focus:block focus:p-4">Skip to content</a>
     <OrganizerTopbar roleLabel={profile.role === 'admin' ? 'Admin' : 'Organizer'} email={profile.email} activeView={editor ? null : view} loggingOut={loggingOut} onNavigate={navigate} onLogout={logout} />
-    <div className="mx-auto max-w-6xl px-5 sm:px-9">
+    <div className={portalContainer}>
       <main id="admin-main" className="py-7 sm:py-8">
         {error && <p role="alert" className="mb-5 text-sm text-red-800">{error}</p>}
         {notice && <p role="status" className="mb-5 text-sm text-neutral-700">{notice}</p>}
@@ -111,7 +111,7 @@ export default function OrganizerDashboard({ profile, onLogout }: { profile: Use
                 {displayed.map(event => {
                   const staff = staffing(event);
                   const date = event.startDate ? new Date(`${event.startDate}T12:00:00`) : null;
-                  return <article key={event.id} className="mt-4 grid grid-cols-[36px_minmax(0,1fr)] items-start gap-4 rounded-xl border border-[#ff0000]/40 p-4 sm:grid-cols-[36px_minmax(0,1fr)_auto] sm:p-5">
+                  return <article key={event.id} className={`mt-4 grid grid-cols-[36px_minmax(0,1fr)] items-start gap-4 ${card} p-4 sm:grid-cols-[36px_minmax(0,1fr)_auto] sm:p-5`}>
                     <div className="tabular-nums" aria-hidden="true">
                       <span className="block text-xl">{date ? date.getDate() : '–'}</span>
                       <span className="text-xs text-neutral-500">{date ? date.toLocaleDateString('en-GB', { month: 'short' }) : 'Draft'}</span>
@@ -154,7 +154,7 @@ export default function OrganizerDashboard({ profile, onLogout }: { profile: Use
 
           {view === 'My shifts' && <section className="mt-6 max-w-3xl" aria-label="Shift management">
             {openFilter()}
-            {[...events].sort((a, b) => a.startDate.localeCompare(b.startDate)).filter(event => event.shifts.length > 0).map(event => <section key={event.id} className="mb-7 rounded-xl border border-[#ff0000]/40 p-5" aria-label={event.name}>
+            {[...events].sort((a, b) => a.startDate.localeCompare(b.startDate)).filter(event => event.shifts.length > 0).map(event => <section key={event.id} className={`mb-7 ${card}`} aria-label={event.name}>
               <div className="flex items-center justify-between gap-4"><h2 className="font-semibold">{event.name}</h2><button className={button} onClick={() => edit(event)}>Edit event</button></div>
               {shiftList(event)}
             </section>)}

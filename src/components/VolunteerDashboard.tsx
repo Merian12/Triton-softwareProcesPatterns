@@ -2,7 +2,16 @@
 'use client';
 
 import { useState } from 'react';
-import { portalButton as button, portalPrimary as primary } from './portalStyles';
+import {
+  card,
+  checkbox,
+  panel,
+  portalButton as button,
+  portalContainer,
+  portalPrimary as primary,
+  portalShell,
+  textarea,
+} from './portalStyles';
 import type { UserProfile } from '@/services/authService';
 import PortalTopbar from '@/components/PortalTopbar';
 import { volunteerDemoEvents as events } from './volunteerDemoData';
@@ -99,7 +108,7 @@ export default function VolunteerDashboard({
     return events.map(e => (
       <article
         key={e.id}
-        className="mt-4 grid grid-cols-[44px_1fr] items-center gap-4 rounded-xl border border-[#FF0000]/40 p-5 sm:grid-cols-[44px_1fr_auto]"
+        className={`mt-4 grid grid-cols-[44px_1fr] items-center gap-4 ${card} sm:grid-cols-[44px_1fr_auto]`}
       >
         <div className="tabular-nums">
           <span className="block text-xl">{e.day}</span>
@@ -136,7 +145,7 @@ export default function VolunteerDashboard({
   }
 
   return (
-    <div className="min-h-screen bg-white text-neutral-900">
+    <div className={portalShell}>
       <PortalTopbar
         email={profile.email}
         roleLabel="Volunteer"
@@ -146,7 +155,7 @@ export default function VolunteerDashboard({
         onProfile={() => navigate('My profile')}
         onLogout={logout}
       />
-      <div className="mx-auto max-w-6xl px-5 sm:px-9">
+      <div className={portalContainer}>
         <main className="py-9">
           <h1 className="text-3xl font-semibold tracking-tight">
             {selection
@@ -223,7 +232,7 @@ export default function VolunteerDashboard({
                   <label className="mt-6 flex items-start gap-3 text-sm">
                     <input
                       type="checkbox"
-                      className="mt-1 accent-[#FF0000]"
+                      className={`mt-1 ${checkbox}`}
                       checked={accepted}
                       onChange={e => setAccepted(e.target.checked)}
                     />
@@ -288,7 +297,7 @@ export default function VolunteerDashboard({
           ) : view === 'Overview' ? (
             <div className="mt-9 grid gap-10 lg:grid-cols-[minmax(0,1fr)_400px]">
               <div className="min-w-0">
-                <section className="border-b border-neutral-200 pb-7">
+                <section className={panel}>
                   <h2 className="text-lg font-semibold">
                     Your next shift
                   </h2>
@@ -447,7 +456,7 @@ export default function VolunteerDashboard({
                   id="message"
                   required
                   rows={4}
-                  className="mt-2 w-full rounded-sm border border-neutral-300 p-3 focus:outline-2 focus:outline-[#FF0000]"
+                  className={`mt-2 ${textarea}`}
                   value={message}
                   onChange={e => setMessage(e.target.value)}
                 />
