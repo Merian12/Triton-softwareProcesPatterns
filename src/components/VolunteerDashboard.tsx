@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import { portalButton as button, portalPrimary as primary } from './portalStyles';
 import type { UserProfile } from '@/services/authService';
-import { Logo } from '@/components/Logo';
+import PortalTopbar from '@/components/PortalTopbar';
 import { volunteerDemoEvents as events } from './volunteerDemoData';
 import VolunteerCalendar from '@/components/VolunteerCalendar';
 
@@ -30,7 +30,6 @@ export default function VolunteerDashboard({
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<string[]>([]);
   const [loggingOut, setLoggingOut] = useState(false);
-  const [logoSpin, setLogoSpin] = useState(0);
 
   const registered = (e: Event, s: Shift) =>
     bookings.some(
@@ -138,72 +137,16 @@ export default function VolunteerDashboard({
 
   return (
     <div className="min-h-screen bg-white text-neutral-900">
+      <PortalTopbar
+        email={profile.email}
+        roleLabel="Volunteer"
+        activeView={view === 'My profile' ? null : view}
+        loggingOut={loggingOut}
+        onNavigate={navigate}
+        onProfile={() => navigate('My profile')}
+        onLogout={logout}
+      />
       <div className="mx-auto max-w-6xl px-5 sm:px-9">
-        <header className="flex flex-wrap items-center gap-4 py-7">
-          <button
-            type="button"
-            onClick={() => {
-              setLogoSpin(c => c + 1);
-              navigate('Overview');
-            }}
-            className="flex cursor-pointer items-center gap-3 rounded-sm text-left focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#FF0000]"
-          >
-            <Logo
-              variant="symbol"
-              hoverAnimation="none"
-              spinTrigger={logoSpin}
-              className="h-9 w-9 shrink-0"
-            />
-            <span className="text-lg font-semibold">
-              <span className="text-[#262E40]">Volunteer</span>
-              <span className="text-[#D7142A]">Portal</span>
-            </span>
-          </button>
-
-          <span className="text-sm text-neutral-600">
-            Triton Swim Ballerup · demo club
-          </span>
-
-          <div className="ml-auto flex gap-3">
-            <button
-              className={button}
-              onClick={() => navigate('My profile')}
-            >
-              My profile
-            </button>
-
-            <button
-              className={button}
-              disabled={loggingOut}
-              onClick={logout}
-            >
-              {loggingOut ? 'Logging out…' : 'Log out'}
-            </button>
-          </div>
-        </header>
-
-        <nav
-          aria-label="Main navigation"
-          className="flex flex-wrap gap-6 border-b border-neutral-200"
-        >
-          {(
-            ['Overview', 'Find events', 'My shifts', 'Messages'] as View[]
-          ).map(item => (
-            <button
-              key={item}
-              aria-current={view === item ? 'page' : undefined}
-              className={`min-h-11 border-b-2 py-3 text-sm focus-visible:outline-2 focus-visible:outline-[#FF0000] ${
-                view === item
-                  ? 'border-[#FF0000] font-semibold'
-                  : 'border-transparent text-neutral-600'
-              }`}
-              onClick={() => navigate(item)}
-            >
-              {item}
-            </button>
-          ))}
-        </nav>
-
         <main className="py-9">
           <h1 className="text-3xl font-semibold tracking-tight">
             {selection

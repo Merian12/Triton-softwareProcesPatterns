@@ -1,4 +1,8 @@
-export type UserRole = 'volunteer' | 'organizer';
+export type UserRole = 'volunteer' | 'organizer' | 'admin';
+
+export function dashboardFor(role: UserRole): string {
+  return role === 'admin' ? '/admin-dashboard' : role === 'organizer' ? '/organizer-dashboard' : '/volunteer-dashboard';
+}
 
 export interface UserProfile {
   id: string;
@@ -22,6 +26,7 @@ export class AuthService {
     confirmPassword: string,
     role: UserRole,
   ): Promise<{ profile: UserProfile; redirectUrl: string }> {
+    if (role !== 'volunteer' && role !== 'organizer') throw new Error('Admin accounts must be assigned by an administrator.');
     const cleanEmail = email.trim();
 
     if (!cleanEmail || !cleanEmail.includes('@')) {
@@ -36,9 +41,7 @@ export class AuthService {
 
     const profile = await this.authRepo.signUp(cleanEmail, password, role);
 
-    const redirectUrl = profile.role === 'organizer'
-      ? '/organizer-dashboard'
-      : '/volunteer-dashboard';
+    const redirectUrl = dashboardFor(profile.role);
 
     return { profile, redirectUrl };
   }
@@ -55,9 +58,7 @@ export class AuthService {
 
     const profile = await this.authRepo.signIn(cleanEmail, password);
 
-    const redirectUrl = profile.role === 'organizer'
-      ? '/organizer-dashboard'
-      : '/volunteer-dashboard';
+    const redirectUrl = dashboardFor(profile.role);
 
     return { profile, redirectUrl };
   }
@@ -74,9 +75,7 @@ export class AuthService {
     }
 
     if (profile.role !== allowedRole) {
-      const fallbackUrl = profile.role === 'organizer'
-        ? '/organizer-dashboard'
-        : '/volunteer-dashboard';
+      const fallbackUrl = dashboardFor(profile.role);
       return { authorized: false, profile, redirectUrl: fallbackUrl };
     }
 
