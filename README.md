@@ -110,6 +110,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser. The app wil
 | `npm run lint` | Runs ESLint to check for code quality and syntax issues |
 | `npm test` | Runs Vitest in interactive watch mode |
 | `npm run test:run` | Runs the full unit and component test suite once |
+| `npm run test:coverage` | Runs tests and generates a full line coverage report (terminal + HTML) |
 
 ---
 

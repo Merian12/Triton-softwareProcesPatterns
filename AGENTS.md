@@ -193,5 +193,6 @@ npm run build     # Production build
 npm run start     # Start production server
 npm test          # Run Vitest in interactive watch mode
 npm run test:run  # Run all tests once
+npm run test:coverage # Run tests with V8 line coverage report
 npm run lint      # Run ESLint
 ```
