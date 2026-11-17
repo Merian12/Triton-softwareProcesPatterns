@@ -9,6 +9,7 @@ import { Logo } from '@/components/Logo';
 export const LoginForm: React.FC = () => {
   const router = useRouter();
   const [isSignUp, setIsSignUp] = useState(false);
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -23,6 +24,7 @@ export const LoginForm: React.FC = () => {
   }, []);
 
   const resetForm = () => {
+    setUsername('');
     setEmail('');
     setPassword('');
     setConfirmPassword('');
@@ -46,7 +48,7 @@ export const LoginForm: React.FC = () => {
 
     try {
       if (isSignUp) {
-        const result = await authService.register(email, password, confirmPassword, role);
+        const result = await authService.register(email, password, confirmPassword, role, username);
         router.push(result.redirectUrl);
       } else {
         const result = await authService.login(email, password);
@@ -78,6 +80,22 @@ export const LoginForm: React.FC = () => {
         </header>
 
         <form onSubmit={handleSubmit} noValidate className="login-form">
+          {isSignUp && (
+            <div className="form-group">
+              <label htmlFor="username" className="form-label">Username</label>
+              <input
+                type="text"
+                id="username"
+                className="form-input"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="your_username"
+                required
+                disabled={isLoading}
+              />
+            </div>
+          )}
+
           <div className="form-group">
             <label htmlFor="email" className="form-label">Email</label>
             <input

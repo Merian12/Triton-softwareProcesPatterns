@@ -88,10 +88,10 @@ UI (components/) → Service (services/) → Repository (repositories/)
 
 Defines all auth types and the core business logic. **Start here** to understand the domain model.
 
-- **Types:** `UserRole` (`'volunteer' | 'organizer'`), `UserProfile` (`{ id, email, role }`)
+- **Types:** `UserRole` (`'volunteer' | 'organizer'`), `UserProfile` (`{ id, email, role, username? }`)
 - **Interface:** `IAuthRepository` — contract for any auth backend
   - `signIn(email, password) → UserProfile`
-  - `signUp(email, password, role) → UserProfile`
+  - `signUp(email, password, role, username) → UserProfile`
   - `getCurrentUser() → UserProfile | null`
   - `signOut() → void`
 - **Class:** `AuthService` — business logic that consumes any `IAuthRepository`
@@ -120,11 +120,12 @@ Implements `IAuthRepository` using Supabase. Accepts an optional `SupabaseClient
 
 The app expects a `profiles` table in Supabase:
 
-| Column  | Type   | Notes                                    |
-|---------|--------|------------------------------------------|
-| `id`    | uuid   | Primary key, matches Supabase auth user ID |
-| `email` | text   | User's email address                     |
-| `role`  | text   | `'volunteer'` or `'organizer'`           |
+| Column     | Type   | Notes                                    |
+|------------|--------|------------------------------------------|
+| `id`       | uuid   | Primary key, matches Supabase auth user ID |
+| `email`    | text   | User's email address                     |
+| `role`     | text   | `'volunteer'` or `'organizer'`           |
+| `username` | text   | User's chosen username (set at sign-up)  |
 
 **RLS Note:** Ensure Row Level Security policies allow:
 - Authenticated users to `INSERT` their own profile row (for sign-up)

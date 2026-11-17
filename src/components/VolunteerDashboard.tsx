@@ -148,6 +148,7 @@ export default function VolunteerDashboard({
     <div className={portalShell}>
       <PortalTopbar
         email={profile.email}
+        username={profile.username}
         roleLabel="Volunteer"
         activeView={view === 'My profile' ? null : view}
         loggingOut={loggingOut}
@@ -474,6 +475,12 @@ export default function VolunteerDashboard({
                 Account details
               </h2>
               <dl className="mt-5 grid max-w-xl grid-cols-[90px_1fr] gap-4 text-sm">
+                {profile.username && (
+                  <>
+                    <dt>Username</dt>
+                    <dd className="break-all">{profile.username}</dd>
+                  </>
+                )}
                 <dt>Email</dt>
                 <dd className="break-all">{profile.email}</dd>
                 <dt>Role</dt>

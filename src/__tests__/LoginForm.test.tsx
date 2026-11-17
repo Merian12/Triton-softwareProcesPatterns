@@ -13,11 +13,13 @@ vi.mock('next/navigation', () => ({
 }));
 
 const mockSignIn = vi.fn();
+const mockSignUp = vi.fn();
 
 vi.mock('@/repositories/supabaseAuthRepo', () => {
   return {
     SupabaseAuthRepository: class {
       signIn = mockSignIn;
+      signUp = mockSignUp;
       getCurrentUser = vi.fn();
       signOut = vi.fn();
     },
@@ -99,5 +101,63 @@ describe('LoginForm Component', () => {
       'Invalid login credentials.'
     );
     expect(mockPush).not.toHaveBeenCalled();
+  });
+
+  it('shows Username input when toggling to Sign Up mode', async () => {
+    const user = userEvent.setup();
+    render(<LoginForm />);
+
+    expect(screen.queryByLabelText(/username/i)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /sign up/i }));
+
+    expect(screen.getByLabelText(/username/i)).toBeInTheDocument();
+  });
+
+  it('displays validation error when submitting Sign Up without a username', async () => {
+    const user = userEvent.setup();
+    render(<LoginForm />);
+
+    await user.click(screen.getByRole('button', { name: /sign up/i }));
+    await user.type(screen.getByLabelText(/email/i), 'new@example.com');
+    await user.type(screen.getByLabelText(/^password$/i), 'password123');
+    await user.type(screen.getByLabelText(/confirm password/i), 'password123');
+    await user.click(screen.getByRole('button', { name: /^sign up$/i }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Please enter a username.'
+    );
+    expect(mockSignUp).not.toHaveBeenCalled();
+    expect(mockPush).not.toHaveBeenCalled();
+  });
+
+  it('submits Sign Up with username and redirects to dashboard on success', async () => {
+    const user = userEvent.setup();
+    mockSignUp.mockResolvedValue({
+      id: 'vol-2',
+      email: 'new@example.com',
+      role: 'organizer',
+      username: 'alex_org',
+    });
+
+    render(<LoginForm />);
+
+    await user.click(screen.getByRole('button', { name: /sign up/i }));
+    await user.type(screen.getByLabelText(/username/i), 'alex_org');
+    await user.type(screen.getByLabelText(/email/i), 'new@example.com');
+    await user.type(screen.getByLabelText(/^password$/i), 'password123');
+    await user.type(screen.getByLabelText(/confirm password/i), 'password123');
+    await user.click(screen.getByRole('button', { name: /^organizer$/i }));
+    await user.click(screen.getByRole('button', { name: /^sign up$/i }));
+
+    await waitFor(() => {
+      expect(mockSignUp).toHaveBeenCalledWith(
+        'new@example.com',
+        'password123',
+        'organizer',
+        'alex_org'
+      );
+      expect(mockPush).toHaveBeenCalledWith('/organizer-dashboard');
+    });
   });
 });

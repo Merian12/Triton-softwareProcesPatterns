@@ -88,7 +88,7 @@ export default function OrganizerDashboard({ profile, onLogout }: { profile: Use
 
   return <div lang="en" className={portalShell}>
     <a href="#admin-main" className="sr-only focus:not-sr-only focus:block focus:p-4">Skip to content</a>
-    <OrganizerTopbar roleLabel={profile.role === 'admin' ? 'Admin' : 'Organizer'} email={profile.email} activeView={editor ? null : view} loggingOut={loggingOut} onNavigate={navigate} onLogout={logout} />
+    <OrganizerTopbar roleLabel={profile.role === 'admin' ? 'Admin' : 'Organizer'} email={profile.email} username={profile.username} activeView={editor ? null : view} loggingOut={loggingOut} onNavigate={navigate} onLogout={logout} />
     <div className={portalContainer}>
       <main id="admin-main" className="py-7 sm:py-8">
         {error && <p role="alert" className="mb-5 text-sm text-red-800">{error}</p>}

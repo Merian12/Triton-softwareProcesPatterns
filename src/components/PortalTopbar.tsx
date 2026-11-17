@@ -8,6 +8,7 @@ export type PortalView = 'Overview' | 'Find events' | 'My shifts' | 'Messages';
 
 type Props = {
   email: string;
+  username?: string;
   roleLabel?: string;
   onProfile?: () => void;
   activeView: PortalView | null;
@@ -21,6 +22,7 @@ const dropdownItem =
 
 export default function PortalTopbar({
   email,
+  username,
   activeView,
   loggingOut,
   onNavigate,
@@ -32,7 +34,8 @@ export default function PortalTopbar({
   const trigger = useRef<HTMLElement>(null);
   const [logoSpin, setLogoSpin] = useState(0);
   const emailName = email.split('@')[0].split(/[._+-]/)[0];
-  const name = emailName ? emailName[0].toLocaleUpperCase('en-GB') + emailName.slice(1) : 'My account';
+  const fallbackName = emailName ? emailName[0].toLocaleUpperCase('en-GB') + emailName.slice(1) : 'My account';
+  const name = username?.trim() || fallbackName;
 
   useEffect(() => {
     function closeOutside(event: PointerEvent) {

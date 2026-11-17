@@ -8,11 +8,12 @@ export interface UserProfile {
   id: string;
   email: string;
   role: UserRole;
+  username?: string;
 }
 
 export interface IAuthRepository {
   signIn(email: string, password: string): Promise<UserProfile>;
-  signUp(email: string, password: string, role: UserRole): Promise<UserProfile>;
+  signUp(email: string, password: string, role: UserRole, username: string): Promise<UserProfile>;
   getCurrentUser(): Promise<UserProfile | null>;
   signOut(): Promise<void>;
 }
@@ -25,10 +26,15 @@ export class AuthService {
     password: string,
     confirmPassword: string,
     role: UserRole,
+    username: string = '',
   ): Promise<{ profile: UserProfile; redirectUrl: string }> {
     if (role !== 'volunteer' && role !== 'organizer') throw new Error('Admin accounts must be assigned by an administrator.');
+    const cleanUsername = username.trim();
     const cleanEmail = email.trim();
 
+    if (!cleanUsername) {
+      throw new Error('Please enter a username.');
+    }
     if (!cleanEmail || !cleanEmail.includes('@')) {
       throw new Error('Please enter a valid email address.');
     }
@@ -39,7 +45,7 @@ export class AuthService {
       throw new Error('Passwords do not match.');
     }
 
-    const profile = await this.authRepo.signUp(cleanEmail, password, role);
+    const profile = await this.authRepo.signUp(cleanEmail, password, role, cleanUsername);
 
     const redirectUrl = dashboardFor(profile.role);
 
