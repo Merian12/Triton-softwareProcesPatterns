@@ -120,6 +120,7 @@ export default function VolunteerDashboard({
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [event, setEvent] = useState<Event | null>(null);
   const [selection, setSelection] = useState<{
+
     event: Event;
     shift: Shift;
   } | null>(null);
@@ -420,82 +421,87 @@ export default function VolunteerDashboard({
     <div className="min-h-screen bg-white text-neutral-900">
       <div className="mx-auto max-w-6xl px-5 sm:px-9">
 
-        {/* Header */}
-        <header className="flex flex-wrap items-center gap-4 py-7">
-          <button
-            type="button"
-            onClick={() => {
-              setLogoSpin(c => c + 1);
-              navigate('Overview');
-            }}
-            className="flex cursor-pointer items-center gap-3 rounded-sm text-left focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#FF0000]"
-          >
-            <Logo
-              variant="symbol"
-              hoverAnimation="none"
-              spinTrigger={logoSpin}
-              className="h-9 w-9 shrink-0"
-            />
+       
+{/* Original header */}
+<header className="flex flex-wrap items-center gap-4 py-7">
+  <button
+    type="button"
+    onClick={() => {
+      setLogoSpin(c => c + 1);
+      navigate('Overview');
+    }}
+    className="flex cursor-pointer items-center gap-3 rounded-sm text-left focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#FF0000]"
+  >
+    <Logo
+      variant="symbol"
+      hoverAnimation="none"
+      spinTrigger={logoSpin}
+      className="h-9 w-9 shrink-0"
+    />
 
-            <span className="text-lg font-semibold">
-              <span className="text-[#262E40]">
-                Volunteer
-              </span>
-              <span className="text-[#D7142A]">
-                Portal
-              </span>
-            </span>
-          </button>
+    <span className="text-lg font-semibold">
+      <span className="text-[#262E40]">Volunteer</span>
+      <span className="text-[#D7142A]">Portal</span>
+    </span>
+  </button>
 
-          <span className="text-sm text-neutral-600">
-            Triton Swim Ballerup · demo club
-          </span>
+  <span className="text-sm text-neutral-600">
+    Triton Swim Ballerup · demo club
+  </span>
 
-          <div className="ml-auto flex gap-3">
-            <button
-              type="button"
-              className={button}
-              onClick={() => navigate('My profile')}
-            >
-              My profile
-            </button>
+  <div className="ml-auto flex gap-3">
+    <button
+      type="button"
+      className={button}
+      onClick={() => navigate('My profile')}
+    >
+      My profile
+    </button>
 
-            <button
-              type="button"
-              className={button}
-              disabled={loggingOut}
-              onClick={logout}
-            >
-              {loggingOut ? 'Logging out…' : 'Log out'}
-            </button>
-          </div>
-        </header>
+    <button
+      type="button"
+      className={button}
+      disabled={loggingOut}
+      onClick={logout}
+    >
+      {loggingOut ? 'Logging out…' : 'Log out'}
+    </button>
+  </div>
+</header>
 
-        {/* Navigation */}
-        <nav
-          aria-label="Main navigation"
-          className="flex flex-wrap gap-6 border-b border-neutral-200"
-        >
-          {views
-            .filter(item => item !== 'My profile')
-            .map(item => (
-              <button
-                type="button"
-                key={item}
-                aria-current={
-                  view === item ? 'page' : undefined
-                }
-                className={`min-h-11 border-b-2 py-3 text-sm focus-visible:outline-2 focus-visible:outline-[#FF0000] ${
-                  view === item
-                    ? 'border-[#FF0000] font-semibold'
-                    : 'border-transparent text-neutral-600'
-                }`}
-                onClick={() => navigate(item)}
-              >
-                {item}
-              </button>
-            ))}
-        </nav>
+{/* Navigation */}
+<nav
+  aria-label="Main navigation"
+  className="flex flex-wrap gap-6 border-b border-neutral-200"
+>
+  {(
+    [
+      'Overview',
+      'Find events',
+      'My shifts',
+      'Calendar',
+      'Messages',
+    ] as const
+  ).map(item => (
+    <button
+      type="button"
+      key={item}
+      aria-current={view === item ? 'page' : undefined}
+      className={`min-h-11 border-b-2 py-3 text-sm focus-visible:outline-2 focus-visible:outline-[#FF0000] ${
+        view === item
+          ? 'border-[#FF0000] font-semibold'
+          : 'border-transparent text-neutral-600'
+      }`}
+      onClick={() => navigate(item)}
+    >
+      {item}
+    </button>
+  ))}
+</nav>
+
+
+   
+      
 
         <main className="py-9">
 
