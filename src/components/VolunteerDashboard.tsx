@@ -219,8 +219,7 @@ export default function VolunteerDashboard({
   }, [loadData]);
 
   useEffect(() => {
-    const requestedView = searchParams.get('view');
-
+    const requestedView = searchParams?.get('view');
     if (
       requestedView &&
       views.includes(requestedView as View)
