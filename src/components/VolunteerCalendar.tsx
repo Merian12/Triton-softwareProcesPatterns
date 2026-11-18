@@ -2,184 +2,213 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
+
+type VolunteerCalendarProps = {
+  onOpenCalendar?: () => void;
+};
 
 type Shift = {
   id: string;
-  title: string;
-  location: string | null;
   starts_at: string;
   ends_at: string;
 };
 
-type Registration = {
-  shift_id: string;
-  status: string;
-};
-
-export default function VolunteerCalendar() {
-  const router = useRouter();
-
-  const [today] = useState(() => new Date());
-  const [shifts, setShifts] = useState<Shift[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+export default function VolunteerCalendar({
+  onOpenCalendar,
+}: VolunteerCalendarProps) {
+  const [today, setToday] = useState<Date | null>(null);
+  const [shiftsToday, setShiftsToday] = useState<Shift[]>([]);
 
   useEffect(() => {
-    let active = true;
+    setToday(new Date());
 
-    async function fetchShifts() {
-      setLoading(true);
-      setError(null);
+    const interval = setInterval(() => {
+      setToday(new Date());
+    }, 60_000);
 
-      const { data: userData, error: userError } =
-        await supabase.auth.getUser();
+    return () => clearInterval(interval);
+  }, []);
 
-      if (!active) return;
+  const dateKey = today?.toDateString();
 
-      if (userError || !userData.user) {
-        setShifts([]);
-        setError('Unable to identify the signed-in volunteer.');
-        setLoading(false);
+  useEffect(() => {
+    if (!today) return;
+
+    let cancelled = false;
+
+    async function loadShifts() {
+      const { data: authData } = await supabase.auth.getUser();
+      const user = authData.user;
+
+      if (!user) {
+        if (!cancelled) setShiftsToday([]);
         return;
       }
 
       const { data: registrations, error: registrationError } =
         await supabase
           .from('registrations')
-          .select('shift_id, status')
-          .eq('volunteer_id', userData.user.id)
-          .in('status', ['registered', 'confirmed']);
+          .select('shift_id')
+          .eq('volunteer_id', user.id)
+          .eq('status', 'registered');
 
-      if (!active) return;
+      if (registrationError || !registrations) return;
 
-      if (registrationError) {
-        setError(registrationError.message);
-        setShifts([]);
-        setLoading(false);
-        return;
-      }
-
-      const shiftIds = [
-        ...new Set(
-          ((registrations ?? []) as Registration[]).map(
-            registration => registration.shift_id
-          )
-        ),
-      ];
+      const shiftIds = registrations.map(
+        registration => registration.shift_id
+      );
 
       if (shiftIds.length === 0) {
-        setShifts([]);
-        setLoading(false);
+        if (!cancelled) setShiftsToday([]);
         return;
       }
 
-      const { data: shiftData, error: shiftError } =
+      const start = new Date();
+      start.setHours(0, 0, 0, 0);
+
+      const end = new Date();
+      end.setHours(23, 59, 59, 999);
+
+      const { data: shifts, error: shiftsError } =
         await supabase
           .from('shifts')
-          .select('id, title, location, starts_at, ends_at')
+          .select('id, starts_at, ends_at')
           .in('id', shiftIds)
-          .order('starts_at', { ascending: true });
+          .lte('starts_at', end.toISOString())
+          .gte('ends_at', start.toISOString());
 
-      if (!active) return;
-
-      if (shiftError) {
-        setError(shiftError.message);
-        setShifts([]);
-      } else {
-        setShifts((shiftData ?? []) as Shift[]);
-      }
-
-      setLoading(false);
-    }
-
-    fetchShifts();
-
-    function handleVisibilityChange() {
-      if (document.visibilityState === 'visible') {
-        fetchShifts();
+      if (!cancelled && !shiftsError) {
+        setShiftsToday((shifts ?? []) as Shift[]);
       }
     }
 
-    document.addEventListener(
-      'visibilitychange',
-      handleVisibilityChange
-    );
+    void loadShifts();
 
     return () => {
-      active = false;
-      document.removeEventListener(
-        'visibilitychange',
-        handleVisibilityChange
-      );
+      cancelled = true;
     };
-  }, []);
+  }, [dateKey]);
 
-  const todayShifts = shifts.filter(shift => {
-    const date = new Date(shift.starts_at);
+  const weekday = today
+    ? today
+        .toLocaleDateString('en-GB', {
+          weekday: 'long',
+        })
+        .toUpperCase()
+    : '';
 
-    return (
-      date.getFullYear() === today.getFullYear() &&
-      date.getMonth() === today.getMonth() &&
-      date.getDate() === today.getDate()
-    );
-  });
+  const day = today ? today.getDate() : '';
 
-  const weekday = today.toLocaleDateString('en-GB', {
-    weekday: 'long',
-  });
+  const shiftText =
+    shiftsToday.length === 0
+      ? 'No shifts today'
+      : shiftsToday.length === 1
+        ? '1 shift today'
+        : `${shiftsToday.length} shifts today`;
 
   return (
-    <div className="relative z-40 flex w-full justify-end">
-      <button
-        type="button"
-        onClick={() => router.push('/volunteer-calendar')}
-        aria-label="Open volunteer calendar"
-        className="group flex w-[260px] cursor-pointer flex-col overflow-hidden rounded-xl border border-neutral-300 bg-white text-center transition-colors hover:border-[#FF0000] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#FF0000]"
+    <button
+      type="button"
+      onClick={onOpenCalendar}
+      aria-label="Open calendar"
+      className="
+        group relative block
+        h-[250px] w-[260px]
+        shrink-0 overflow-hidden
+        rounded-[30px]
+        border border-neutral-200
+        bg-white
+        text-center
+        transition-colors duration-200
+        hover:border-[#FF0000]/40
+        focus-visible:outline-2
+        focus-visible:outline-offset-2
+        focus-visible:outline-[#FF0000]
+      "
+    >
+      {/* Solid red curved header and navy swoosh */}
+      <svg
+        viewBox="0 0 260 100"
+        preserveAspectRatio="none"
+        className="pointer-events-none absolute inset-x-0 top-0 h-[100px] w-full"
+        aria-hidden="true"
       >
-        {/* BLACK CALENDAR HEADER */}
-        <div className="flex h-[42px] w-full shrink-0 items-center justify-center bg-black">
-          <span className="text-sm font-semibold uppercase tracking-[0.12em] text-white">
-            {weekday}
-          </span>
+        {/* Flat red header */}
+        <path
+          d="
+            M 0 0
+            H 260
+            V 42
+            C 190 10, 100 48, 0 100
+            Z
+          "
+          fill="#D7142A"
+        />
+
+        {/* Navy swoosh */}
+        <path
+          d="
+            M 0 55
+            C 22 67, 52 56, 100 43
+            C 65 62, 25 83, 0 100
+            Z
+          "
+          fill="#262E40"
+        />
+
+        {/* Thin red accent */}
+        <path
+          d="
+            M 0 100
+            C 38 62, 91 45, 145 34
+            C 90 51, 37 75, 0 100
+            Z
+          "
+          fill="#C8101E"
+        />
+      </svg>
+
+      {/* Calendar content */}
+      <div className="absolute inset-0 z-10 flex flex-col items-center">
+        <div className="mt-[78px] text-[17px] font-bold tracking-[0.08em] text-[#1C1C1C]">
+          {weekday}
         </div>
 
-        {/* CALENDAR BODY */}
-        <div className="flex h-[208px] w-full flex-col items-center justify-center px-4 py-4">
-          <span className="text-7xl font-bold leading-none tracking-tight text-[#FF0000]">
-            {today.getDate()}
-          </span>
-
-          <span className="mt-4 text-xs font-medium text-neutral-600">
-            {loading
-              ? 'Loading shifts...'
-              : error
-                ? 'Unable to load shifts'
-                : todayShifts.length === 0
-                  ? 'No shifts today'
-                  : todayShifts.length === 1
-                    ? '1 shift today'
-                    : `${todayShifts.length} shifts today`}
-          </span>
-
-          <span className="mt-3 text-neutral-600 transition-transform group-hover:translate-y-0.5">
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <path d="m6 9 6 6 6-6" />
-            </svg>
-          </span>
+        <div
+          className="
+            mt-[-5px]
+            font-serif
+            text-[105px]
+            font-bold
+            leading-[1.08]
+            tracking-[-0.07em]
+            text-[#1C1C1C]
+          "
+        >
+          {day}
         </div>
-      </button>
-    </div>
+
+        <div className="mt-[-3px] text-[15px] text-neutral-600">
+          {shiftText}
+        </div>
+
+        <div className="mt-auto mb-[13px] transition-transform duration-200 group-hover:translate-y-1">
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#262E40"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="m6 9 6 6 6-6" />
+          </svg>
+        </div>
+      </div>
+    </button>
   );
 }

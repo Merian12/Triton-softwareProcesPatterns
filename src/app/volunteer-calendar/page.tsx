@@ -102,7 +102,7 @@ export default function VolunteerCalendarPage() {
               {/* Calendar page content */}
            <main className="pt-3 pb-4">
   <h1 className="text-3xl font-semibold tracking-tight">
-    My calendar
+
   </h1>
 
   <div className="mt-2">

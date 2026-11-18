@@ -1,6 +1,7 @@
 
 'use client';
-import { useState, useEffect } from 'react';
+
+import { useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import {
   portalButton as button,
@@ -8,19 +9,102 @@ import {
 } from './portalStyles';
 import type { UserProfile } from '@/services/authService';
 import { Logo } from '@/components/Logo';
-import { volunteerDemoEvents as events } from './volunteerDemoData';
 import VolunteerCalendar from '@/components/VolunteerCalendar';
+import ExpandedCalendar from '@/components/ExpandedCalendar';
+import { supabase } from '@/lib/supabaseClient';
+import MyShiftNotes from '@/components/MyShiftNotes';
 
 type View =
   | 'Overview'
   | 'Find events'
   | 'My shifts'
+  | 'Calendar'
   | 'Messages'
   | 'My profile';
 
-type Shift = (typeof events)[number]['shifts'][number];
-type Event = (typeof events)[number];
-type Booking = { event: Event; shift: Shift };
+type Shift = {
+  id: string;
+  event_id: string;
+  title: string | null;
+  description: string | null;
+  location: string | null;
+  starts_at: string;
+  ends_at: string;
+  capacity: number | null;
+  registered_count: number;
+  status: string;
+};
+
+type Event = {
+  id: string;
+  title?: string | null;
+  name?: string | null;
+  description?: string | null;
+  location?: string | null;
+  starts_at?: string | null;
+  shifts: Shift[];
+};
+
+type Booking = {
+  id: string;
+  shift_id: string;
+  status: string;
+  event: Event;
+  shift: Shift;
+};
+
+type RegistrationRow = {
+  id: string;
+  shift_id: string;
+  status: string;
+};
+
+const views: View[] = [
+  'Overview',
+  'Find events',
+  'My shifts',
+  'Calendar',
+  'Messages',
+  'My profile',
+];
+
+function eventName(event: Event) {
+  return event.title || event.name || 'Untitled event';
+}
+
+function shiftName(shift: Shift) {
+  return shift.title || 'Volunteer shift';
+}
+
+function formatDate(value: string) {
+  return new Date(value).toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+}
+
+function formatTime(value: string) {
+  return new Date(value).toLocaleTimeString('en-GB', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+function shiftTime(shift: Shift) {
+  return `${formatTime(shift.starts_at)} – ${formatTime(shift.ends_at)}`;
+}
+
+function availablePlaces(shift: Shift) {
+  if (shift.status !== 'open') return 0;
+
+  if (shift.capacity === null) return null;
+
+  return Math.max(
+    0,
+    shift.capacity - shift.registered_count
+  );
+}
 
 export default function VolunteerDashboard({
   profile,
@@ -29,44 +113,139 @@ export default function VolunteerDashboard({
   profile: UserProfile;
   onLogout: () => Promise<void>;
 }) {
+  const searchParams = useSearchParams();
+
   const [view, setView] = useState<View>('Overview');
+  const [events, setEvents] = useState<Event[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [event, setEvent] = useState<Event | null>(null);
-  const [selection, setSelection] = useState<Booking | null>(null);
+  const [selection, setSelection] = useState<{
+    event: Event;
+    shift: Shift;
+  } | null>(null);
+
   const [accepted, setAccepted] = useState(false);
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<string[]>([]);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [registering, setRegistering] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [logoSpin, setLogoSpin] = useState(0);
 
-  const searchParams = useSearchParams();
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    setError('');
 
-useEffect(() => {
-  const requestedView = searchParams.get('view');
+    try {
+      const [
+        eventsResult,
+        shiftsResult,
+        registrationsResult,
+      ] = await Promise.all([
+        supabase.from('events').select('*'),
+        supabase
+          .from('shifts')
+          .select('*')
+          .order('starts_at', { ascending: true }),
+        supabase
+          .from('registrations')
+          .select('id, shift_id, status')
+          .eq('volunteer_id', profile.id),
+      ]);
 
-  const validViews: View[] = [
-    'Overview',
-    'Find events',
-    'My shifts',
-    'Messages',
-    'My profile',
-  ];
+      if (eventsResult.error) throw eventsResult.error;
+      if (shiftsResult.error) throw shiftsResult.error;
+      if (registrationsResult.error) {
+        throw registrationsResult.error;
+      }
 
-  if (requestedView && validViews.includes(requestedView as View)) {
-    navigate(requestedView as View);
-  }
-}, [searchParams]);
+      const allShifts = (shiftsResult.data ?? []) as Shift[];
 
-  const registered = (e: Event, s: Shift) =>
+      const allEvents: Event[] = (
+        eventsResult.data ?? []
+      ).map(row => ({
+        ...row,
+        shifts: allShifts.filter(
+          shift => shift.event_id === row.id
+        ),
+      }));
+
+      const registrations = (
+        registrationsResult.data ?? []
+      ) as RegistrationRow[];
+
+      const registeredBookings: Booking[] = registrations
+        .filter(row => row.status === 'registered')
+        .flatMap(row => {
+          const shift = allShifts.find(
+            item => item.id === row.shift_id
+          );
+
+          if (!shift) return [];
+
+          const matchingEvent = allEvents.find(
+            item => item.id === shift.event_id
+          );
+
+          if (!matchingEvent) return [];
+
+          return [{
+            id: row.id,
+            shift_id: row.shift_id,
+            status: row.status,
+            event: matchingEvent,
+            shift,
+          }];
+        });
+
+      setEvents(allEvents);
+      setBookings(registeredBookings);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Could not load volunteer data.'
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, [profile.id]);
+
+  useEffect(() => {
+    void loadData();
+  }, [loadData]);
+
+  useEffect(() => {
+    const requestedView = searchParams.get('view');
+
+    if (
+      requestedView &&
+      views.includes(requestedView as View)
+    ) {
+      setView(requestedView as View);
+      setEvent(null);
+      setSelection(null);
+    }
+  }, [searchParams]);
+
+  const registered = (shift: Shift) =>
     bookings.some(
-      b => b.event.id === e.id && b.shift.id === s.id
+      booking => booking.shift_id === shift.id
     );
 
-  const next = [...bookings].sort(
-    (a, b) => a.event.day - b.event.day
-  )[0];
+  const next = [...bookings]
+    .filter(
+      booking =>
+        new Date(booking.shift.ends_at).getTime() >
+        Date.now()
+    )
+    .sort(
+      (a, b) =>
+        new Date(a.shift.starts_at).getTime() -
+        new Date(b.shift.starts_at).getTime()
+    )[0];
 
   function navigate(nextView: View) {
     setView(nextView);
@@ -77,42 +256,63 @@ useEffect(() => {
     setAccepted(false);
   }
 
-  function choose(e: Event, s: Shift) {
-    setSelection({ event: e, shift: s });
+  function choose(selectedEvent: Event, shift: Shift) {
+    setSelection({
+      event: selectedEvent,
+      shift,
+    });
+
     setAccepted(false);
     setNotice('');
     setError('');
   }
 
-  function confirm() {
-    if (!selection || !accepted) return;
+  async function confirm() {
+    if (!selection || !accepted || registering) return;
 
-    if (
-      registered(selection.event, selection.shift) ||
-      selection.shift.spots < 1
-    ) {
-      setError(
-        'This shift is unavailable. Please choose another shift.'
-      );
+    if (registered(selection.shift)) {
+      setError('You are already registered for this shift.');
       return;
     }
 
-    const selected = selection;
+    if (availablePlaces(selection.shift) === 0) {
+      setError('This shift is unavailable.');
+      return;
+    }
 
-    setBookings(previous =>
-      previous.some(
-        b =>
-          b.event.id === selected.event.id &&
-          b.shift.id === selected.shift.id
-      )
-        ? previous
-        : [...previous, selected]
-    );
+    setRegistering(true);
+    setError('');
+
+    console.log('REGISTERING SHIFT:', selection.shift.id);
+    console.log('VOLUNTEER ID:', profile.id);
+
+    const { data, error: registrationError } = await supabase
+      .from('registrations')
+      .insert({
+        shift_id: selection.shift.id,
+        volunteer_id: profile.id,
+        status: 'registered',
+      })
+      .select();
+
+    console.log('REGISTRATION RESULT:', data);
+    console.log('REGISTRATION ERROR:', registrationError);
+
+    if (registrationError) {
+      setError(registrationError.message);
+      setRegistering(false);
+      await loadData();
+      return;
+    }
+
+    await loadData();
 
     navigate('My shifts');
     setNotice(
-      'Registration confirmed in this demo. Your shift is shown below.'
+      'Registration confirmed. Your shift has been saved.'
     );
+
+    setRegistering(false);
   }
 
   async function logout() {
@@ -128,47 +328,92 @@ useEffect(() => {
   }
 
   function eventList() {
-    return events.map(e => (
-      <article
-        key={e.id}
-        className="mt-4 grid grid-cols-[44px_1fr] items-center gap-4 rounded-xl border border-[#FF0000]/40 p-5 sm:grid-cols-[44px_1fr_auto]"
-      >
-        <div className="tabular-nums">
-          <span className="block text-xl">{e.day}</span>
-          <span className="text-sm text-neutral-600">
-            May
-          </span>
-        </div>
+    const upcomingEvents = events
+      .filter(e =>
+        e.shifts.some(
+          s => new Date(s.ends_at).getTime() > Date.now()
+        )
+      )
+      .sort((a, b) => {
+        const aDate = Math.min(
+          ...a.shifts.map(s => new Date(s.starts_at).getTime())
+        );
+        const bDate = Math.min(
+          ...b.shifts.map(s => new Date(s.starts_at).getTime())
+        );
 
-        <div>
-          <h3 className="font-semibold">{e.name}</h3>
+        return aDate - bDate;
+      });
 
-          <p className="mt-1 text-sm text-neutral-600">
-            {e.place} · {e.shifts.length}{' '}
-            {e.shifts.length === 1 ? 'shift' : 'shifts'}
-          </p>
+    if (!upcomingEvents.length) {
+      return (
+        <p className="mt-5 text-neutral-600">
+          No upcoming events available.
+        </p>
+      );
+    }
 
-          <p className="mt-1 text-sm text-neutral-600">
-            {e.shifts.reduce(
-              (sum, s) =>
-                sum + s.spots - (registered(e, s) ? 1 : 0),
-              0
-            )}{' '}
-            places available
-          </p>
-        </div>
+    return upcomingEvents.map(e => {
+      const firstShift = [...e.shifts].sort(
+        (a, b) =>
+          new Date(a.starts_at).getTime() -
+          new Date(b.starts_at).getTime()
+      )[0];
 
-        <button
-          className={`${button} col-start-2 justify-self-start sm:col-start-auto`}
-          onClick={() => {
-            setEvent(e);
-            setNotice('');
-          }}
+      const date = new Date(firstShift.starts_at);
+
+      const places = e.shifts.reduce((total, shift) => {
+        const available = availablePlaces(shift);
+        return total + (available ?? 0);
+      }, 0);
+
+      return (
+        <article
+          key={e.id}
+          className="mt-4 grid grid-cols-[44px_1fr] items-center gap-4 rounded-xl border border-[#FF0000]/40 p-5 sm:grid-cols-[44px_1fr_auto]"
         >
-          View shifts
-        </button>
-      </article>
-    ));
+          <div className="tabular-nums">
+            <span className="block text-xl">
+              {date.getDate()}
+            </span>
+
+            <span className="text-sm text-neutral-600">
+              {date.toLocaleDateString('en-GB', {
+                month: 'short',
+              })}
+            </span>
+          </div>
+
+          <div>
+            <h3 className="font-semibold">
+              {eventName(e)}
+            </h3>
+
+            <p className="mt-1 text-sm text-neutral-600">
+              {e.location || firstShift.location || 'Location TBA'}
+              {' · '}
+              {e.shifts.length}
+              {e.shifts.length === 1 ? ' shift' : ' shifts'}
+            </p>
+
+            <p className="mt-1 text-sm text-neutral-600">
+              {places} places available
+            </p>
+          </div>
+
+          <button
+            type="button"
+            className={`${button} col-start-2 justify-self-start sm:col-start-auto`}
+            onClick={() => {
+              setEvent(e);
+              setNotice('');
+            }}
+          >
+            View shifts
+          </button>
+        </article>
+      );
+    });
   }
 
   return (
@@ -208,6 +453,7 @@ useEffect(() => {
 
           <div className="ml-auto flex gap-3">
             <button
+              type="button"
               className={button}
               onClick={() => navigate('My profile')}
             >
@@ -215,6 +461,7 @@ useEffect(() => {
             </button>
 
             <button
+              type="button"
               className={button}
               disabled={loggingOut}
               onClick={logout}
@@ -229,43 +476,81 @@ useEffect(() => {
           aria-label="Main navigation"
           className="flex flex-wrap gap-6 border-b border-neutral-200"
         >
-          {(
-            [
-              'Overview',
-              'Find events',
-              'My shifts',
-              'Messages',
-            ] as View[]
-          ).map(item => (
-            <button
-              key={item}
-              aria-current={
-                view === item ? 'page' : undefined
-              }
-              className={`min-h-11 border-b-2 py-3 text-sm focus-visible:outline-2 focus-visible:outline-[#FF0000] ${
-                view === item
-                  ? 'border-[#FF0000] font-semibold'
-                  : 'border-transparent text-neutral-600'
-              }`}
-              onClick={() => navigate(item)}
-            >
-              {item}
-            </button>
-          ))}
+          {views
+            .filter(item => item !== 'My profile')
+            .map(item => (
+              <button
+                type="button"
+                key={item}
+                aria-current={
+                  view === item ? 'page' : undefined
+                }
+                className={`min-h-11 border-b-2 py-3 text-sm focus-visible:outline-2 focus-visible:outline-[#FF0000] ${
+                  view === item
+                    ? 'border-[#FF0000] font-semibold'
+                    : 'border-transparent text-neutral-600'
+                }`}
+                onClick={() => navigate(item)}
+              >
+                {item}
+              </button>
+            ))}
         </nav>
 
         <main className="py-9">
-          <h1 className="text-3xl font-semibold tracking-tight">
-            {selection
-              ? 'Review your shift'
-              : event
-                ? event.name
-                : view}
-          </h1>
 
-          <p className="mt-3 break-words text-sm text-neutral-600">
-            Signed in as {profile.email}
-          </p>
+          {/* Back arrow and page heading */}
+          {view !== 'Calendar' && (
+            <>
+              {(event || selection) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (selection) {
+                      setSelection(null);
+                    } else {
+                      setEvent(null);
+                    }
+                  }}
+                  aria-label="Go back"
+                  title="Go back"
+                  className="mb-5 flex h-10 w-10 items-center justify-center rounded-md text-neutral-900 transition-colors hover:bg-neutral-100 hover:text-[#FF0000]"
+                >
+                  <svg
+                    width="26"
+                    height="26"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="m15 18-6-6 6-6" />
+                  </svg>
+                </button>
+              )}
+
+              <h1 className="text-3xl font-semibold tracking-tight">
+                {selection
+                  ? 'Review your shift'
+                  : event
+                    ? eventName(event)
+                    : view}
+              </h1>
+
+              <p className="mt-3 break-words text-sm text-neutral-600">
+                Signed in as {profile.email}
+              </p>
+            </>
+          )}
+
+          {loading && (
+            <p className="mt-5 text-sm text-neutral-500">
+              Loading events and registrations...
+            </p>
+          )}
 
           {notice && (
             <p
@@ -277,41 +562,31 @@ useEffect(() => {
           )}
 
           {error && (
-            <p
-              role="alert"
-              className="mt-6 text-red-800"
-            >
+            <p role="alert" className="mt-6 text-red-800">
               {error}
             </p>
           )}
 
           {selection ? (
             <section className="mt-8 max-w-2xl">
-              <button
-                className={button}
-                onClick={() => setSelection(null)}
-              >
-                Back to shifts
-              </button>
-
               <h2 className="mt-7 text-xl font-semibold">
-                {selection.shift.name}
+                {shiftName(selection.shift)}
               </h2>
 
               <dl className="mt-5 grid grid-cols-[90px_1fr] gap-4 text-sm sm:grid-cols-[120px_1fr]">
                 {Object.entries({
-                  Event: selection.event.name,
-                  Date: `${selection.event.day} May 2027`,
-                  Time: selection.shift.time,
-                  Location: selection.shift.place,
-                  Meeting: selection.shift.meet,
-                  Task: selection.shift.task,
-                  Bring: selection.shift.need,
+                  Event: eventName(selection.event),
+                  Date: formatDate(selection.shift.starts_at),
+                  Time: shiftTime(selection.shift),
+                  Location:
+                    selection.shift.location ||
+                    selection.event.location ||
+                    'TBA',
+                  Task:
+                    selection.shift.description ||
+                    'No description provided.',
                 }).map(([key, value]) => (
-                  <div
-                    key={key}
-                    className="contents"
-                  >
+                  <div key={key} className="contents">
                     <dt className="text-neutral-600">
                       {key}
                     </dt>
@@ -320,14 +595,12 @@ useEffect(() => {
                 ))}
               </dl>
 
-              {registered(
-                selection.event,
-                selection.shift
-              ) ? (
+              {registered(selection.shift) ? (
                 <div className="mt-6">
-                  <p>Registered in this demo.</p>
+                  <p>You are registered for this shift.</p>
 
                   <button
+                    type="button"
                     className={`${button} mt-4`}
                     onClick={() => navigate('Messages')}
                   >
@@ -355,74 +628,84 @@ useEffect(() => {
                   </label>
 
                   <button
+                    type="button"
                     className={`${primary} mt-5`}
-                    disabled={!accepted}
+                    disabled={
+                      !accepted ||
+                      registering ||
+                      loading ||
+                      availablePlaces(selection.shift) === 0
+                    }
                     onClick={confirm}
                   >
-                    Confirm registration
+                    {registering
+                      ? 'Registering...'
+                      : 'Confirm registration'}
                   </button>
                 </>
               )}
             </section>
           ) : event ? (
             <section className="mt-8 max-w-3xl">
-              <button
-                className={button}
-                onClick={() => setEvent(null)}
-              >
-                Back to events
-              </button>
-
               <p className="my-6 text-neutral-600">
-                {event.desc}
+                {event.description || ''}
               </p>
 
-              {event.shifts.map(s => (
-                <article
-                  key={s.id}
-                  className="flex flex-wrap items-center justify-between gap-4 border-b border-neutral-200 py-5"
-                >
-                  <div>
-                    <h2 className="font-semibold">
-                      {s.name}
-                    </h2>
+              {event.shifts.map(s => {
+                const available = availablePlaces(s);
+                const isRegistered = registered(s);
+                const full = available === 0;
 
-                    <p className="mt-1 text-sm text-neutral-600">
-                      {s.time} · {s.place}
-                    </p>
-
-                    <p className="mt-2 text-sm">
-                      {registered(event, s)
-                        ? 'Registered'
-                        : s.spots
-                          ? `${s.spots} places available`
-                          : 'Fully booked'}
-                    </p>
-                  </div>
-
-                  <button
-                    className={button}
-                    disabled={
-                      registered(event, s) || !s.spots
-                    }
-                    onClick={() => choose(event, s)}
+                return (
+                  <article
+                    key={s.id}
+                    className="flex flex-wrap items-center justify-between gap-4 border-b border-neutral-200 py-5"
                   >
-                    {registered(event, s)
-                      ? 'Registered'
-                      : s.spots
-                        ? 'Choose shift'
-                        : 'Fully booked'}
-                  </button>
-                </article>
-              ))}
+                    <div>
+                      <h2 className="font-semibold">
+                        {shiftName(s)}
+                      </h2>
+
+                      <p className="mt-1 text-sm text-neutral-600">
+                        {formatDate(s.starts_at)}
+                        {' · '}
+                        {shiftTime(s)}
+                        {' · '}
+                        {s.location || event.location || 'TBA'}
+                      </p>
+
+                      <p className="mt-2 text-sm">
+                        {isRegistered
+                          ? 'Registered'
+                          : full
+                            ? 'Fully booked'
+                            : available === null
+                              ? 'Places available'
+                              : `${available} places available`}
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      className={button}
+                      disabled={
+                        isRegistered || full || loading
+                      }
+                      onClick={() => choose(event, s)}
+                    >
+                      {isRegistered
+                        ? 'Registered'
+                        : full
+                          ? 'Fully booked'
+                          : 'Choose shift'}
+                    </button>
+                  </article>
+                );
+              })}
             </section>
           ) : view === 'Overview' ? (
             <div className="mt-9">
-
-              {/* Next shift section */}
               <section className="relative border-b border-neutral-200 pb-7">
-
-                {/* Original next shift placement */}
                 <div className="min-h-[260px] lg:pr-[250px]">
                   <h2 className="text-lg font-semibold">
                     Your next shift
@@ -431,16 +714,19 @@ useEffect(() => {
                   {next ? (
                     <>
                       <h3 className="mt-4 text-xl">
-                        {next.event.name}
+                        {eventName(next.event)}
                       </h3>
 
                       <p className="mt-2 text-sm text-neutral-600">
-                        {next.event.day} May 2027 ·{' '}
-                        {next.shift.time} ·{' '}
-                        {next.shift.name}
+                        {formatDate(next.shift.starts_at)}
+                        {' · '}
+                        {shiftTime(next.shift)}
+                        {' · '}
+                        {shiftName(next.shift)}
                       </p>
 
                       <button
+                        type="button"
                         className={`${button} mt-4`}
                         onClick={() =>
                           choose(next.event, next.shift)
@@ -453,7 +739,7 @@ useEffect(() => {
                     <>
                       <p className="mt-4 text-neutral-600">
                         You have not signed up for
-                        a shift yet.
+                        an upcoming shift yet.
                       </p>
 
                       <p className="mt-2 text-sm text-neutral-600">
@@ -464,18 +750,14 @@ useEffect(() => {
                   )}
                 </div>
 
-                
-
-{/* Smaller calendar centered independently */}
-<div className="mt-5 flex justify-end lg:absolute lg:right-0 lg:top-1/2 lg:mt-0 lg:w-[280px] lg:-translate-y-[calc(50%+70px)]">
-  <VolunteerCalendar />
-</div>
-
-
-
+                {/* Small calendar preview */}
+                <div className="mt-5 flex justify-end lg:absolute lg:right-0 lg:top-1/2 lg:mt-0 lg:w-[280px] lg:-translate-y-[calc(50%+70px)]">
+                  <VolunteerCalendar
+                    onOpenCalendar={() => navigate('Calendar')}
+                  />
+                </div>
               </section>
 
-              {/* Upcoming events */}
               <section className="mt-8">
                 <h2 className="text-lg font-semibold">
                   Upcoming events
@@ -489,52 +771,23 @@ useEffect(() => {
               {eventList()}
             </section>
           ) : view === 'My shifts' ? (
-            <section className="mt-8 max-w-3xl">
-              {bookings.length ? (
-                bookings.map(b => (
-                  <article
-                    key={`${b.event.id}-${b.shift.id}`}
-                    className="flex flex-wrap items-center justify-between gap-4 border-b border-neutral-200 py-5"
-                  >
-                    <div>
-                      <h2 className="font-semibold">
-                        {b.event.name}
-                      </h2>
+            <MyShiftNotes
+              bookings={bookings}
+              userId={profile.id}
+              onViewDetails={bookingId => {
+                const booking = bookings.find(
+                  b => b.id === bookingId
+                );
 
-                      <p className="mt-2 text-sm text-neutral-600">
-                        {b.event.day} May 2027 ·{' '}
-                        {b.shift.time} ·{' '}
-                        {b.shift.name}
-                      </p>
-                    </div>
-
-                    <button
-                      className={button}
-                      onClick={() =>
-                        choose(b.event, b.shift)
-                      }
-                    >
-                      View details
-                    </button>
-                  </article>
-                ))
-              ) : (
-                <>
-                  <p>
-                    No shifts yet. Browse events
-                    to choose a task and time.
-                  </p>
-
-                  <button
-                    className={`${button} mt-5`}
-                    onClick={() =>
-                      navigate('Find events')
-                    }
-                  >
-                    Find events
-                  </button>
-                </>
-              )}
+                if (booking) {
+                  choose(booking.event, booking.shift);
+                }
+              }}
+              onFindEvents={() => navigate('Find events')}
+            />
+          ) : view === 'Calendar' ? (
+            <section className="mt-4">
+              <ExpandedCalendar />
             </section>
           ) : view === 'Messages' ? (
             <section className="mt-8 max-w-2xl">
@@ -564,8 +817,8 @@ useEffect(() => {
                   e.preventDefault();
 
                   if (message.trim()) {
-                    setMessages([
-                      ...messages,
+                    setMessages(previous => [
+                      ...previous,
                       message.trim(),
                     ]);
                     setMessage('');
@@ -623,7 +876,7 @@ useEffect(() => {
         </main>
 
         <footer className="border-t border-neutral-200 py-5 text-xs text-neutral-600">
-          Volunteer Portal · Event data is for demonstration only.
+          Volunteer Portal
         </footer>
       </div>
     </div>
