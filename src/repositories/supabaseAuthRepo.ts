@@ -9,10 +9,14 @@ export class SupabaseAuthRepository implements IAuthRepository {
     this.supabase = supabaseClient || supabase;
   }
 
-  async signUp(email: string, password: string, role: UserRole): Promise<UserProfile> {
+  async signUp(email: string, password: string, role: UserRole, username: string): Promise<UserProfile> {
+    if (role !== 'volunteer' && role !== 'organizer') throw new Error('Admin accounts must be assigned by an administrator.');
     const { data: authData, error: authError } = await this.supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: { username },
+      },
     });
 
     if (authError || !authData.user) {
@@ -22,10 +26,10 @@ export class SupabaseAuthRepository implements IAuthRepository {
     const { data: profileData, error: profileError } = await this.supabase
       .from('profiles')
       .upsert(
-        { id: authData.user.id, email, role },
+        { id: authData.user.id, email, role, username },
         { onConflict: 'id' }
       )
-      .select('id, email, role')
+      .select('id, email, role, username')
       .single();
 
     if (profileError || !profileData) {
@@ -47,7 +51,7 @@ export class SupabaseAuthRepository implements IAuthRepository {
 
     const { data: profileData, error: profileError } = await this.supabase
       .from('profiles')
-      .select('id, email, role')
+      .select('id, email, role, username')
       .eq('id', authData.user.id)
       .single();
 
@@ -67,7 +71,7 @@ export class SupabaseAuthRepository implements IAuthRepository {
 
     const { data: profileData, error } = await this.supabase
       .from('profiles')
-      .select('id, email, role')
+      .select('id, email, role, username')
       .eq('id', user.id)
       .single();
 

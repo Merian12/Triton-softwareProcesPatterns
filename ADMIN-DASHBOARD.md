@@ -1,34 +1,30 @@
-﻿# Administratorforside
+# Administrator dashboard
 
-Åbn `/login`, og log ind med en eksisterende Supabase-bruger, hvis række i `profiles` har rollen `organizer`. Login sender brugeren til `/organizer-dashboard`. Adgangskontrol og logout er de eksisterende Supabase-funktioner. Der er ingen genvej uden login.
+Open `/login` and sign in with an existing Supabase user whose `profiles` row has the `organizer` role. The dashboard is at `/organizer-dashboard`; existing role checks and logout remain in place.
 
-Start med `npm install` og `npm run dev`. Åbn http://localhost:3000.
+## Interface
 
-## Afprøvning
+- A compact 64px header uses `#ff0000`, with the existing logo rendered in white for contrast.
+- The navigation matches the volunteer portal: Overview, Find events, My shifts, Messages.
+- Overview shows upcoming published events, a calendar and compact staffing totals. Find events includes drafts and past events.
+- Both dashboards render `ShiftCalendar`. The volunteer wrapper still loads registered shifts from Supabase; the organizer passes the shifts from its current event repository. Month navigation, day selection and calendar styling are shared.
+- Each staffing icon represents one volunteer place. Filled places are light green (`#86efac`); empty places are grey. The numeric count remains available alongside an accessible label.
+- Create event uses a white button with a red outline. The event editor, validation errors, dates and navigation are in English.
+- My shifts lists the organizer's event shifts, with the availability filter and volunteer rosters. Messages has an empty state; messaging has not been implemented.
+- Demo explanation paragraphs and published/available-place captions have been removed from the interface.
 
-- Overblik viser kommende offentliggjorte arrangementer. Arrangementer viser også kladder og tidligere arrangementer.
-- Se vagter åbner vagtoversigten nedenunder. Filtrér ledige vagter, og åbn Se tilmeldte.
-- Opret arrangement har tre trin. Tilbage bevarer værdier. Gem kladde accepterer ufuldstændige grundoplysninger; navn og gyldige udfyldte datoer/vagter kræves stadig.
-- Offentliggørelse kræver alle grundoplysninger og mindst én gyldig vagt.
-- Redigér CPH Marathon for at teste eksisterende tilmeldinger: kapacitet under antallet af tilmeldte afvises; vagter med tilmeldinger kan ikke fjernes. Ændringer i vagtens opgave, tid eller sted kræver en bekræftelse på, at administratoren selv informerer de frivillige.
-- Ændr et felt og vælg Luk formular, navigation eller logout: kassering kræver bekræftelse. Browserens genindlæsning/lukning bruger dens egen advarsel.
+## Existing event workflow
 
-## Data og arkitektur
+The three-step editor preserves values when moving back. Drafts may be incomplete, but names and any supplied dates/shifts must be valid. Publishing requires all event details and at least one valid shift. Existing registrations cannot be removed through the editor, capacity cannot be reduced below enrollment, and schedule/location/task changes require acknowledgement before saving. Navigation and logout still confirm before discarding unsaved changes.
 
-UI → EventService → IEventRepository følger samme opdeling som login. DemoEventRepository indeholder fiktive arrangementer, vagter og personer. Den gemmer kun i hukommelsen på den åbne administratorside. Genindlæsning, logout eller ny åbning nulstiller ændringer. Ingen arrangementsdata sendes til Supabase eller frivilligsiden. Frivilligsidens egen demo er uændret.
+## Data and architecture
 
-Oversigtstallene bruger offentliggjorte arrangementer med startdato fra dags dato i Europe/Copenhagen. Kapacitet og tilmeldinger summeres pr. vagt, så samme person kan besætte flere vagtpladser. Kladder indgår aldrig i tallene. En arrangementsperiode omfatter hele start- og slutdatoen. Vagter skal slutte samme dag og ligge i perioden; vagter over midnat opdeles. Tilmeldingsfristen er en dato, senest startdatoen.
+The event path remains UI → EventService → IEventRepository → DemoEventRepository. Event changes remain in memory for the current dashboard mount and reset on reload; these UI changes do not connect event storage to Supabase. Supabase authentication and the volunteer calendar's existing database integration are unchanged.
 
-## Senere Supabase-tilkobling
+Staffing totals count places across upcoming published events, using the current date in Europe/Copenhagen. Drafts are excluded. The same volunteer may occupy places on different shifts.
 
-Der er ingen arrangementsmigrationer eller repositories for arrangementer i projektet. Den faktiske eksterne databasestruktur er ikke inspiceret. Før tilkobling skal dens schema afklares.
+## Verification
 
-Der skal bruges tabeller til arrangementer, vagter og tilmeldinger med stabile ID'er og fremmednøgler. Tilmeldinger skal forbinde en profil med en vagt og have en unik kombination af profil og vagt. Opret et Supabase-repository til kontrakten; den nuværende synkrone kontrakt skal gøres asynkron, og UI skal have loading- og netværksfejltilstande.
+Run `npm run lint`, `npm run test:run`, and `npm run build`.
 
-Brug databasepolitikker (RLS), så kun organizer kan skrive arrangementer og vagter/læse alle tilmeldte, og frivillige kun kan læse offentliggjorte arrangementer og egne tilmeldinger. Kladder må ikke kunne læses af frivillige. En frontend-rollebeskyttelse alene beskytter ikke databasen. Gemning af arrangement og vagter bør ske samlet i en transaktion/RPC. Kapacitetskontrol og bevarelse af tilmeldinger skal også håndhæves i databasen, så samtidige ændringer ikke overskriver tilmeldinger. Nuværende miljøvariabler genbruges; tilføj ikke en service role-nøgle i browseren.
-
-## Checks
-
-`npm run lint`, `npm run test:run`, `npm run build`.
-
-Nye tests dækker optælling, kladder, datoer/tider/kapacitet, bevarelse af tilmeldinger, formulartrin, filtrering og kassering. Build henter de eksisterende Geist-skrifttyper fra Google og kræver adgang dertil.
+Tests cover event validation, draft handling, protected registrations, editor navigation, availability filtering, unsaved changes, the four navigation tabs, calendar navigation and shift markers, and the five-filled/eight-total staffing example. Calendar tests mock Supabase rather than requiring live credentials.

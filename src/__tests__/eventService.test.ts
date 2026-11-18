@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { DemoEventRepository } from '@/repositories/demoEventRepo';
 import { affectedShifts, EventService, overview, validateEvent } from '@/services/eventService';
 
@@ -21,7 +21,7 @@ describe('Event administration rules', () => {
     expect(errors['shift.water.start']).toBeTruthy();
     expect(errors['shift.water.capacity']).toBeTruthy();
     event.shifts[0].capacity = 2;
-    expect(validateEvent(event, true)['shift.water.capacity']).toContain('allerede 3');
+    expect(validateEvent(event, true)['shift.water.capacity']).toContain('already 3');
     event.shifts[0].start = '08:00';
     expect(validateEvent(event, true)['shift.water.end']).toBeTruthy();
   });
@@ -34,7 +34,7 @@ describe('Event administration rules', () => {
     event.shifts[0].capacity = 2;
     expect(() => service.save(event)).toThrow();
     event.shifts = [];
-    expect(() => service.save(event)).toThrow('aflysningsfunktion');
+    expect(() => service.save(event)).toThrow('cancellation workflow');
   });
   it('allows incomplete drafts and identifies changes that affect registered volunteers', () => {
     const service = new EventService(new DemoEventRepository());

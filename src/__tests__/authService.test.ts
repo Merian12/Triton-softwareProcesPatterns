@@ -15,6 +15,60 @@ describe('AuthService', () => {
     authService = new AuthService(mockAuthRepo);
   });
 
+  describe('register()', () => {
+    it('throws an error when username is empty or whitespace', async () => {
+      await expect(
+        authService.register('user@example.com', 'password123', 'password123', 'volunteer', '')
+      ).rejects.toThrow('Please enter a username.');
+      await expect(
+        authService.register('user@example.com', 'password123', 'password123', 'volunteer', '   ')
+      ).rejects.toThrow('Please enter a username.');
+      expect(mockAuthRepo.signUp).not.toHaveBeenCalled();
+    });
+
+    it('throws validation errors for invalid email, short password, and mismatched passwords', async () => {
+      await expect(
+        authService.register('invalid-email', 'password123', 'password123', 'volunteer', 'alice')
+      ).rejects.toThrow('Please enter a valid email address.');
+      await expect(
+        authService.register('user@example.com', '12345', '12345', 'volunteer', 'alice')
+      ).rejects.toThrow('Password must be at least 6 characters.');
+      await expect(
+        authService.register('user@example.com', 'password123', 'different123', 'volunteer', 'alice')
+      ).rejects.toThrow('Passwords do not match.');
+      expect(mockAuthRepo.signUp).not.toHaveBeenCalled();
+    });
+
+    it('trims username and email, calls signUp, and returns profile with redirectUrl', async () => {
+      const profile: UserProfile = {
+        id: 'vol-1',
+        email: 'vol@example.com',
+        role: 'volunteer',
+        username: 'alice_v',
+      };
+      vi.mocked(mockAuthRepo.signUp).mockResolvedValue(profile);
+
+      const result = await authService.register(
+        '  vol@example.com  ',
+        'password123',
+        'password123',
+        'volunteer',
+        '  alice_v  '
+      );
+
+      expect(mockAuthRepo.signUp).toHaveBeenCalledWith(
+        'vol@example.com',
+        'password123',
+        'volunteer',
+        'alice_v'
+      );
+      expect(result).toEqual({
+        profile,
+        redirectUrl: '/volunteer-dashboard',
+      });
+    });
+  });
+
   describe('login()', () => {
     it('throws an error when email is empty or whitespace', async () => {
       await expect(authService.login('', 'password123')).rejects.toThrow(

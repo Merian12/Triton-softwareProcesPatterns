@@ -1,6 +1,10 @@
-import { render, screen, fireEvent, within } from '@testing-library/react';
+import { act, render, screen, fireEvent, within } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import VolunteerDashboard from '@/components/VolunteerDashboard';
+
+vi.mock('@/lib/supabaseClient', () => ({
+  supabase: { auth: { getUser: vi.fn().mockResolvedValue({ data: { user: null }, error: null }) } },
+}));
 
 describe('Volunteer dashboard', () => {
   it('uses the authenticated profile and registers a shift only after acknowledgement', () => {
@@ -20,20 +24,22 @@ describe('Volunteer dashboard', () => {
   it.each([
     { date: '2026-11-11T12:00:00', label: 'November 2026', today: 11, days: 30, offset: 6 },
     { date: '2028-02-15T12:00:00', label: 'February 2028', today: 15, days: 29, offset: 1 },
-  ])('shows $label with the correct weekday alignment and today highlighted', ({date, label, today, days, offset}) => {
+  ])('shows $label with the correct weekday alignment and today highlighted', async ({date, label, today, days, offset}) => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date(date));
     try {
-      render(<VolunteerDashboard profile={{id:'v1',email:'volunteer@example.org',role:'volunteer'}} onLogout={vi.fn()} />);
+      await act(async () => {
+        render(<VolunteerDashboard profile={{id:'v1',email:'volunteer@example.org',role:'volunteer'}} onLogout={vi.fn()} />);
+      });
       const calendar = screen.getByRole('region', {name: `${label} shift calendar`});
       expect(within(calendar).getByText(label)).toBeInTheDocument();
       const currentDay = within(calendar).getByLabelText(`${today} ${label}, today`);
       expect(currentDay).toHaveAttribute('aria-current', 'date');
-      expect(currentDay).toHaveClass('bg-[#FF0000]/10');
+      expect(currentDay).toHaveClass('bg-red-500');
       expect(within(calendar).getByLabelText(`${days} ${label}`)).toBeInTheDocument();
       expect(within(calendar).queryByLabelText(`${days + 1} ${label}`)).not.toBeInTheDocument();
       const firstDay = within(calendar).getByLabelText(`1 ${label}`);
-      expect(Array.from(firstDay.parentElement!.children).indexOf(firstDay)).toBe(7 + offset);
+      expect(Array.from(firstDay.parentElement!.parentElement!.children).indexOf(firstDay.parentElement!)).toBe(7 + offset);
       expect(within(calendar).queryByText('Your calendar')).not.toBeInTheDocument();
     } finally {
       vi.useRealTimers();
