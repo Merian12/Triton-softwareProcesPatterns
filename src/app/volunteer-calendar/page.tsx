@@ -1,0 +1,118 @@
+
+'use client';
+import ExpandedCalendar from '@/components/ExpandedCalendar';
+import { useState } from 'react';
+import Link from 'next/link';
+import RoleGuard from '@/components/RoleGuard';
+import { Logo } from '@/components/Logo';
+import { portalButton as button } from '@/components/portalStyles';
+
+export default function VolunteerCalendarPage() {
+  const [loggingOut, setLoggingOut] = useState(false);
+  const [error, setError] = useState('');
+  const [logoSpin, setLogoSpin] = useState(0);
+
+  return (
+    <RoleGuard allowedRole="volunteer">
+      {(profile, handleLogout) => {
+        async function logout() {
+          setLoggingOut(true);
+          setError('');
+
+          try {
+            await handleLogout();
+          } catch {
+            setError('Could not log out. Please try again.');
+            setLoggingOut(false);
+          }
+        }
+
+        return (
+          <div className="min-h-screen bg-white text-neutral-900">
+            <div className="mx-auto max-w-6xl px-5 sm:px-9">
+
+              {/* Header */}
+              <header className="flex flex-wrap items-center gap-4 py-7">
+                <Link
+                  href="/volunteer-dashboard"
+                  onClick={() => setLogoSpin(c => c + 1)}
+                  className="flex cursor-pointer items-center gap-3 rounded-sm text-left focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#FF0000]"
+                >
+                  <Logo
+                    variant="symbol"
+                    hoverAnimation="none"
+                    spinTrigger={logoSpin}
+                    className="h-9 w-9 shrink-0"
+                  />
+
+                  <span className="text-lg font-semibold">
+                    <span className="text-[#262E40]">
+                      Volunteer
+                    </span>
+                    <span className="text-[#D7142A]">
+                      Portal
+                    </span>
+                  </span>
+                </Link>
+
+                <span className="text-sm text-neutral-600">
+                  Triton Swim Ballerup · demo club
+                </span>
+
+                <div className="ml-auto flex gap-3">
+                  <Link
+                    href="/volunteer-dashboard?view=My%20profile"
+                    className={button}
+                  >
+                    My profile
+                  </Link>
+
+                  <button
+                    type="button"
+                    className={button}
+                    disabled={loggingOut}
+                    onClick={logout}
+                  >
+                    {loggingOut ? 'Logging out…' : 'Log out'}
+                  </button>
+                </div>
+              </header>
+
+              {/* Navigation */}
+              <nav
+                aria-label="Main navigation"
+                className="flex flex-wrap gap-6 border-b border-neutral-200"
+              >
+                {[
+                  'Overview',
+                  'Find events',
+                  'My shifts',
+                  'Messages',
+                ].map(item => (
+                  <Link
+                    key={item}
+                    href={`/volunteer-dashboard?view=${encodeURIComponent(item)}`}
+                    className="min-h-11 border-b-2 border-transparent py-3 text-sm text-neutral-600 focus-visible:outline-2 focus-visible:outline-[#FF0000]"
+                  >
+                    {item}
+                  </Link>
+                ))}
+              </nav>
+
+              {/* Calendar page content */}
+           <main className="pt-3 pb-4">
+  <h1 className="text-3xl font-semibold tracking-tight">
+
+  </h1>
+
+  <div className="mt-2">
+    <ExpandedCalendar />
+  </div>
+</main>
+            </div>
+          </div>
+        );
+      }}
+    </RoleGuard>
+  );
+}
