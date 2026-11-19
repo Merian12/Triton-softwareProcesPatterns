@@ -1,5 +1,5 @@
-
 'use client';
+import { useLanguage } from '@/components/LanguageProvider';
 
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
@@ -46,27 +46,26 @@ function localDateKey(value: string) {
   return `${year}-${month}-${day}`;
 }
 
-function formatDate(value: string) {
-  return new Date(value).toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
-}
-
-function formatTime(value: string) {
-  return new Date(value).toLocaleTimeString('en-GB', {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
-
 export default function MyShifts({
   bookings,
   userId,
   onViewDetails,
   onFindEvents,
 }: MyShiftsProps) {
+  const { t, locale } = useLanguage();
+  function formatDate(value: string) {
+    return new Date(value).toLocaleDateString(locale, {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+  }
+  function formatTime(value: string) {
+    return new Date(value).toLocaleTimeString(locale, {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }
   const [notes, setNotes] = useState<CalendarNote[]>([]);
   const [loadingNotes, setLoadingNotes] = useState(true);
   const [notesError, setNotesError] = useState('');
@@ -120,7 +119,7 @@ export default function MyShifts({
     <section className="mt-8 max-w-3xl">
       {notesError && (
         <p role="alert" className="mb-4 text-sm text-red-600">
-          {notesError}
+          {t(notesError)}
         </p>
       )}
 
@@ -144,7 +143,7 @@ export default function MyShifts({
                   <h2 className="font-semibold">
                     {booking.event.title ||
                       booking.event.name ||
-                      'Untitled event'}
+                      t("Untitled event")}
                   </h2>
 
                   <p className="mt-2 text-sm text-neutral-600">
@@ -154,7 +153,7 @@ export default function MyShifts({
                     {' – '}
                     {formatTime(booking.shift.ends_at)}
                     {' · '}
-                    {booking.shift.title || 'Volunteer shift'}
+                    {booking.shift.title || t("Volunteer shift")}
                   </p>
                 </div>
 
@@ -163,15 +162,13 @@ export default function MyShifts({
   className={button}
   onClick={() => onViewDetails(booking.id)}
 >
-  View details
-</button>
+  {t("View details")} </button>
               </div>
 
               {note?.content?.trim() && (
                 <div className="mt-4 rounded-lg border border-[#D7142A]/20 bg-[#D7142A]/5 p-4">
                   <p className="mb-2 text-sm font-semibold text-[#D7142A]">
-                    My notes
-                  </p>
+                    {t("My notes")} </p>
 
                   <p className="whitespace-pre-wrap break-words text-sm text-neutral-700">
                     {note.content}
@@ -181,8 +178,7 @@ export default function MyShifts({
 
               {loadingNotes && (
                 <p className="mt-3 text-xs text-neutral-400">
-                  Loading notes...
-                </p>
+                  {t("Loading notes...")} </p>
               )}
             </article>
           );
@@ -190,17 +186,14 @@ export default function MyShifts({
       ) : (
         <>
           <p>
-            No shifts yet. Browse events to choose a task
-            and time.
-          </p>
+            {t("No shifts yet. Browse events to choose a task and time.")} </p>
 
           <button
             type="button"
             className={`${button} mt-5`}
             onClick={onFindEvents}
           >
-            Find events
-          </button>
+            {t("Find events")} </button>
         </>
       )}
     </section>

@@ -1,6 +1,7 @@
 'use client';
-
+import { useLanguage } from '@/components/LanguageProvider';
 import { useEffect, useRef, useState } from 'react';
+import { AccountIdentity } from '@/components/AccountIdentity';
 import { Logo } from '@/components/Logo';
 import { navTab, portalContainer, portalNav, portalTopbar } from '@/components/portalStyles';
 
@@ -30,19 +31,21 @@ export default function PortalTopbar({
   roleLabel = 'Organizer',
   onProfile,
 }: Props) {
+  const { t } = useLanguage();
   const dropdown = useRef<HTMLDetailsElement>(null);
   const trigger = useRef<HTMLElement>(null);
   const [logoSpin, setLogoSpin] = useState(0);
-  const emailName = email.split('@')[0].split(/[._+-]/)[0];
-  const fallbackName = emailName ? emailName[0].toLocaleUpperCase('en-GB') + emailName.slice(1) : 'My account';
-  const name = username?.trim() || fallbackName;
 
   useEffect(() => {
-    function closeOutside(event: PointerEvent) {
+    function closeOutside(event: PointerEvent | FocusEvent) {
       if (dropdown.current && !dropdown.current.contains(event.target as Node)) dropdown.current.open = false;
     }
     document.addEventListener('pointerdown', closeOutside);
-    return () => document.removeEventListener('pointerdown', closeOutside);
+    document.addEventListener('focusin', closeOutside);
+    return () => {
+      document.removeEventListener('pointerdown', closeOutside);
+      document.removeEventListener('focusin', closeOutside);
+    };
   }, []);
 
   return (
@@ -55,7 +58,7 @@ export default function PortalTopbar({
               setLogoSpin(c => c + 1);
               onNavigate('Overview');
             }}
-            aria-label="Volunteer Portal home"
+            aria-label={t("Volunteer Portal home")}
             className="flex min-h-11 cursor-pointer items-center gap-2.5 rounded-sm text-left focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
           >
             <Logo variant="symbol" colorScheme="white" hoverAnimation="none" spinTrigger={logoSpin} className="size-8 shrink-0" />
@@ -71,22 +74,17 @@ export default function PortalTopbar({
                 trigger.current?.focus();
               }
             }}
-            onBlur={event => {
-              if (!event.currentTarget.contains(event.relatedTarget as Node | null)) event.currentTarget.open = false;
-            }}
           >
             <summary
               ref={trigger}
               className="flex min-h-11 cursor-pointer list-none items-center gap-2.5 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white [&::-webkit-details-marker]:hidden"
             >
-              <svg aria-hidden="true" viewBox="0 0 32 40" className="hidden h-7 w-6 fill-current sm:block">
-                <circle cx="16" cy="10" r="8" />
-                <path d="M1 36a15 15 0 0 1 30 0v2H1Z" />
-              </svg>
-              <span className="text-left">
-                <span className="block max-w-28 truncate text-sm font-semibold">{name}</span>
-                <span className="block text-[11px] text-white/90">{roleLabel}</span>
-              </span>
+              <AccountIdentity
+                email={email}
+                username={username}
+                roleLabel={roleLabel}
+                roleClassName="text-white/90"
+              />
               <svg
                 aria-hidden="true"
                 viewBox="0 0 24 24"
@@ -109,10 +107,9 @@ export default function PortalTopbar({
                   }}
                   className={dropdownItem}
                 >
-                  My profile
-                </button>
+                  {t("My profile")} </button>
               )}
-              <button disabled={loggingOut} onClick={onLogout} className={dropdownItem}>
+              <button type="button" disabled={loggingOut} onClick={onLogout} className={dropdownItem}>
                 {loggingOut ? 'Logging out…' : 'Log out'}
               </button>
             </div>
@@ -120,7 +117,7 @@ export default function PortalTopbar({
         </div>
       </header>
       <div className={portalContainer}>
-        <nav aria-label="Main navigation" className={portalNav}>
+        <nav aria-label={t("Main navigation")} className={portalNav}>
           {(['Overview', 'Find events', 'My shifts', 'Messages'] as const).map(view => (
             <button
               type="button"
@@ -129,7 +126,7 @@ export default function PortalTopbar({
               onClick={() => onNavigate(view)}
               className={navTab(activeView === view)}
             >
-              {view}
+              {t(view)}
             </button>
           ))}
         </nav>
