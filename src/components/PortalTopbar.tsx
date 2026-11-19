@@ -39,11 +39,15 @@ export default function PortalTopbar({
   const name = username?.trim() || fallbackName;
 
   useEffect(() => {
-    function closeOutside(event: PointerEvent) {
+    function closeOutside(event: PointerEvent | FocusEvent) {
       if (dropdown.current && !dropdown.current.contains(event.target as Node)) dropdown.current.open = false;
     }
     document.addEventListener('pointerdown', closeOutside);
-    return () => document.removeEventListener('pointerdown', closeOutside);
+    document.addEventListener('focusin', closeOutside);
+    return () => {
+      document.removeEventListener('pointerdown', closeOutside);
+      document.removeEventListener('focusin', closeOutside);
+    };
   }, []);
 
   return (
@@ -71,9 +75,6 @@ export default function PortalTopbar({
                 dropdown.current.open = false;
                 trigger.current?.focus();
               }
-            }}
-            onBlur={event => {
-              if (!event.currentTarget.contains(event.relatedTarget as Node | null)) event.currentTarget.open = false;
             }}
           >
             <summary
@@ -112,8 +113,8 @@ export default function PortalTopbar({
                 >
                   {t("My profile")} </button>
               )}
-              <button disabled={loggingOut} onClick={onLogout} className={dropdownItem}>
-                {loggingOut ? t("Logging out…") : t("Log out")}
+              <button type="button" disabled={loggingOut} onClick={onLogout} className={dropdownItem}>
+                {loggingOut ? 'Logging out…' : 'Log out'}
               </button>
             </div>
           </details>

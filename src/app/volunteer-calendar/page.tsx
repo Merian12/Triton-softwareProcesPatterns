@@ -25,6 +25,7 @@ export default function VolunteerCalendarPage() {
             await handleLogout();
           } catch {
             setError('Could not log out. Please try again.');
+          } finally {
             setLoggingOut(false);
           }
         }

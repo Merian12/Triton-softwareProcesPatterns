@@ -42,6 +42,7 @@ export const RoleGuard = ({ allowedRole, children }: RoleGuardProps) => {
 
   const handleLogout = async () => {
     await authService.logout();
+    setProfile(null);
     router.replace('/login');
   };
 
