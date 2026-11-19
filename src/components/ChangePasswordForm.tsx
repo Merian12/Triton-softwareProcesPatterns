@@ -1,6 +1,7 @@
 'use client';
 
 import { FormEvent, useState } from 'react';
+import { input, portalPrimary as primary } from '@/components/portalStyles';
 
 export default function ChangePasswordForm() {
   const [newPassword, setNewPassword] = useState('');
@@ -28,9 +29,9 @@ export default function ChangePasswordForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="space-y-3">
+    <form onSubmit={handleSubmit} noValidate className="space-y-4">
       <div>
-        <label htmlFor="new-password" className="block text-sm font-medium text-gray-800">
+        <label htmlFor="new-password" className="block text-sm font-medium">
           Ny adgangskode
         </label>
         <input
@@ -39,11 +40,11 @@ export default function ChangePasswordForm() {
           autoComplete="new-password"
           value={newPassword}
           onChange={(event) => setNewPassword(event.target.value)}
-          className="mt-1 w-full rounded-md border border-gray-300 p-2 text-sm text-gray-800"
+          className={`mt-1 ${input}`}
         />
       </div>
       <div>
-        <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-800">
+        <label htmlFor="confirm-password" className="block text-sm font-medium">
           Gentag ny adgangskode
         </label>
         <input
@@ -52,7 +53,7 @@ export default function ChangePasswordForm() {
           autoComplete="new-password"
           value={confirmPassword}
           onChange={(event) => setConfirmPassword(event.target.value)}
-          className="mt-1 w-full rounded-md border border-gray-300 p-2 text-sm text-gray-800"
+          className={`mt-1 ${input}`}
         />
       </div>
 
@@ -61,14 +62,11 @@ export default function ChangePasswordForm() {
           {error}
         </p>
       )}
-      {message && <p className="text-sm text-gray-500">{message}</p>}
+      {message && <p className="text-sm text-neutral-600">{message}</p>}
 
-      <p className="text-xs text-gray-500">Prototype: adgangskoden bliver ikke ændret eller gemt.</p>
+      <p className="text-xs text-neutral-600">Prototype: adgangskoden bliver ikke ændret eller gemt.</p>
 
-      <button
-        type="submit"
-        className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
-      >
+      <button type="submit" className={primary}>
         Gem adgangskode
       </button>
     </form>

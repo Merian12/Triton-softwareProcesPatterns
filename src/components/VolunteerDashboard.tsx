@@ -3,6 +3,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import {
   portalButton as button,
   portalPrimary as primary,
@@ -451,13 +452,9 @@ export default function VolunteerDashboard({
   </span>
 
   <div className="ml-auto flex gap-3">
-    <button
-      type="button"
-      className={button}
-      onClick={() => navigate('My profile')}
-    >
+    <Link href="/profile" className={button}>
       My profile
-    </button>
+    </Link>
 
     <button
       type="button"

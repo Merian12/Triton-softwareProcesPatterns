@@ -62,7 +62,7 @@ export default function VolunteerCalendarPage() {
 
                 <div className="ml-auto flex gap-3">
                   <Link
-                    href="/volunteer-dashboard?view=My%20profile"
+                    href="/profile"
                     className={button}
                   >
                     My profile
