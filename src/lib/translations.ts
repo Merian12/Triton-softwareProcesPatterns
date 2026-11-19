@@ -76,7 +76,7 @@ export const danish: Record<string, string> = {
   'Remove organizer': 'Fjern arrangør', 'Remove organizer {value0}': 'Fjern arrangøren {value0}', 'Removing…': 'Fjerner…',
   'Remove organizer access for {value0}? Their account will become a Volunteer account.': 'Vil du fjerne arrangøradgangen for {value0}? Kontoen bliver en frivilligkonto.',
   '{value0} is now a Volunteer.': '{value0} er nu frivillig.', 'Could not load organizers.': 'Kunne ikke indlæse arrangører.', 'Could not remove organizer.': 'Kunne ikke fjerne arrangøren.',
-  'Message registered users using their email address. Conversations stay inside Triton and refresh automatically.': 'Skriv til registrerede brugere via deres e-mailadresse. Samtaler bliver på Triton og opdateres automatisk.',
+  'Message registered users using their email address. Conversations stay inside Volunteerportal and refresh automatically.': 'Skriv til registrerede brugere via deres e-mailadresse. Samtaler bliver på Triton og opdateres automatisk.',
   'Conversations': 'Samtaler', 'Conversation': 'Samtale', 'New message': 'Ny besked', 'Loading messages...': 'Indlæser beskeder...', 'No messages yet.': 'Ingen beskeder endnu.',
   'You': 'Dig', 'Recipient email': 'Modtagerens e-mail', 'Your message': 'Din besked', 'Send message': 'Send besked', 'Sending...': 'Sender...',
   'Message sent.': 'Beskeden er sendt.', 'name@example.com': 'navn@eksempel.dk', 'Could not load messages. Please try again.': 'Kunne ikke indlæse beskeder. Prøv igen.',

@@ -52,7 +52,7 @@ describe('Site language and information', () => {
   it('links to public information pages from the footer', () => {
     render(<LanguageProvider><SiteFooter /></LanguageProvider>);
     fireEvent.click(screen.getByRole('button', { name: 'Dansk' }));
-    for (const [name, href] of [['Ofte stillede spørgsmål', '/faq'], ['Om Triton', '/about'], ['Kontakt', '/contact'], ['Hjælp og vejledning', '/help']]) {
+    for (const [name, href] of [['Ofte stillede spørgsmål', '/faq'], ['Om Volunteerportal', '/about'], ['Kontakt', '/contact'], ['Hjælp og vejledning', '/help']]) {
       expect(screen.getByRole('link', { name })).toHaveAttribute('href', href);
     }
   });

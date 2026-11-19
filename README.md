@@ -123,6 +123,6 @@ Open [http://localhost:3000](http://localhost:3000) in your browser. The app wil
 
 The shared footer links to `/faq`, `/about`, `/contact` and `/help`. These pages are public and available before signing in. Contact guidance points to event coordinators and internal Messages; no support email address is configured.
 
-Use **Dansk / English** at the top or bottom of any page. Danish is the default. The preference is stored as `triton-language` in local storage, applies to all roles and survives navigation and browser reloads. Changing language preserves form input. Calendars and dates use the selected locale. User-authored event content, notes and messages are kept in their original language.
+Use **Dansk / English** at the bottom of any page. Danish is the default. The preference is stored as `triton-language` in local storage, applies to all roles and survives navigation and browser reloads. Changing language preserves form input. Calendars and dates use the selected locale. User-authored event content, notes and messages are kept in their original language.
 
 Shared interface translations live in `src/lib/translations.ts` and are accessed with `useLanguage()`. Information page content is maintained in Danish and English in `src/components/InformationPage.tsx`. The FAQ explains the parental registration and permission requirement for children under 15; it does not implement an age or consent verification flow.

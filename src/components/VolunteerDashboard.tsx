@@ -436,7 +436,7 @@ export default function VolunteerDashboard({
 
     <span className="text-lg font-semibold">
       <span className="text-[#262E40]">Volunteer</span>
-      <span className="text-[#D7142A]">Portal</span>
+      <span className="text-[#D7142A]">portal</span>
     </span>
   </button>
 

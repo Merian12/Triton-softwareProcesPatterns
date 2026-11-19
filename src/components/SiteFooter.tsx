@@ -9,14 +9,14 @@ export default function SiteFooter() {
   const da = language === 'da';
   const links = [
     ['/faq', da ? 'Ofte stillede spørgsmål' : 'Frequently asked questions'],
-    ['/about', da ? 'Om Triton' : 'About Triton'],
+    ['/about', da ? 'Om Volunteerportal' : 'About Volunteerportal'],
     ['/contact', da ? 'Kontakt' : 'Contact'],
     ['/help', da ? 'Hjælp og vejledning' : 'Help and guidance'],
   ];
   return <footer className="mt-auto border-t-4 border-brand bg-brand-navy text-white">
     <div className={`${portalContainer} grid gap-9 py-10 sm:py-12 lg:grid-cols-[1fr_1.4fr] lg:gap-16`}>
       <div>
-        <p className="text-lg font-semibold tracking-tight">Triton <span className="font-normal text-white/75">VolunteerPortal</span></p>
+        <p className="text-lg font-semibold tracking-tight">Volunteerportal</p>
         <p className="mt-3 max-w-sm text-sm leading-6 text-white/75">{da ? 'Sammen om frivillighed. Find din plads ved sportsevents i Danmark.' : 'Volunteering together. Find your place at sporting events in Denmark.'}</p>
       </div>
       <nav aria-label={da ? 'Information og hjælp' : 'Information and help'} className="grid gap-x-8 gap-y-2 sm:grid-cols-2">

@@ -39,7 +39,7 @@ export default function Messages({ userId }: { userId: string }) {
   const thread = messages.filter(message => message.peer_email.toLowerCase() === active.toLowerCase());
 
   return <section className="mt-6" aria-label={t("Messages")}>
-    <p className="mb-5 text-sm text-neutral-600">{t("Message registered users using their email address. Conversations stay inside Triton and refresh automatically.")}</p>
+    <p className="mb-5 text-sm text-neutral-600">{t("Message registered users using their email address. Conversations stay inside Volunteerportal and refresh automatically.")}</p>
     {loadError && <p role="alert" className="mb-4 text-sm text-red-800">{t(loadError)}</p>}
     <div className="grid items-start gap-5 md:grid-cols-[260px_minmax(0,1fr)]">
       <aside className={card} aria-label={t("Conversations")}>

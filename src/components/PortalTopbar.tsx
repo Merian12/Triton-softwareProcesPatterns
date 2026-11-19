@@ -62,7 +62,7 @@ export default function PortalTopbar({
             className="flex min-h-11 cursor-pointer items-center gap-2.5 rounded-sm text-left focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
           >
             <Logo variant="symbol" colorScheme="white" hoverAnimation="none" spinTrigger={logoSpin} className="size-8 shrink-0" />
-            <span className="text-base font-semibold tracking-tight sm:text-lg text-white">VolunteerPortal</span>
+            <span className="text-base font-semibold tracking-tight sm:text-lg text-white">Volunteerportal</span>
           </button>
           <details
             ref={dropdown}
