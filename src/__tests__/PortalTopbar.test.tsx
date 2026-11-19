@@ -1,6 +1,8 @@
-import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import PortalTopbar from '@/components/PortalTopbar';
+
+afterEach(cleanup);
 
 describe('PortalTopbar', () => {
   it('derives a capitalized fallback display name from email and uses username when set', () => {
@@ -85,12 +87,6 @@ describe('PortalTopbar', () => {
     expect(screen.getByRole('button', { name: 'Logging out…' })).toBeDisabled();
   });
 });
-
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
-import PortalTopbar from '@/components/PortalTopbar';
-
-afterEach(cleanup);
 
 function renderTopbar() {
   const onLogout = vi.fn();
