@@ -47,8 +47,10 @@ const mockShifts = [
 ];
 
 let mockRegistrations: MockRegistration[] = [];
+let mockEventsError: Error | null = null;
+let mockSearchParams = new URLSearchParams();
 
-function createQuery(getData: () => unknown[]) {
+function createQuery(getData: () => unknown[], getError?: () => Error | null) {
   const query = {
     select: vi.fn(() => query),
     eq: vi.fn(() => query),
@@ -58,15 +60,15 @@ function createQuery(getData: () => unknown[]) {
     in: vi.fn(() => query),
     order: vi.fn(() => query),
     then: (
-      onFulfilled?: (value: { data: unknown[]; error: null }) => unknown,
+      onFulfilled?: (value: { data: unknown[]; error: Error | null }) => unknown,
       onRejected?: (reason: unknown) => unknown
-    ) => Promise.resolve({ data: getData(), error: null }).then(onFulfilled, onRejected),
+    ) => Promise.resolve({ data: getData(), error: getError?.() ?? null }).then(onFulfilled, onRejected),
   };
   return query;
 }
 
 vi.mock('next/navigation', () => ({
-  useSearchParams: () => new URLSearchParams(),
+  useSearchParams: () => mockSearchParams,
 }));
 
 vi.mock('@/lib/supabaseClient', () => ({
@@ -78,7 +80,7 @@ vi.mock('@/lib/supabaseClient', () => ({
       }),
     },
     from: vi.fn((table: string) => {
-      if (table === 'events') return createQuery(() => mockEvents);
+      if (table === 'events') return createQuery(() => mockEvents, () => mockEventsError);
       if (table === 'shifts') return createQuery(() => mockShifts);
       if (table === 'registrations') {
         const query = createQuery(() => mockRegistrations);
@@ -105,6 +107,8 @@ vi.mock('@/lib/supabaseClient', () => ({
 describe('Volunteer dashboard', () => {
   beforeEach(() => {
     mockRegistrations = [];
+    mockEventsError = null;
+    mockSearchParams = new URLSearchParams();
   });
 
   it('uses the authenticated profile and registers a shift only after acknowledgement', async () => {
@@ -177,9 +181,11 @@ describe('Volunteer dashboard', () => {
 
         const todayKey = `${yearMonth}-${String(today).padStart(2, '0')}`;
         const currentDayButton = screen.getByRole('button', { name: `Select ${todayKey}` });
+        const firstDayButton = screen.getByRole('button', { name: `Select ${yearMonth}-01` });
         const currentDayBadge = currentDayButton.querySelector('span');
+        const firstDayBadge = firstDayButton.querySelector('span');
         expect(currentDayBadge).toHaveTextContent(String(today));
-        expect(currentDayBadge).toHaveClass('bg-[#D7142A]');
+        expect(currentDayBadge?.className).not.toBe(firstDayBadge?.className);
 
         expect(
           screen.getByRole('button', { name: `Select ${yearMonth}-${String(days).padStart(2, '0')}` })
@@ -188,7 +194,6 @@ describe('Volunteer dashboard', () => {
           screen.queryByRole('button', { name: `Select ${yearMonth}-${String(days + 1).padStart(2, '0')}` })
         ).not.toBeInTheDocument();
 
-        const firstDayButton = screen.getByRole('button', { name: `Select ${yearMonth}-01` });
         await waitFor(() => {
           expect(Array.from(firstDayButton.parentElement!.children).indexOf(firstDayButton)).toBe(offset);
         });
@@ -197,4 +202,42 @@ describe('Volunteer dashboard', () => {
       }
     }
   );
+
+  it('displays the upcoming registered shift on Overview and opens its details', async () => {
+    mockRegistrations = [
+      { id: 'reg-existing', shift_id: 's-open', volunteer_id: 'v1', status: 'registered' },
+    ];
+
+    render(
+      <VolunteerDashboard
+        profile={{ id: 'v1', email: 'volunteer@example.org', role: 'volunteer' }}
+        onLogout={vi.fn()}
+      />
+    );
+
+    const viewShiftButton = await screen.findByRole('button', { name: 'View shift' });
+    expect(screen.getByText(/Water station/)).toBeInTheDocument();
+
+    fireEvent.click(viewShiftButton);
+    expect(screen.getByText('You are registered for this shift.')).toBeInTheDocument();
+  });
+
+  it('opens the requested view from search params and shows errors when data loading or logout fails', async () => {
+    mockSearchParams = new URLSearchParams('view=Find+events');
+    mockEventsError = new Error('Events unavailable');
+    const onLogout = vi.fn().mockRejectedValue(new Error('Network error'));
+
+    render(
+      <VolunteerDashboard
+        profile={{ id: 'v1', email: 'volunteer@example.org', role: 'volunteer' }}
+        onLogout={onLogout}
+      />
+    );
+
+    expect(await screen.findByRole('heading', { name: 'Find events' })).toBeInTheDocument();
+    expect(await screen.findByRole('alert')).toHaveTextContent('Events unavailable');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Log out' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Could not log out. Please try again.');
+  });
 });

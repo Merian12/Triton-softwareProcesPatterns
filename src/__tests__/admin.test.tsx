@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { AuthService, type IAuthRepository } from '@/services/authService';
+import { AdminService } from '@/services/adminService';
 import OrganizerManagement from '@/components/OrganizerManagement';
 const mocks = vi.hoisted(() => ({ list: vi.fn(), remove: vi.fn() }));
 vi.mock('@/repositories/supabaseAdminRepo', () => ({ SupabaseAdminRepository: class {
@@ -54,5 +55,11 @@ describe('Organizer management', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Remove organizer org@example.com' }));
     await screen.findByRole('alert');
     await waitFor(() => expect(screen.getByRole('button', { name: 'Remove organizer org@example.com' })).toBeEnabled());
+  });
+  it('rejects removing an organizer with a blank id', () => {
+    const repo = { listOrganizers: vi.fn(), removeOrganizer: vi.fn() };
+    const service = new AdminService(repo);
+    expect(() => service.removeOrganizer('   ')).toThrow('Choose an organizer.');
+    expect(repo.removeOrganizer).not.toHaveBeenCalled();
   });
 });
