@@ -14,6 +14,7 @@ import { Logo } from '@/components/Logo';
 import VolunteerCalendar from '@/components/VolunteerCalendar';
 import ExpandedCalendar from '@/components/ExpandedCalendar';
 import { supabase } from '@/lib/supabaseClient';
+import Messages from '@/components/Messages';
 import MyShiftNotes from '@/components/MyShiftNotes';
 
 type View =
@@ -130,8 +131,6 @@ export default function VolunteerDashboard({
   const [accepted, setAccepted] = useState(false);
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
-  const [message, setMessage] = useState('');
-  const [messages, setMessages] = useState<string[]>([]);
   const [loggingOut, setLoggingOut] = useState(false);
   const [registering, setRegistering] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -797,67 +796,7 @@ export default function VolunteerDashboard({
               <ExpandedCalendar />
             </section>
           ) : view === 'Messages' ? (
-            <section className="mt-8 max-w-2xl">
-              <h2 className="font-semibold">
-                Coordinator · demo conversation
-              </h2>
-
-              <p className="mt-3 text-sm text-neutral-600">
-                Messages below are local previews.
-                Nothing is sent.
-              </p>
-
-              <div aria-live="polite">
-                {messages.map((m, i) => (
-                  <p
-                    key={i}
-                    className="my-5 whitespace-pre-wrap break-words border-b border-neutral-200 py-4"
-                  >
-                    {m}
-                  </p>
-                ))}
-              </div>
-
-              <form
-                className="mt-6"
-                onSubmit={e => {
-                  e.preventDefault();
-
-                  if (message.trim()) {
-                    setMessages(previous => [
-                      ...previous,
-                      message.trim(),
-                    ]);
-                    setMessage('');
-                  }
-                }}
-              >
-                <label
-                  className="block text-sm"
-                  htmlFor="message"
-                >
-                  Your message
-                </label>
-
-                <textarea
-                  id="message"
-                  required
-                  rows={4}
-                  className="mt-2 w-full rounded-sm border border-neutral-300 p-3 focus:outline-2 focus:outline-[#FF0000]"
-                  value={message}
-                  onChange={e =>
-                    setMessage(e.target.value)
-                  }
-                />
-
-                <button
-                  className={`${button} mt-4`}
-                  disabled={!message.trim()}
-                >
-                  Preview message
-                </button>
-              </form>
-            </section>
+            <Messages userId={profile.id} />
           ) : (
             <section className="mt-8">
               <h2 className="font-semibold">

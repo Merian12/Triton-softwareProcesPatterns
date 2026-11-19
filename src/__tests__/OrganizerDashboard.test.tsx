@@ -71,7 +71,7 @@ describe('Organizer navigation and calendar', () => {
       fireEvent.click(within(navigation).getByRole('button', { name: 'My shifts' }));
       expect(screen.getByRole('region', { name: 'Shift management' })).toBeInTheDocument();
       fireEvent.click(within(navigation).getByRole('button', { name: 'Messages' }));
-      expect(screen.getByText('No messages yet.')).toBeInTheDocument();
+      expect(screen.getByLabelText('Recipient email')).toBeInTheDocument();
       expect(screen.queryByText(/Eksempeldata|lokal demo|Offentliggjort/)).not.toBeInTheDocument();
     } finally {
       vi.useRealTimers();
