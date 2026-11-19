@@ -6,6 +6,8 @@ import { useSearchParams } from 'next/navigation';
 import {
   portalButton as button,
   portalPrimary as primary,
+  navTab,
+  portalNav,
 } from './portalStyles';
 import type { UserProfile } from '@/services/authService';
 import { Logo } from '@/components/Logo';
@@ -471,7 +473,7 @@ export default function VolunteerDashboard({
 {/* Navigation */}
 <nav
   aria-label="Main navigation"
-  className="flex flex-wrap gap-6 border-b border-neutral-200"
+  className={portalNav}
 >
   {(
     [
@@ -486,11 +488,7 @@ export default function VolunteerDashboard({
       type="button"
       key={item}
       aria-current={view === item ? 'page' : undefined}
-      className={`min-h-11 border-b-2 py-3 text-sm focus-visible:outline-2 focus-visible:outline-[#FF0000] ${
-        view === item
-          ? 'border-[#FF0000] font-semibold'
-          : 'border-transparent text-neutral-600'
-      }`}
+      className={navTab(view === item)}
       onClick={() => navigate(item)}
     >
       {item}
@@ -537,17 +535,28 @@ export default function VolunteerDashboard({
                 </button>
               )}
 
-              <h1 className="text-3xl font-semibold tracking-tight">
-                {selection
-                  ? 'Review your shift'
-                  : event
-                    ? eventName(event)
-                    : view}
-              </h1>
+              <div className={view === 'Overview' && !event && !selection ? 'relative pr-[150px]' : undefined}>
+                <div className="min-w-0">
+                  <h1 className="text-3xl font-semibold tracking-tight">
+                    {selection
+                      ? 'Review your shift'
+                      : event
+                        ? eventName(event)
+                        : view}
+                  </h1>
 
-              <p className="mt-3 break-words text-sm text-neutral-600">
-                Signed in as {profile.email}
-              </p>
+                  <p className="mt-3 break-words text-sm text-neutral-600">
+                    Signed in as {profile.email}
+                  </p>
+                </div>
+                {view === 'Overview' && !event && !selection && (
+                  <div className="absolute right-0 top-0">
+                    <VolunteerCalendar
+                      onOpenCalendar={() => navigate('Calendar')}
+                    />
+                  </div>
+                )}
+              </div>
             </>
           )}
 
@@ -710,9 +719,9 @@ export default function VolunteerDashboard({
             </section>
           ) : view === 'Overview' ? (
             <div className="mt-9">
-              <section className="relative border-b border-neutral-200 pb-7">
-                <div className="min-h-[260px] lg:pr-[250px]">
-                  <h2 className="text-lg font-semibold">
+              <section className="border-b border-neutral-200 pb-7">
+                <div className="min-w-0">
+                  <h2 className="pr-[150px] text-lg font-semibold">
                     Your next shift
                   </h2>
 
@@ -753,13 +762,6 @@ export default function VolunteerDashboard({
                       </p>
                     </>
                   )}
-                </div>
-
-                {/* Small calendar preview */}
-                <div className="mt-5 flex justify-end lg:absolute lg:right-0 lg:top-1/2 lg:mt-0 lg:w-[280px] lg:-translate-y-[calc(50%+70px)]">
-                  <VolunteerCalendar
-                    onOpenCalendar={() => navigate('Calendar')}
-                  />
                 </div>
               </section>
 

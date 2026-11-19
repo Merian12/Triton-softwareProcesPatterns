@@ -114,9 +114,9 @@ export default function VolunteerCalendar({
       aria-label="Open calendar"
       className="
         group relative block
-        h-[250px] w-[260px]
+        h-[125px] w-[130px]
         shrink-0 overflow-hidden
-        rounded-[30px]
+        rounded-[15px]
         border border-neutral-200
         bg-white
         text-center
@@ -131,7 +131,7 @@ export default function VolunteerCalendar({
       <svg
         viewBox="0 0 260 100"
         preserveAspectRatio="none"
-        className="pointer-events-none absolute inset-x-0 top-0 h-[100px] w-full"
+        className="pointer-events-none absolute inset-x-0 top-0 h-[50px] w-full"
         aria-hidden="true"
       >
         {/* Flat red header */}
@@ -171,17 +171,17 @@ export default function VolunteerCalendar({
 
       {/* Calendar content */}
       <div className="absolute inset-0 z-10 flex flex-col items-center">
-        <div className="mt-[78px] text-[17px] font-bold tracking-[0.08em] text-[#1C1C1C]">
+        <div className="mt-[39px] text-[9px] leading-[10px] font-bold tracking-[0.08em] text-[#1C1C1C]">
           {weekday}
         </div>
 
         <div
           className="
-            mt-[-5px]
+            mt-[-2.5px]
             font-serif
-            text-[105px]
+            text-[52.5px]
             font-bold
-            leading-[1.08]
+            leading-none
             tracking-[-0.07em]
             text-[#1C1C1C]
           "
@@ -189,14 +189,14 @@ export default function VolunteerCalendar({
           {day}
         </div>
 
-        <div className="mt-[-3px] text-[15px] text-neutral-600">
+        <div className="mt-[-1.5px] text-[9px] leading-[10px] text-neutral-600">
           {shiftText}
         </div>
 
-        <div className="mt-auto mb-[13px] transition-transform duration-200 group-hover:translate-y-1">
+        <div className="mt-auto mb-[5px] transition-transform duration-200 group-hover:translate-y-0.5">
           <svg
-            width="20"
-            height="20"
+            width="10"
+            height="10"
             viewBox="0 0 24 24"
             fill="none"
             stroke="#262E40"

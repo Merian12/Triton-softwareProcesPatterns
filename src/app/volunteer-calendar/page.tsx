@@ -5,7 +5,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import RoleGuard from '@/components/RoleGuard';
 import { Logo } from '@/components/Logo';
-import { portalButton as button } from '@/components/portalStyles';
+import { navTab, portalNav, portalButton as button } from '@/components/portalStyles';
 
 export default function VolunteerCalendarPage() {
   const [loggingOut, setLoggingOut] = useState(false);
@@ -81,18 +81,20 @@ export default function VolunteerCalendarPage() {
               {/* Navigation */}
               <nav
                 aria-label="Main navigation"
-                className="flex flex-wrap gap-6 border-b border-neutral-200"
+                className={portalNav}
               >
                 {[
                   'Overview',
                   'Find events',
                   'My shifts',
+                  'Calendar',
                   'Messages',
                 ].map(item => (
                   <Link
                     key={item}
-                    href={`/volunteer-dashboard?view=${encodeURIComponent(item)}`}
-                    className="min-h-11 border-b-2 border-transparent py-3 text-sm text-neutral-600 focus-visible:outline-2 focus-visible:outline-[#FF0000]"
+                    href={item === 'Calendar' ? '/volunteer-calendar' : `/volunteer-dashboard?view=${encodeURIComponent(item)}`}
+                    aria-current={item === 'Calendar' ? 'page' : undefined}
+                    className={navTab(item === 'Calendar')}
                   >
                     {item}
                   </Link>

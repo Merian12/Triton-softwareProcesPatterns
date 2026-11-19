@@ -17,7 +17,7 @@ export const portalPrimary = primarySolid;
 export const portalShell = 'min-h-screen bg-background text-foreground';
 export const portalContainer = 'mx-auto max-w-6xl px-5 sm:px-9';
 export const portalTopbar = 'bg-brand text-white';
-export const portalNav = 'flex gap-6 overflow-x-auto border-b border-border-subtle';
+export const portalNav = 'flex flex-wrap items-center gap-4 border-b border-border-subtle px-2 py-3';
 export const panel = 'border-b border-border-subtle pb-7';
 export const card = 'rounded-xl border border-brand/40 p-5';
 
@@ -30,8 +30,8 @@ export const checkbox = 'size-4 accent-brand';
 
 // Navigation tab helper
 export function navTab(active: boolean) {
-  return `min-h-11 shrink-0 cursor-pointer border-b-2 py-3 text-sm focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand ${
-    active ? 'border-brand font-semibold text-foreground' : 'border-transparent text-muted hover:text-foreground'
+  return `inline-flex min-h-11 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-brand px-4 py-2 text-sm transition-[scale,background-color,color] duration-200 ease-out hover:scale-[1.08] hover:bg-brand/5 hover:text-foreground focus-visible:scale-[1.08] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand motion-reduce:transition-none ${
+    active ? 'scale-[1.08] bg-brand/5 font-semibold text-foreground' : 'text-muted'
   }`;
 }
 
