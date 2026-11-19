@@ -1,5 +1,5 @@
 'use client';
-
+import { useLanguage } from '@/components/LanguageProvider';
 import { useEffect, useRef, useState } from 'react';
 import { Logo } from '@/components/Logo';
 import { navTab, portalContainer, portalNav, portalTopbar } from '@/components/portalStyles';
@@ -30,11 +30,12 @@ export default function PortalTopbar({
   roleLabel = 'Organizer',
   onProfile,
 }: Props) {
+  const { t } = useLanguage();
   const dropdown = useRef<HTMLDetailsElement>(null);
   const trigger = useRef<HTMLElement>(null);
   const [logoSpin, setLogoSpin] = useState(0);
   const emailName = email.split('@')[0].split(/[._+-]/)[0];
-  const fallbackName = emailName ? emailName[0].toLocaleUpperCase('en-GB') + emailName.slice(1) : 'My account';
+  const fallbackName = emailName ? emailName[0].toLocaleUpperCase('en-GB') + emailName.slice(1) : t('My account');
   const name = username?.trim() || fallbackName;
 
   useEffect(() => {
@@ -55,7 +56,7 @@ export default function PortalTopbar({
               setLogoSpin(c => c + 1);
               onNavigate('Overview');
             }}
-            aria-label="Volunteer Portal home"
+            aria-label={t("Volunteer Portal home")}
             className="flex min-h-11 cursor-pointer items-center gap-2.5 rounded-sm text-left focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
           >
             <Logo variant="symbol" colorScheme="white" hoverAnimation="none" spinTrigger={logoSpin} className="size-8 shrink-0" />
@@ -85,7 +86,7 @@ export default function PortalTopbar({
               </svg>
               <span className="text-left">
                 <span className="block max-w-28 truncate text-sm font-semibold">{name}</span>
-                <span className="block text-[11px] text-white/90">{roleLabel}</span>
+                <span className="block text-[11px] text-white/90">{t(roleLabel)}</span>
               </span>
               <svg
                 aria-hidden="true"
@@ -109,18 +110,17 @@ export default function PortalTopbar({
                   }}
                   className={dropdownItem}
                 >
-                  My profile
-                </button>
+                  {t("My profile")} </button>
               )}
               <button disabled={loggingOut} onClick={onLogout} className={dropdownItem}>
-                {loggingOut ? 'Logging out…' : 'Log out'}
+                {loggingOut ? t("Logging out…") : t("Log out")}
               </button>
             </div>
           </details>
         </div>
       </header>
       <div className={portalContainer}>
-        <nav aria-label="Main navigation" className={portalNav}>
+        <nav aria-label={t("Main navigation")} className={portalNav}>
           {(['Overview', 'Find events', 'My shifts', 'Messages'] as const).map(view => (
             <button
               type="button"
@@ -129,7 +129,7 @@ export default function PortalTopbar({
               onClick={() => onNavigate(view)}
               className={navTab(activeView === view)}
             >
-              {view}
+              {t(view)}
             </button>
           ))}
         </nav>

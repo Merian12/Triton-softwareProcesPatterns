@@ -1,5 +1,5 @@
-
 'use client';
+import { useLanguage } from '@/components/LanguageProvider';
 
 import { useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
@@ -71,33 +71,6 @@ const views: View[] = [
   'My profile',
 ];
 
-function eventName(event: Event) {
-  return event.title || event.name || 'Untitled event';
-}
-
-function shiftName(shift: Shift) {
-  return shift.title || 'Volunteer shift';
-}
-
-function formatDate(value: string) {
-  return new Date(value).toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
-}
-
-function formatTime(value: string) {
-  return new Date(value).toLocaleTimeString('en-GB', {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
-
-function shiftTime(shift: Shift) {
-  return `${formatTime(shift.starts_at)} – ${formatTime(shift.ends_at)}`;
-}
-
 function availablePlaces(shift: Shift) {
   if (shift.status !== 'open') return 0;
 
@@ -116,6 +89,29 @@ export default function VolunteerDashboard({
   profile: UserProfile;
   onLogout: () => Promise<void>;
 }) {
+  const { t, locale } = useLanguage();
+  function eventName(event: Event) {
+    return event.title || event.name || t('Untitled event');
+  }
+  function shiftName(shift: Shift) {
+    return shift.title || t('Volunteer shift');
+  }
+  function formatDate(value: string) {
+    return new Date(value).toLocaleDateString(locale, {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+  }
+  function formatTime(value: string) {
+    return new Date(value).toLocaleTimeString(locale, {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }
+  function shiftTime(shift: Shift) {
+    return `${formatTime(shift.starts_at)} – ${formatTime(shift.ends_at)}`;
+  }
   const searchParams = useSearchParams();
 
   const [view, setView] = useState<View>('Overview');
@@ -349,8 +345,7 @@ export default function VolunteerDashboard({
     if (!upcomingEvents.length) {
       return (
         <p className="mt-5 text-neutral-600">
-          No upcoming events available.
-        </p>
+          {t("No upcoming events available.")} </p>
       );
     }
 
@@ -379,7 +374,7 @@ export default function VolunteerDashboard({
             </span>
 
             <span className="text-sm text-neutral-600">
-              {date.toLocaleDateString('en-GB', {
+              {date.toLocaleDateString(locale, {
                 month: 'short',
               })}
             </span>
@@ -391,15 +386,14 @@ export default function VolunteerDashboard({
             </h3>
 
             <p className="mt-1 text-sm text-neutral-600">
-              {e.location || firstShift.location || 'Location TBA'}
+              {e.location || firstShift.location || t("Location TBA")}
               {' · '}
               {e.shifts.length}
-              {e.shifts.length === 1 ? ' shift' : ' shifts'}
+              {e.shifts.length === 1 ? t(" shift") : t(" shifts")}
             </p>
 
             <p className="mt-1 text-sm text-neutral-600">
-              {places} places available
-            </p>
+              {places} {t("places available")} </p>
           </div>
 
           <button
@@ -410,8 +404,7 @@ export default function VolunteerDashboard({
               setNotice('');
             }}
           >
-            View shifts
-          </button>
+            {t("View shifts")} </button>
         </article>
       );
     });
@@ -446,8 +439,7 @@ export default function VolunteerDashboard({
   </button>
 
   <span className="text-sm text-neutral-600">
-    Triton Swim Ballerup · demo club
-  </span>
+    {t("Triton Swim Ballerup · demo club")} </span>
 
   <div className="ml-auto flex gap-3">
     <button
@@ -455,8 +447,7 @@ export default function VolunteerDashboard({
       className={button}
       onClick={() => navigate('My profile')}
     >
-      My profile
-    </button>
+      {t("My profile")} </button>
 
     <button
       type="button"
@@ -464,14 +455,14 @@ export default function VolunteerDashboard({
       disabled={loggingOut}
       onClick={logout}
     >
-      {loggingOut ? 'Logging out…' : 'Log out'}
+      {loggingOut ? t("Logging out…") : t("Log out")}
     </button>
   </div>
 </header>
 
 {/* Navigation */}
 <nav
-  aria-label="Main navigation"
+  aria-label={t("Main navigation")}
   className={portalNav}
 >
   {(
@@ -490,11 +481,10 @@ export default function VolunteerDashboard({
       className={navTab(view === item)}
       onClick={() => navigate(item)}
     >
-      {item}
+      {t(item)}
     </button>
   ))}
 </nav>
-
 
    
       
@@ -514,8 +504,8 @@ export default function VolunteerDashboard({
                       setEvent(null);
                     }
                   }}
-                  aria-label="Go back"
-                  title="Go back"
+                  aria-label={t("Go back")}
+                  title={t("Go back")}
                   className="mb-5 flex h-10 w-10 items-center justify-center rounded-md text-neutral-900 transition-colors hover:bg-neutral-100 hover:text-[#FF0000]"
                 >
                   <svg
@@ -538,14 +528,14 @@ export default function VolunteerDashboard({
                 <div className="min-w-0">
                   <h1 className="text-3xl font-semibold tracking-tight">
                     {selection
-                      ? 'Review your shift'
+                      ? t("Review your shift")
                       : event
                         ? eventName(event)
-                        : view}
+                        : t(view)}
                   </h1>
 
                   <p className="mt-3 break-words text-sm text-neutral-600">
-                    Signed in as {profile.email}
+                    {t("Signed in as")} {profile.email}
                   </p>
                 </div>
                 {view === 'Overview' && !event && !selection && (
@@ -561,8 +551,7 @@ export default function VolunteerDashboard({
 
           {loading && (
             <p className="mt-5 text-sm text-neutral-500">
-              Loading events and registrations...
-            </p>
+              {t("Loading events and registrations...")} </p>
           )}
 
           {notice && (
@@ -570,13 +559,13 @@ export default function VolunteerDashboard({
               role="status"
               className="mt-6 border-b border-neutral-300 py-4"
             >
-              {notice}
+              {t(notice)}
             </p>
           )}
 
           {error && (
             <p role="alert" className="mt-6 text-red-800">
-              {error}
+              {t(error)}
             </p>
           )}
 
@@ -594,14 +583,14 @@ export default function VolunteerDashboard({
                   Location:
                     selection.shift.location ||
                     selection.event.location ||
-                    'TBA',
+                    t('TBA'),
                   Task:
                     selection.shift.description ||
-                    'No description provided.',
+                    t('No description provided.'),
                 }).map(([key, value]) => (
                   <div key={key} className="contents">
                     <dt className="text-neutral-600">
-                      {key}
+                      {t(key)}
                     </dt>
                     <dd>{value}</dd>
                   </div>
@@ -610,20 +599,17 @@ export default function VolunteerDashboard({
 
               {registered(selection.shift) ? (
                 <div className="mt-6">
-                  <p>You are registered for this shift.</p>
+                  <p>{t("You are registered for this shift.")}</p>
 
                   <button
                     type="button"
                     className={`${button} mt-4`}
                     onClick={() => navigate('Messages')}
                   >
-                    Message coordinator
-                  </button>
+                    {t("Message coordinator")} </button>
 
                   <p className="mt-3 text-sm text-neutral-600">
-                    To change or cancel a shift,
-                    contact your coordinator.
-                  </p>
+                    {t("To change or cancel a shift, contact your coordinator.")} </p>
                 </div>
               ) : (
                 <>
@@ -636,9 +622,7 @@ export default function VolunteerDashboard({
                         setAccepted(e.target.checked)
                       }
                     />
-                    I have read the task description
-                    and can attend the entire shift.
-                  </label>
+                    {t("I have read the task description and can attend the entire shift.")} </label>
 
                   <button
                     type="button"
@@ -652,8 +636,8 @@ export default function VolunteerDashboard({
                     onClick={confirm}
                   >
                     {registering
-                      ? 'Registering...'
-                      : 'Confirm registration'}
+                      ? t("Registering...")
+                      : t("Confirm registration")}
                   </button>
                 </>
               )}
@@ -684,17 +668,17 @@ export default function VolunteerDashboard({
                         {' · '}
                         {shiftTime(s)}
                         {' · '}
-                        {s.location || event.location || 'TBA'}
+                        {s.location || event.location || t("TBA")}
                       </p>
 
                       <p className="mt-2 text-sm">
                         {isRegistered
-                          ? 'Registered'
+                          ? t("Registered")
                           : full
-                            ? 'Fully booked'
+                            ? t("Fully booked")
                             : available === null
-                              ? 'Places available'
-                              : `${available} places available`}
+                              ? t("Places available")
+                              : t("{value0} places available", { value0: available })}
                       </p>
                     </div>
 
@@ -707,10 +691,10 @@ export default function VolunteerDashboard({
                       onClick={() => choose(event, s)}
                     >
                       {isRegistered
-                        ? 'Registered'
+                        ? t("Registered")
                         : full
-                          ? 'Fully booked'
-                          : 'Choose shift'}
+                          ? t("Fully booked")
+                          : t("Choose shift")}
                     </button>
                   </article>
                 );
@@ -721,8 +705,7 @@ export default function VolunteerDashboard({
               <section className="border-b border-neutral-200 pb-7">
                 <div className="min-w-0">
                   <h2 className="pr-[150px] text-lg font-semibold">
-                    Your next shift
-                  </h2>
+                    {t("Your next shift")} </h2>
 
                   {next ? (
                     <>
@@ -745,20 +728,15 @@ export default function VolunteerDashboard({
                           choose(next.event, next.shift)
                         }
                       >
-                        View shift
-                      </button>
+                        {t("View shift")} </button>
                     </>
                   ) : (
                     <>
                       <p className="mt-4 text-neutral-600">
-                        You have not signed up for
-                        an upcoming shift yet.
-                      </p>
+                        {t("You have not signed up for an upcoming shift yet.")} </p>
 
                       <p className="mt-2 text-sm text-neutral-600">
-                        Choose an event below to find
-                        an available task.
-                      </p>
+                        {t("Choose an event below to find an available task.")} </p>
                     </>
                   )}
                 </div>
@@ -766,8 +744,7 @@ export default function VolunteerDashboard({
 
               <section className="mt-8">
                 <h2 className="text-lg font-semibold">
-                  Upcoming events
-                </h2>
+                  {t("Upcoming events")} </h2>
 
                 {eventList()}
               </section>
@@ -800,30 +777,23 @@ export default function VolunteerDashboard({
           ) : (
             <section className="mt-8">
               <h2 className="font-semibold">
-                Account details
-              </h2>
+                {t("Account details")} </h2>
 
               <dl className="mt-5 grid max-w-xl grid-cols-[90px_1fr] gap-4 text-sm">
-                <dt>Email</dt>
+                <dt>{t("Email")}</dt>
                 <dd className="break-all">
                   {profile.email}
                 </dd>
 
-                <dt>Role</dt>
-                <dd>{profile.role}</dd>
+                <dt>{t("Role")}</dt>
+                <dd>{t(profile.role)}</dd>
               </dl>
 
               <p className="mt-5 text-sm text-neutral-600">
-                Profile editing and club membership
-                are not yet available in this project.
-              </p>
+                {t("Profile editing and club membership are not yet available in this project.")} </p>
             </section>
           )}
         </main>
-
-        <footer className="border-t border-neutral-200 py-5 text-xs text-neutral-600">
-          Volunteer Portal
-        </footer>
       </div>
     </div>
   );

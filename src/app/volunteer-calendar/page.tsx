@@ -1,5 +1,6 @@
 
 'use client';
+import { useLanguage } from '@/components/LanguageProvider';
 import ExpandedCalendar from '@/components/ExpandedCalendar';
 import { useState } from 'react';
 import Link from 'next/link';
@@ -8,6 +9,7 @@ import { Logo } from '@/components/Logo';
 import { navTab, portalNav, portalButton as button } from '@/components/portalStyles';
 
 export default function VolunteerCalendarPage() {
+  const { t } = useLanguage();
   const [loggingOut, setLoggingOut] = useState(false);
   const [error, setError] = useState('');
   const [logoSpin, setLogoSpin] = useState(0);
@@ -64,7 +66,7 @@ export default function VolunteerCalendarPage() {
                     href="/volunteer-dashboard?view=My%20profile"
                     className={button}
                   >
-                    My profile
+                    {t('My profile')}
                   </Link>
 
                   <button
@@ -80,7 +82,7 @@ export default function VolunteerCalendarPage() {
 
               {/* Navigation */}
               <nav
-                aria-label="Main navigation"
+                aria-label={t('Main navigation')}
                 className={portalNav}
               >
                 {[
@@ -96,16 +98,15 @@ export default function VolunteerCalendarPage() {
                     aria-current={item === 'Calendar' ? 'page' : undefined}
                     className={navTab(item === 'Calendar')}
                   >
-                    {item}
+                    {t(item)}
                   </Link>
                 ))}
               </nav>
 
               {/* Calendar page content */}
            <main className="pt-3 pb-4">
-  <h1 className="text-3xl font-semibold tracking-tight">
-
-  </h1>
+  {error && <p role="alert" className="mb-4 text-sm text-red-800">{t(error)}</p>}
+  <h1 className="sr-only">{t("Calendar")}</h1>
 
   <div className="mt-2">
     <ExpandedCalendar />

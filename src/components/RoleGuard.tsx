@@ -1,5 +1,5 @@
 'use client';
-
+import { useLanguage } from '@/components/LanguageProvider';
 import { useEffect, useState, useMemo, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { AuthService, UserProfile, UserRole } from '@/services/authService';
@@ -12,6 +12,7 @@ interface RoleGuardProps {
 }
 
 export const RoleGuard = ({ allowedRole, children }: RoleGuardProps) => {
+  const { t } = useLanguage();
   const router = useRouter();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [checking, setChecking] = useState(true);
@@ -51,9 +52,9 @@ export const RoleGuard = ({ allowedRole, children }: RoleGuardProps) => {
           variant="symbol"
           loading
           className="h-20 w-20"
-          ariaLabel="Loading permissions"
+          ariaLabel={t("Loading permissions")}
         />
-        <p className="text-sm text-gray-500">Checking permissions...</p>
+        <p className="text-sm text-gray-500">{t("Checking permissions...")}</p>
       </main>
     );
   }
