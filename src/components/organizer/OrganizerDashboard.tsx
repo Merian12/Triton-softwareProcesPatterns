@@ -53,7 +53,7 @@ export default function OrganizerDashboard({ profile, onLogout }: { profile: Use
   async function logout() {
     if (!canLeave()) return;
     setLoggingOut(true); setError('');
-    try { await onLogout(); } catch { setError('Could not log out. Please try again.'); setLoggingOut(false); }
+    try { await onLogout(); } catch { setError('Could not log out. Please try again.'); } finally { setLoggingOut(false); }
   }
   function openFilter() {
     return <label className="my-5 flex items-center gap-3 text-sm">

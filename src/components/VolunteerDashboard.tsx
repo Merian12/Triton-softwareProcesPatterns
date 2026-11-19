@@ -325,6 +325,7 @@ export default function VolunteerDashboard({
       await onLogout();
     } catch {
       setError('Could not log out. Please try again.');
+    } finally {
       setLoggingOut(false);
     }
   }
