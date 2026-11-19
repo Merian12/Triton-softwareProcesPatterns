@@ -1,17 +1,18 @@
 'use client';
 
-import { ReactNode, useState } from 'react';
-import { Volunteer } from '@/services/profileService';
+import { ReactNode, useEffect, useMemo, useState } from 'react';
+import { RegisteredEvents, Volunteer } from '@/services/profileService';
+import { SupabaseProfileEventRepository } from '@/repositories/supabaseProfileEventRepo';
 import ChangePasswordForm from '@/components/ChangePasswordForm';
 import ClubAccount from '@/components/ClubAccount';
+import MyEvents from '@/components/MyEvents';
+import { useSignedInProfile } from '@/components/ProfileShell';
 import { card, input, portalPrimary as primary } from '@/components/portalStyles';
 
 interface ProfileDetailsProps {
   user: Volunteer;
   clubs: string[];
   creditsPerEvent: number;
-  attendedEventsCount: number;
-  children: ReactNode;
 }
 
 function Dropdown({ title, children }: { title: string; children: ReactNode }) {
@@ -23,15 +24,45 @@ function Dropdown({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-export default function ProfileDetails({
-  user,
-  clubs,
-  creditsPerEvent,
-  attendedEventsCount,
-  children,
-}: ProfileDetailsProps) {
+export default function ProfileDetails({ user, clubs, creditsPerEvent }: ProfileDetailsProps) {
+  const profile = useSignedInProfile();
+  const eventRepo = useMemo(() => new SupabaseProfileEventRepository(), []);
+
   const [club, setClub] = useState(user.club);
   const [selectedClub, setSelectedClub] = useState(user.club);
+
+  const [events, setEvents] = useState<RegisteredEvents>({ upcoming: [], past: [] });
+  const [loadingEvents, setLoadingEvents] = useState(true);
+  const [eventsError, setEventsError] = useState<string | null>(null);
+
+  // Henter den indloggede frivilliges tilmeldinger fra Supabase.
+  useEffect(() => {
+    let ignore = false;
+
+    eventRepo
+      .getRegisteredEvents(profile.id)
+      .then((result) => {
+        if (!ignore) setEvents(result);
+      })
+      .catch((err: unknown) => {
+        if (!ignore) setEventsError(err instanceof Error ? err.message : 'Ukendt fejl.');
+      })
+      .finally(() => {
+        if (!ignore) setLoadingEvents(false);
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [eventRepo, profile.id]);
+
+  async function cancelRegistration(registrationId: string) {
+    await eventRepo.cancelRegistration(profile.id, registrationId);
+    setEvents((current) => ({
+      ...current,
+      upcoming: current.upcoming.filter((event) => event.id !== registrationId),
+    }));
+  }
 
   return (
     <>
@@ -47,7 +78,13 @@ export default function ProfileDetails({
         </dl>
       </section>
 
-      {children}
+      <MyEvents
+        upcoming={events.upcoming}
+        past={events.past}
+        loading={loadingEvents}
+        error={eventsError}
+        onCancel={cancelRegistration}
+      />
 
       <div className="mt-10 space-y-3">
         <Dropdown title="Skift klub">
@@ -82,7 +119,7 @@ export default function ProfileDetails({
             key={club}
             club={club}
             creditsPerEvent={creditsPerEvent}
-            attendedEventsCount={attendedEventsCount}
+            attendedEventsCount={events.past.length}
           />
         </Dropdown>
       </div>

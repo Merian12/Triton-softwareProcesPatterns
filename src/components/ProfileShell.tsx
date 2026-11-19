@@ -1,8 +1,9 @@
 'use client';
 
-import { ReactNode, useState } from 'react';
+import { createContext, ReactNode, useContext, useState } from 'react';
 import Link from 'next/link';
 import RoleGuard from '@/components/RoleGuard';
+import type { UserProfile } from '@/services/authService';
 import { Logo } from '@/components/Logo';
 import { navTab, portalNav, portalButton as button } from '@/components/portalStyles';
 
@@ -14,6 +15,15 @@ function navHref(item: (typeof navItems)[number]) {
     : `/volunteer-dashboard?view=${encodeURIComponent(item)}`;
 }
 
+// Giver komponenterne på profilsiden adgang til den bruger, der er logget ind.
+const SignedInProfileContext = createContext<UserProfile | null>(null);
+
+export function useSignedInProfile() {
+  const profile = useContext(SignedInProfileContext);
+  if (!profile) throw new Error('useSignedInProfile must be used inside ProfileShell.');
+  return profile;
+}
+
 // Samme header, navigation og footer som volunteer-dashboardet og kalenderen.
 export default function ProfileShell({ children }: { children: ReactNode }) {
   const [loggingOut, setLoggingOut] = useState(false);
@@ -22,7 +32,7 @@ export default function ProfileShell({ children }: { children: ReactNode }) {
 
   return (
     <RoleGuard allowedRole="volunteer">
-      {(_profile, handleLogout) => {
+      {(profile, handleLogout) => {
         async function logout() {
           setLoggingOut(true);
           setError('');
@@ -83,7 +93,9 @@ export default function ProfileShell({ children }: { children: ReactNode }) {
                 </p>
               )}
 
-              <main className="py-9">{children}</main>
+              <main className="py-9">
+                <SignedInProfileContext value={profile}>{children}</SignedInProfileContext>
+              </main>
 
               <footer className="border-t border-neutral-200 py-5 text-xs text-neutral-600">
                 Volunteer Portal
