@@ -30,8 +30,8 @@ export const checkbox = 'size-4 accent-brand';
 
 // Navigation tab helper
 export function navTab(active: boolean) {
-  return `inline-flex min-h-11 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-brand px-4 py-2 text-sm transition-[scale,background-color,color] duration-200 ease-out hover:scale-[1.08] hover:bg-brand/5 hover:text-foreground focus-visible:scale-[1.08] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand motion-reduce:transition-none ${
-    active ? 'scale-[1.08] bg-brand/5 font-semibold text-foreground' : 'text-muted'
+  return `inline-flex min-h-11 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-brand px-4 py-2 text-sm font-semibold text-foreground transition-[scale,background-color,color] duration-200 ease-out hover:scale-[1.08] hover:bg-brand/5 hover:text-foreground focus-visible:scale-[1.08] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand motion-reduce:transition-none ${
+    active ? 'scale-[1.08] bg-brand/5' : ''
   }`;
 }
 

@@ -24,7 +24,7 @@ export default function ShiftCalendar({ shifts, loading = false, error = null }:
   const firstDay = (new Date(year, month, 1).getDay() + 6) % 7;
   const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-  // Always display 6 weeks to maintain a square calendar.
+  // Always display 6 weeks to keep the calendar height consistent.
   const days: (number | null)[] = [
     ...Array(firstDay).fill(null),
     ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
@@ -62,11 +62,23 @@ export default function ShiftCalendar({ shifts, loading = false, error = null }:
     selectedDate !== null ? getShiftsForDay(selectedDate) : [];
 
   return (
-    <div role="region" aria-label={`${currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })} shift calendar`} className="flex aspect-square w-full max-w-[400px] min-h-0 flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white p-5 shadow-xl sm:p-6">
+    <div role="region" aria-label={`${currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })} shift calendar`} className="relative flex w-full max-w-[400px] flex-col overflow-hidden rounded-[30px] border border-neutral-200 bg-white px-5 pb-5 pt-[88px] sm:px-6 sm:pb-6">
+
+      {/* Same signature curves as the volunteer calendar. */}
+      <svg
+        viewBox="0 0 260 100"
+        preserveAspectRatio="none"
+        className="pointer-events-none absolute inset-x-0 top-0 h-[90px] w-full"
+        aria-hidden="true"
+      >
+        <path d="M 0 0 H 260 V 42 C 190 10, 100 48, 0 100 Z" fill="#D7142A" />
+        <path d="M 0 55 C 22 67, 52 56, 100 43 C 65 62, 25 83, 0 100 Z" fill="#262E40" />
+        <path d="M 0 100 C 38 62, 91 45, 145 34 C 90 51, 37 75, 0 100 Z" fill="#C8101E" />
+      </svg>
 
       {/* Month navigation */}
-      <div className="mb-3 flex shrink-0 items-center justify-between">
-        <h2 className="text-lg font-semibold text-gray-900">
+      <div className="relative mb-3 flex shrink-0 items-center justify-between gap-2">
+        <h2 className="text-base font-semibold text-foreground">
           {currentMonth.toLocaleDateString('en-US', {
             month: 'long',
             year: 'numeric',
@@ -78,7 +90,7 @@ export default function ShiftCalendar({ shifts, loading = false, error = null }:
             type="button"
             onClick={() => changeMonth(-1)}
             aria-label="Previous month"
-            className="rounded-lg px-2 py-1 text-gray-500 hover:bg-gray-100"
+            className="flex size-9 items-center justify-center rounded-full text-xl text-[#262E40] transition-colors hover:bg-[#D7142A]/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
           >
             ‹
           </button>
@@ -87,7 +99,7 @@ export default function ShiftCalendar({ shifts, loading = false, error = null }:
             type="button"
             onClick={() => changeMonth(1)}
             aria-label="Next month"
-            className="rounded-lg px-2 py-1 text-gray-500 hover:bg-gray-100"
+            className="flex size-9 items-center justify-center rounded-full text-xl text-[#262E40] transition-colors hover:bg-[#D7142A]/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
           >
             ›
           </button>
@@ -95,12 +107,12 @@ export default function ShiftCalendar({ shifts, loading = false, error = null }:
       </div>
 
       {/* Calendar */}
-      <div className="grid min-h-0 flex-1 grid-cols-7 grid-rows-7 gap-1 text-center">
+      <div className="grid min-h-[260px] grid-cols-7 grid-rows-7 gap-1 text-center">
 
         {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, i) => (
           <div
             key={`weekday-${i}`}
-            className="flex min-h-0 items-center justify-center text-xs font-medium text-gray-400"
+            className="flex min-h-0 items-center justify-center text-xs font-medium text-muted"
           >
             {day}
           </div>
@@ -133,10 +145,11 @@ export default function ShiftCalendar({ shifts, loading = false, error = null }:
                   })}${isToday ? ', today' : ''}${dayShifts.length ? `, ${dayShifts.length} shifts` : ''}`}
                   aria-current={isToday ? 'date' : undefined}
                   aria-pressed={isSelected}
-                  className={`relative flex aspect-square w-full max-w-230 flex-col items-center justify-center rounded-full text-sm transition-colors
-                    ${isToday ? 'bg-red-500 text-white' : ''}
-                    ${isSelected && !isToday ? 'bg-blue-100 text-blue-700' : ''}
-                    ${!isToday && !isSelected ? 'text-gray-700 hover:bg-gray-100' : ''}
+                  className={`relative flex aspect-square w-full max-w-10 flex-col items-center justify-center rounded-full text-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand
+                    ${isToday ? 'bg-[#D7142A] text-white' : ''}
+                    ${isSelected ? 'ring-2 ring-[#262E40] ring-offset-2' : ''}
+                    ${isSelected && !isToday ? 'bg-[#D7142A]/10 text-[#1C1C1C]' : ''}
+                    ${!isToday && !isSelected ? 'text-[#1C1C1C] hover:bg-[#D7142A]/10' : ''}
                   `}
                 >
                   <span>{day}</span>
@@ -144,7 +157,7 @@ export default function ShiftCalendar({ shifts, loading = false, error = null }:
                   {dayShifts.length > 0 && (
                     <span
                       className={`absolute bottom-0.5 h-1 w-1 rounded-full ${
-                        isToday ? 'bg-white' : 'bg-blue-500'
+                        isToday ? 'bg-white' : 'bg-[#262E40]'
                       }`}
                     />
                   )}
@@ -156,19 +169,19 @@ export default function ShiftCalendar({ shifts, loading = false, error = null }:
       </div>
 
       {/* Selected date and shifts */}
-      <div className="mt-2 shrink-0 border-t border-gray-100 pt-3">
+      <div className="mt-2 shrink-0 border-t border-neutral-200 pt-3">
         {error ? (
-          <p className="text-xs text-red-600">{error}</p>
+          <p className="text-sm text-red-600">{error}</p>
         ) : loading ? (
-          <p className="text-xs text-gray-500">
+          <p className="text-sm text-muted">
             Loading shifts...
           </p>
         ) : selectedDate === null ? (
-          <p className="text-xs text-gray-500">
+          <p className="text-sm text-muted">
             Select a date to view shifts
           </p>
         ) : selectedShifts.length === 0 ? (
-          <p className="text-xs text-gray-500">
+          <p className="text-sm text-muted">
             No shifts on {selectedDate}{' '}
             {currentMonth.toLocaleDateString('en-US', {
               month: 'long',
@@ -177,7 +190,7 @@ export default function ShiftCalendar({ shifts, loading = false, error = null }:
         ) : (
           <div className="max-h-20 space-y-2 overflow-y-auto">
             {selectedShifts.map((shift) => (
-              <div key={shift.id} className="text-xs">
+              <div key={shift.id} className="text-sm">
                 <p className="font-semibold text-gray-900">
                   {shift.title}
                 </p>

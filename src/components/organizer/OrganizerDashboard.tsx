@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import type { UserProfile } from '@/services/authService';
 import { ClubEvent, EventService, overview, staffing } from '@/services/eventService';
 import { DemoEventRepository } from '@/repositories/demoEventRepo';
+import Messages from '@/components/Messages';
 import OrganizerManagement from '@/components/OrganizerManagement';
 import ShiftCalendar from '@/components/ShiftCalendar';
 import EventEditor from './EventEditor';
@@ -160,10 +161,7 @@ export default function OrganizerDashboard({ profile, onLogout }: { profile: Use
             </section>)}
             {!events.some(event => event.shifts.length) && <p className="text-sm text-neutral-600">No shifts yet.</p>}
           </section>}
-          {view === 'Messages' && <section className="mt-8 rounded-xl border border-neutral-200 px-6 py-12 text-center" aria-label="Messages">
-            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="mx-auto mb-4 size-9 text-neutral-400"><path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6A8.4 8.4 0 0 1 12.5 3h.5a8.5 8.5 0 0 1 8 8v.5Z" /></svg>
-            <p className="text-sm text-neutral-600">No messages yet.</p>
-          </section>}
+          {view === 'Messages' && <Messages userId={profile.id} />}
         </>}
       </main>
     </div>

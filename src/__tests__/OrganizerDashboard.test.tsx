@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import OrganizerDashboard from '@/components/organizer/OrganizerDashboard';
 vi.mock('@/lib/supabaseClient', () => ({ supabase: {} }));
@@ -52,8 +52,8 @@ describe('Organizer dashboard', () => {
 
 
 describe('Organizer navigation and calendar', () => {
-  it('reuses the calendar, links every tab and shows one person per volunteer place', () => {
-    vi.useFakeTimers();
+  it('reuses the calendar, links every tab and shows one person per volunteer place', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
     vi.setSystemTime(new Date('2027-05-01T12:00:00'));
     try {
       render(<OrganizerDashboard profile={profile} onLogout={vi.fn()} />);
@@ -70,8 +70,10 @@ describe('Organizer navigation and calendar', () => {
       expect(screen.getByRole('region', { name: 'June 2027 shift calendar' })).toBeInTheDocument();
       fireEvent.click(within(navigation).getByRole('button', { name: 'My shifts' }));
       expect(screen.getByRole('region', { name: 'Shift management' })).toBeInTheDocument();
-      fireEvent.click(within(navigation).getByRole('button', { name: 'Messages' }));
-      expect(screen.getByText('No messages yet.')).toBeInTheDocument();
+      await act(async () => {
+        fireEvent.click(within(navigation).getByRole('button', { name: 'Messages' }));
+      });
+      expect(screen.getByLabelText('Recipient email')).toBeInTheDocument();
       expect(screen.queryByText(/Eksempeldata|lokal demo|Offentliggjort/)).not.toBeInTheDocument();
     } finally {
       vi.useRealTimers();
