@@ -1,6 +1,7 @@
 'use client';
 import { useLanguage } from '@/components/LanguageProvider';
 import { useEffect, useRef, useState } from 'react';
+import { AccountIdentity } from '@/components/AccountIdentity';
 import { Logo } from '@/components/Logo';
 import { navTab, portalContainer, portalNav, portalTopbar } from '@/components/portalStyles';
 
@@ -34,9 +35,6 @@ export default function PortalTopbar({
   const dropdown = useRef<HTMLDetailsElement>(null);
   const trigger = useRef<HTMLElement>(null);
   const [logoSpin, setLogoSpin] = useState(0);
-  const emailName = email.split('@')[0].split(/[._+-]/)[0];
-  const fallbackName = emailName ? emailName[0].toLocaleUpperCase('en-GB') + emailName.slice(1) : t('My account');
-  const name = username?.trim() || fallbackName;
 
   useEffect(() => {
     function closeOutside(event: PointerEvent | FocusEvent) {
@@ -81,14 +79,12 @@ export default function PortalTopbar({
               ref={trigger}
               className="flex min-h-11 cursor-pointer list-none items-center gap-2.5 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white [&::-webkit-details-marker]:hidden"
             >
-              <svg aria-hidden="true" viewBox="0 0 32 40" className="hidden h-7 w-6 fill-current sm:block">
-                <circle cx="16" cy="10" r="8" />
-                <path d="M1 36a15 15 0 0 1 30 0v2H1Z" />
-              </svg>
-              <span className="text-left">
-                <span className="block max-w-28 truncate text-sm font-semibold">{name}</span>
-                <span className="block text-[11px] text-white/90">{t(roleLabel)}</span>
-              </span>
+              <AccountIdentity
+                email={email}
+                username={username}
+                roleLabel={roleLabel}
+                roleClassName="text-white/90"
+              />
               <svg
                 aria-hidden="true"
                 viewBox="0 0 24 24"

@@ -10,6 +10,7 @@ import {
   portalNav,
 } from './portalStyles';
 import type { UserProfile } from '@/services/authService';
+import { AccountIdentity } from '@/components/AccountIdentity';
 import { Logo } from '@/components/Logo';
 import VolunteerCalendar from '@/components/VolunteerCalendar';
 import ExpandedCalendar from '@/components/ExpandedCalendar';
@@ -442,7 +443,15 @@ export default function VolunteerDashboard({
   <span className="text-sm text-neutral-600">
     {t("Triton Swim Ballerup · demo club")} </span>
 
-  <div className="ml-auto flex gap-3">
+  <div className="ml-auto flex flex-wrap items-center gap-3">
+    <div className="flex items-center gap-2.5 border-r border-border-subtle pr-3 text-[#262E40]">
+      <AccountIdentity
+        email={profile.email}
+        username={profile.username}
+        roleLabel="Volunteer"
+      />
+    </div>
+
     <button
       type="button"
       className={button}
@@ -781,7 +790,16 @@ export default function VolunteerDashboard({
                 {t("Account details")} </h2>
 
               <dl className="mt-5 grid max-w-xl grid-cols-[90px_1fr] gap-4 text-sm">
-                <dt>{t("Email")}</dt>
+                {profile.username && (
+                  <>
+                    <dt>Username</dt>
+                    <dd className="break-all">
+                      {profile.username}
+                    </dd>
+                  </>
+                )}
+
+                <dt>Email</dt>
                 <dd className="break-all">
                   {profile.email}
                 </dd>

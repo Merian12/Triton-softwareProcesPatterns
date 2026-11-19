@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { AuthService, IAuthRepository, UserProfile } from '@/services/authService';
+import { AuthService, displayNameFor, IAuthRepository, UserProfile } from '@/services/authService';
 
 describe('AuthService', () => {
   let mockAuthRepo: IAuthRepository;
@@ -215,5 +215,17 @@ describe('AuthService', () => {
 
       expect(mockAuthRepo.signOut).toHaveBeenCalledTimes(1);
     });
+  });
+});
+
+describe('displayNameFor()', () => {
+  it('prefers the trimmed username when provided', () => {
+    expect(displayNameFor('alice.smith@example.com', '  swim_alice  ')).toBe('swim_alice');
+  });
+
+  it('falls back to the capitalized email prefix when username is empty or missing', () => {
+    expect(displayNameFor('alice.smith@example.com')).toBe('Alice');
+    expect(displayNameFor('bob@example.com', '   ')).toBe('Bob');
+    expect(displayNameFor('')).toBe('My account');
   });
 });
