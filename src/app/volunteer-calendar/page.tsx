@@ -4,6 +4,7 @@ import ExpandedCalendar from '@/components/ExpandedCalendar';
 import { useState } from 'react';
 import Link from 'next/link';
 import RoleGuard from '@/components/RoleGuard';
+import { AccountIdentity } from '@/components/AccountIdentity';
 import { Logo } from '@/components/Logo';
 import { navTab, portalNav, portalButton as button } from '@/components/portalStyles';
 
@@ -60,7 +61,15 @@ export default function VolunteerCalendarPage() {
                   Triton Swim Ballerup · demo club
                 </span>
 
-                <div className="ml-auto flex gap-3">
+                <div className="ml-auto flex flex-wrap items-center gap-3">
+                  <div className="flex items-center gap-2.5 border-r border-border-subtle pr-3 text-[#262E40]">
+                    <AccountIdentity
+                      email={profile.email}
+                      username={profile.username}
+                      roleLabel="Volunteer"
+                    />
+                  </div>
+
                   <Link
                     href="/volunteer-dashboard?view=My%20profile"
                     className={button}
