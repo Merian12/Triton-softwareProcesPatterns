@@ -36,9 +36,9 @@ export function navTab(active: boolean) {
 }
 
 // Date formatting helper
-export function dateLabel(value: string) {
+export function dateLabel(value: string, locale = 'en-GB') {
   return value
-    ? new Date(`${value}T12:00:00`).toLocaleDateString('en-GB', {
+    ? new Date(`${value}T12:00:00`).toLocaleDateString(locale, {
         day: 'numeric',
         month: 'short',
         year: 'numeric',

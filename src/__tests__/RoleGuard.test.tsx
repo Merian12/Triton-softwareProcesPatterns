@@ -91,17 +91,17 @@ describe('RoleGuard Component', () => {
     });
   });
 
-  it('logs out and redirects to /login when handleLogout is called', async () => {
+  it.each(['organizer', 'volunteer'] as const)('logs out %s and redirects to /login', async role => {
     const user = userEvent.setup();
     mockGetCurrentUser.mockResolvedValue({
       id: 'org-1',
       email: 'organizer@example.com',
-      role: 'organizer',
+      role,
     });
     mockSignOut.mockResolvedValue(undefined);
 
     render(
-      <RoleGuard allowedRole="organizer">
+      <RoleGuard allowedRole={role}>
         {(profile, handleLogout) => (
           <div>
             <span>Welcome {profile.email}</span>

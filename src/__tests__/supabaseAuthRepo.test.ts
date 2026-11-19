@@ -231,7 +231,31 @@ describe('SupabaseAuthRepository', () => {
 
       await repo.signOut();
 
-      expect(mockSignOut).toHaveBeenCalledTimes(1);
+      expect(mockSignOut).toHaveBeenCalledWith({ scope: 'local' });
+    });
+    it('propagates errors when the session is still active', async () => {
+      const error = new Error('Logout failed');
+      mockSignOut.mockResolvedValue({ error });
+      mockGetSession.mockResolvedValue({ data: { session: { user: { id: 'u1' } } }, error: null });
+      await expect(repo.signOut()).rejects.toThrow('Logout failed');
+    });
+
+    it('finishes when local sign-out succeeded despite a server error', async () => {
+      mockSignOut.mockResolvedValue({ error: new Error('Network unavailable') });
+      mockGetSession.mockResolvedValue({ data: { session: null }, error: null });
+      await expect(repo.signOut()).resolves.toBeUndefined();
+    });
+
+    it('rejects a stuck SDK call so the logout button can be retried', async () => {
+      vi.useFakeTimers();
+      try {
+        mockSignOut.mockReturnValue(new Promise(() => {}));
+        const result = expect(repo.signOut()).rejects.toThrow('Logout timed out');
+        await vi.advanceTimersByTimeAsync(12_000);
+        await result;
+      } finally {
+        vi.useRealTimers();
+      }
     });
   });
 });

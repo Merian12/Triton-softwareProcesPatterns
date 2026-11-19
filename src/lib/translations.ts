@@ -1,0 +1,123 @@
+// English UI text is the key; keep domain values and user-authored content unchanged.
+export const danish: Record<string, string> = {
+  'Overview': 'Overblik', 'Find events': 'Find events', 'My shifts': 'Mine vagter', 'Calendar': 'Kalender', 'Messages': 'Beskeder',
+  'Volunteer': 'Frivillig', 'Organizer': 'Arrangør', 'Admin': 'Administrator', 'volunteer': 'Frivillig', 'organizer': 'Arrangør', 'admin': 'Administrator',
+  'My account': 'Min konto', 'My profile': 'Min profil', 'Account details': 'Kontooplysninger', 'Username': 'Brugernavn', 'Email': 'E-mail',
+  'Password': 'Adgangskode', 'Confirm Password': 'Bekræft adgangskode', 'Role': 'Rolle',
+  'Create your account': 'Opret din konto', 'Sign in as a Volunteer or Organizer': 'Log ind som frivillig eller arrangør',
+  'Already have an account?': 'Har du allerede en konto?', "Don't have an account?": 'Har du ikke en konto?',
+  'Creating account...': 'Opretter konto...', 'Signing in...': 'Logger ind...', 'Sign Up': 'Opret konto', 'Log In': 'Log ind',
+  'Log out': 'Log ud', 'Logging out…': 'Logger ud…', 'your_username': 'dit_brugernavn', 'you@example.com': 'dig@eksempel.dk',
+  'Checking permissions...': 'Kontrollerer adgang...', 'Loading permissions': 'Indlæser adgangsrettigheder',
+  'Skip to content': 'Gå til indhold', 'Volunteer Portal home': 'Frivilligportalens forside', 'Main navigation': 'Hovednavigation',
+  'Upcoming events': 'Kommende events', 'All events': 'Alle events', '+ Create event': '+ Opret event', 'Create event': 'Opret event',
+  'Edit event': 'Rediger event', 'Edit': 'Rediger', 'Edit {value0}': 'Rediger {value0}',
+  'View shifts': 'Se vagter', 'View shifts for {value0}': 'Se vagter for {value0}', 'View shift': 'Se vagt', 'View details': 'Se detaljer',
+  'Your calendar': 'Din kalender', 'Events': 'Events', 'Open shifts': 'Ledige vagter', 'Open places': 'Ledige pladser',
+  'Draft': 'Kladde', 'Draft updated.': 'Kladden er opdateret.', 'Event updated.': 'Eventet er opdateret.',
+  'event': 'event', 'events': 'events', 'No upcoming events.': 'Ingen kommende events.', 'No upcoming events available.': 'Ingen kommende events tilgængelige.',
+  'Location not specified': 'Sted ikke angivet', 'Location TBA': 'Sted oplyses senere', 'TBA': 'Oplyses senere',
+  'Only shifts with available places': 'Kun vagter med ledige pladser', 'Shift management': 'Vagter og tilmeldinger',
+  'View volunteers (': 'Se frivillige (', 'No volunteers signed up yet.': 'Ingen frivillige har tilmeldt sig endnu.',
+  'No shifts yet.': 'Ingen vagter endnu.', 'No shifts with available places.': 'Ingen vagter med ledige pladser.',
+  'Event calendar and staffing': 'Eventkalender og bemanding', 'Volunteer places': 'Frivilligpladser',
+  '{value0} volunteer places': 'Frivilligpladser til {value0}',
+  '{value0}: {value1} of {value2} filled': '{value0}: {value1} af {value2} besat',
+  'signed up': 'tilmeldte', 'signed up /': 'tilmeldte /', 'volunteers needed': 'frivillige søges', 'registrations': 'tilmeldinger',
+  'Close form': 'Luk formular', 'Event setup steps': 'Trin til oprettelse af event', 'Event details': 'Eventoplysninger', 'Shifts': 'Vagter', 'Review': 'Gennemse',
+  'Name': 'Navn', 'Location': 'Sted', 'Description and instructions': 'Beskrivelse og vejledning', 'Start date': 'Startdato', 'End date': 'Slutdato',
+  'Registration deadline': 'Tilmeldingsfrist', 'Contact person': 'Kontaktperson', 'Plan shifts': 'Planlæg vagter', 'Shift': 'Vagt',
+  'Task description': 'Opgavebeskrivelse', 'Date': 'Dato', 'Volunteers needed': 'Antal frivillige', 'Start time': 'Starttidspunkt', 'End time': 'Sluttidspunkt',
+  'Remove shift': 'Fjern vagt', 'A shift with registrations cannot be removed.': 'En vagt med tilmeldinger kan ikke fjernes.', '+ Add shift': '+ Tilføj vagt',
+  'Review before saving': 'Gennemse før du gemmer', 'Registration deadline:': 'Tilmeldingsfrist:', 'Contact:': 'Kontakt:',
+  'Changes affect registrations': 'Ændringer påvirker tilmeldinger', 'Review the volunteers affected by these changes.': 'Gennemgå de frivillige, som ændringerne påvirker.',
+  'I have reviewed the changes and will inform the affected volunteers.': 'Jeg har gennemgået ændringerne og vil informere de berørte frivillige.',
+  'Back': 'Tilbage', 'Continue': 'Fortsæt', 'Save draft': 'Gem kladde', 'Save changes': 'Gem ændringer', 'Publish event': 'Offentliggør event',
+  'Discard your unsaved changes?': 'Vil du kassere dine ændringer, som ikke er gemt?',
+  'Fix the highlighted fields to continue.': 'Ret de markerede felter for at fortsætte.', 'Fix the highlighted fields before saving.': 'Ret de markerede felter, før du gemmer.',
+  'Confirm that you have reviewed the affected registrations.': 'Bekræft, at du har gennemgået de berørte tilmeldinger.', 'Could not save. Please try again.': 'Kunne ikke gemme. Prøv igen.',
+  'Enter the event name.': 'Indtast eventets navn.', 'Choose a valid date.': 'Vælg en gyldig dato.',
+  'The end date must be on or after the start date.': 'Slutdatoen skal være på eller efter startdatoen.',
+  'The registration deadline must be on or before the start date.': 'Tilmeldingsfristen skal være på eller før startdatoen.',
+  'Complete this field before publishing.': 'Udfyld feltet før offentliggørelse.', 'Add at least one shift before publishing.': 'Tilføj mindst én vagt før offentliggørelse.',
+  'Complete this field.': 'Udfyld feltet.', 'The shift must be within the event dates.': 'Vagten skal ligge inden for eventets datoer.',
+  'Choose a valid start time.': 'Vælg et gyldigt starttidspunkt.', 'The end time must be later than the start time on the same day.': 'Sluttidspunktet skal være efter starttidspunktet på samme dag.',
+  'Enter a positive whole number.': 'Indtast et positivt heltal.',
+  'There are already {value0} volunteers signed up. Capacity cannot be lower.': 'Der er allerede {value0} frivillige tilmeldt. Antallet af pladser kan ikke være lavere.',
+  'A published event cannot be changed to a draft.': 'Et offentliggjort event kan ikke ændres til en kladde.',
+  'Shifts with registrations require a separate cancellation workflow.': 'Vagter med tilmeldinger skal aflyses særskilt.',
+  'Your next shift': 'Din næste vagt', 'You have not signed up for an upcoming shift yet.': 'Du har endnu ikke tilmeldt dig en kommende vagt.',
+  'Choose an event below to find an available task.': 'Vælg et event nedenfor for at finde en ledig opgave.',
+  'Signed in as': 'Logget ind som', 'Review your shift': 'Gennemgå din vagt', 'Go back': 'Gå tilbage',
+  'Loading events and registrations...': 'Indlæser events og tilmeldinger...', 'Event': 'Event', 'Time': 'Tid', 'Task': 'Opgave',
+  'No description provided.': 'Ingen beskrivelse angivet.', 'You are registered for this shift.': 'Du er tilmeldt denne vagt.',
+  'Message coordinator': 'Skriv til koordinator', 'To change or cancel a shift, contact your coordinator.': 'Kontakt din koordinator for at ændre eller afmelde en vagt.',
+  'I have read the task description and can attend the entire shift.': 'Jeg har læst opgavebeskrivelsen og kan deltage i hele vagten.',
+  'Registering...': 'Tilmelder...', 'Confirm registration': 'Bekræft tilmelding', 'Registered': 'Tilmeldt', 'Fully booked': 'Fuldt booket',
+  'Places available': 'Ledige pladser', '{value0} places available': '{value0} ledige pladser', 'places available': 'ledige pladser', 'Choose shift': 'Vælg vagt',
+  'Profile editing and club membership are not yet available in this project.': 'Profilredigering og klubmedlemskab er endnu ikke tilgængeligt i dette projekt.',
+  'Triton Swim Ballerup · demo club': 'Triton Swim Ballerup · demoklub', 'Untitled event': 'Event uden titel', 'Volunteer shift': 'Frivilligvagt',
+  'No shifts yet. Browse events to choose a task and time.': 'Ingen vagter endnu. Find et event for at vælge opgave og tidspunkt.',
+  'My notes': 'Mine noter', 'Loading notes...': 'Indlæser noter...', 'Could not load your calendar notes.': 'Kunne ikke indlæse dine kalendernoter.',
+  'Open calendar': 'Åbn kalender', 'No shifts today': 'Ingen vagter i dag', '1 shift today': '1 vagt i dag', '{value0} shifts today': '{value0} vagter i dag',
+  'Previous month': 'Forrige måned', 'Next month': 'Næste måned', 'Loading shifts...': 'Indlæser vagter...',
+  'Select a date to view shifts': 'Vælg en dato for at se vagter', 'No shifts on': 'Ingen vagter den', '{value0} shift calendar': 'Vagtkalender for {value0}',
+  ', today': ', i dag', ', {value0} shifts': ', {value0} vagter', ' shift': ' vagt', ' shifts': ' vagter',
+  'Select a date to view shifts or add a note.': 'Vælg en dato for at se vagter eller tilføje en note.',
+  'Today': 'I dag', 'Select {value0}': 'Vælg {value0}', 'Registered shift': 'Tilmeldt vagt', 'Registered shifts': 'Tilmeldte vagter',
+  'Close': 'Luk', 'Location:': 'Sted:', 'Description:': 'Beskrivelse:', 'Edit note': 'Rediger note', 'Delete note': 'Slet note',
+  'Delete this note?': 'Vil du slette denne note?', 'Write your notes for this day...': 'Skriv dine noter til denne dag...',
+  'Save note': 'Gem note', 'Saving...': 'Gemmer...', 'Loading calendar...': 'Indlæser kalender...', 'You must be signed in.': 'Du skal være logget ind.',
+  'Could not load calendar.': 'Kunne ikke indlæse kalenderen.', 'Could not save note.': 'Kunne ikke gemme noten.', 'Could not delete note.': 'Kunne ikke slette noten.',
+  'Note saved.': 'Noten er gemt.', 'Note deleted.': 'Noten er slettet.',
+  'Mon': 'Man', 'Tue': 'Tir', 'Wed': 'Ons', 'Thu': 'Tor', 'Fri': 'Fre', 'Sat': 'Lør', 'Sun': 'Søn',
+  'Manage organizers': 'Administrer arrangører', 'Remove organizer access to change an account to Volunteer.': 'Fjern arrangøradgang for at ændre kontoen til en frivilligkonto.',
+  'Retry': 'Prøv igen', 'Loading organizers…': 'Indlæser arrangører…', 'No organizers found.': 'Ingen arrangører fundet.',
+  'Remove organizer': 'Fjern arrangør', 'Remove organizer {value0}': 'Fjern arrangøren {value0}', 'Removing…': 'Fjerner…',
+  'Remove organizer access for {value0}? Their account will become a Volunteer account.': 'Vil du fjerne arrangøradgangen for {value0}? Kontoen bliver en frivilligkonto.',
+  '{value0} is now a Volunteer.': '{value0} er nu frivillig.', 'Could not load organizers.': 'Kunne ikke indlæse arrangører.', 'Could not remove organizer.': 'Kunne ikke fjerne arrangøren.',
+  'Message registered users using their email address. Conversations stay inside Volunteerportal and refresh automatically.': 'Skriv til registrerede brugere via deres e-mailadresse. Samtaler bliver på Triton og opdateres automatisk.',
+  'Conversations': 'Samtaler', 'Conversation': 'Samtale', 'New message': 'Ny besked', 'Loading messages...': 'Indlæser beskeder...', 'No messages yet.': 'Ingen beskeder endnu.',
+  'You': 'Dig', 'Recipient email': 'Modtagerens e-mail', 'Your message': 'Din besked', 'Send message': 'Send besked', 'Sending...': 'Sender...',
+  'Message sent.': 'Beskeden er sendt.', 'name@example.com': 'navn@eksempel.dk', 'Could not load messages. Please try again.': 'Kunne ikke indlæse beskeder. Prøv igen.',
+  'Could not load messages.': 'Kunne ikke indlæse beskeder.', 'Could not send message.': 'Kunne ikke sende beskeden.',
+  'No registered user has that email address.': 'Ingen registreret bruger har denne e-mailadresse.', 'Choose another user to message.': 'Vælg en anden bruger at skrive til.',
+  'Could not send your message. Please try again.': 'Kunne ikke sende din besked. Prøv igen.', 'Enter a valid recipient email.': 'Indtast en gyldig e-mailadresse til modtageren.',
+  'Write a message between 1 and 5,000 characters.': 'Skriv en besked på mellem 1 og 5.000 tegn.',
+  'Message sent, but the conversation could not refresh. It will retry automatically.': 'Beskeden er sendt, men samtalen kunne ikke opdateres. Der prøves automatisk igen.',
+  'Please enter a username.': 'Indtast et brugernavn.', 'Please enter a valid email address.': 'Indtast en gyldig e-mailadresse.',
+  'Password must be at least 6 characters.': 'Adgangskoden skal være på mindst 6 tegn.', 'Passwords do not match.': 'Adgangskoderne er ikke ens.',
+  'Sign-up failed.': 'Kunne ikke oprette kontoen.', 'Login failed.': 'Kunne ikke logge ind.', 'Invalid login credentials.': 'Forkert e-mail eller adgangskode.',
+  'Invalid login credentials': 'Forkert e-mail eller adgangskode.', 'Email not confirmed': 'Din e-mailadresse er ikke bekræftet.', 'User already registered': 'Brugeren er allerede registreret.',
+  'Could not create user profile.': 'Kunne ikke oprette brugerprofilen.', 'Could not load user role profile.': 'Kunne ikke indlæse brugerens rolle.',
+  'Admin accounts must be assigned by an administrator.': 'Administratorkonti skal tildeles af en administrator.', 'Could not log out. Please try again.': 'Kunne ikke logge ud. Prøv igen.',
+  'Not specified': 'Ikke angivet',
+  'You are already registered for this shift.': 'Du er allerede tilmeldt denne vagt.', 'This shift is unavailable.': 'Denne vagt er ikke tilgængelig.',
+  'Registration confirmed.': 'Din tilmelding er bekræftet.', 'Registration confirmed': 'Din tilmelding er bekræftet',
+  'Could not load events.': 'Kunne ikke indlæse events.', 'Could not load events and registrations.': 'Kunne ikke indlæse events og tilmeldinger.',
+  'You must be signed in to save notes.': 'Du skal være logget ind for at gemme noter.',
+  'You must be signed in to delete notes.': 'Du skal være logget ind for at slette noter.',
+  'Write a note before saving.': 'Skriv en note, før du gemmer.', 'Note has been saved under My shifts.': 'Noten er gemt under Mine vagter.',
+  'Registration confirmed. Your shift has been saved.': 'Din tilmelding er bekræftet. Din vagt er gemt.',
+  'Could not load volunteer data.': 'Kunne ikke indlæse dine frivilligoplysninger.',
+};
+
+export type Language = 'da' | 'en';
+export type TranslationParams = Record<string, string | number>;
+
+export function translate(language: Language, value: string | number | null | undefined, params: TranslationParams = {}): string {
+  if (value == null) return '';
+  let text = String(value);
+  if (language === 'da') {
+    if (danish[text] !== undefined) text = danish[text];
+    else {
+      // Errors stored in state can contain a count or email inserted before rendering.
+      for (const key of Object.keys(danish).filter(key => key.includes('{value'))) {
+        const pattern = key.split(/\{value\d+\}/).map(part => part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('(.+?)');
+        const match = new RegExp(`^${pattern}$`).exec(text);
+        if (match) { text = danish[key].replace(/\{value(\d+)\}/g, (_, index) => match[Number(index) + 1]); break; }
+      }
+    }
+  }
+  return text.replace(/\{(\w+)\}/g, (placeholder, key) => params[key] !== undefined ? String(params[key]) : placeholder);
+}

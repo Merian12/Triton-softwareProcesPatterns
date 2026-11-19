@@ -1,6 +1,7 @@
 import { DummyProfileRepository } from '@/repositories/dummyProfileRepo';
 import MyEvents from '@/components/MyEvents';
 import ProfileDetails from '@/components/ProfileDetails';
+import ProfileShell from '@/components/ProfileShell';
 
 export default async function ProfilePage() {
   const repo = new DummyProfileRepository();
@@ -11,8 +12,8 @@ export default async function ProfilePage() {
   const signedUpEvents = await repo.getUpcomingEvents();
 
   return (
-    <main className="min-h-screen bg-gray-50 p-8">
-      <h1 className="text-2xl font-bold text-gray-900">{currentUser.name}</h1>
+    <ProfileShell>
+      <h1 className="text-3xl font-semibold tracking-tight">{currentUser.name}</h1>
 
       <ProfileDetails
         user={currentUser}
@@ -22,6 +23,6 @@ export default async function ProfilePage() {
       >
         <MyEvents initialSignedUpEvents={signedUpEvents} pastEvents={pastEvents} />
       </ProfileDetails>
-    </main>
+    </ProfileShell>
   );
 }

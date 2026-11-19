@@ -83,6 +83,24 @@ export class SupabaseAuthRepository implements IAuthRepository {
   }
 
   async signOut(): Promise<void> {
-    await this.supabase.auth.signOut();
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    try {
+      await Promise.race([
+        (async () => {
+          const { error } = await this.supabase.auth.signOut({ scope: 'local' });
+          if (error) {
+            // The SDK can clear the browser session even if server revocation fails.
+            // Only proceed to login once that local sign-out is confirmed.
+            const { data, error: sessionError } = await this.supabase.auth.getSession();
+            if (sessionError || data.session) throw sessionError || error;
+          }
+        })(),
+        new Promise<never>((_, reject) => {
+          timer = setTimeout(() => reject(new Error('Logout timed out. Please try again.')), 12_000);
+        }),
+      ]);
+    } finally {
+      clearTimeout(timer);
+    }
   }
 }

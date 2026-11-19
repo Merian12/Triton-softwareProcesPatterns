@@ -5,7 +5,7 @@ import React, { useState } from 'react';
 export type LogoHoverAnimation = 'both' | 'left' | 'right' | 'none';
 
 export interface LogoProps {
-  /** 'full' renders the Six Volunteers symbol + VolunteerPortal wordmark; 'symbol' renders only the icon */
+  /** 'full' renders the Six Volunteers symbol + Volunteerportal wordmark; 'symbol' renders only the icon */
   variant?: 'full' | 'symbol';
   /** 'default' uses brand colors; 'white' uses pure white (#FFFFFF); 'on-red' uses white for red elements */
   colorScheme?: 'default' | 'white' | 'on-red';
@@ -28,7 +28,7 @@ export const Logo: React.FC<LogoProps> = ({
   loading = false,
   spinTrigger = 0,
   className = '',
-  ariaLabel = 'Triton VolunteerPortal Logo',
+  ariaLabel = 'Volunteerportal logo',
 }) => {
   const [internalSpin] = useState(0);
   const totalSpinCount = spinTrigger + internalSpin;
@@ -94,7 +94,7 @@ export const Logo: React.FC<LogoProps> = ({
       </span>
       <span className="mt-1 text-lg font-extrabold tracking-tight">
         <span style={{ color: colorScheme === 'white' ? '#FFFFFF' : 'var(--brand-navy)' }}>Volunteer</span>
-        <span style={{ color: colorScheme === 'white' || colorScheme === 'on-red' ? '#FFFFFF' : 'var(--brand-accent)' }}>Portal</span>
+        <span style={{ color: colorScheme === 'white' || colorScheme === 'on-red' ? '#FFFFFF' : 'var(--brand-accent)' }}>portal</span>
       </span>
     </div>
   );
