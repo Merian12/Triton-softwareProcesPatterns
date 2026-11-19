@@ -73,7 +73,7 @@ export default function VolunteerCalendarPage() {
                   </div>
 
                   <Link
-                    href="/volunteer-dashboard?view=My%20profile"
+                    href="/profile"
                     className={button}
                   >
                     {t('My profile')}

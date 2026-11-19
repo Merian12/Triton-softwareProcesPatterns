@@ -3,6 +3,7 @@ import { useLanguage } from '@/components/LanguageProvider';
 
 import { useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import {
   portalButton as button,
   portalPrimary as primary,
@@ -452,12 +453,9 @@ export default function VolunteerDashboard({
       />
     </div>
 
-    <button
-      type="button"
-      className={button}
-      onClick={() => navigate('My profile')}
-    >
-      {t("My profile")} </button>
+    <Link href="/profile" className={button}>
+      {t("My profile")}
+    </Link>
 
     <button
       type="button"
