@@ -78,7 +78,7 @@ export default function ShiftCalendar({ shifts, loading = false, error = null }:
 
       {/* Month navigation */}
       <div className="relative mb-3 flex shrink-0 items-center justify-between gap-2">
-        <h2 className="text-lg font-bold text-[#1C1C1C]">
+        <h2 className="text-base font-semibold text-foreground">
           {currentMonth.toLocaleDateString('en-US', {
             month: 'long',
             year: 'numeric',
@@ -112,7 +112,7 @@ export default function ShiftCalendar({ shifts, loading = false, error = null }:
         {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, i) => (
           <div
             key={`weekday-${i}`}
-            className="flex min-h-0 items-center justify-center text-xs font-bold tracking-[0.08em] text-[#262E40]"
+            className="flex min-h-0 items-center justify-center text-xs font-medium text-muted"
           >
             {day}
           </div>
@@ -145,7 +145,7 @@ export default function ShiftCalendar({ shifts, loading = false, error = null }:
                   })}${isToday ? ', today' : ''}${dayShifts.length ? `, ${dayShifts.length} shifts` : ''}`}
                   aria-current={isToday ? 'date' : undefined}
                   aria-pressed={isSelected}
-                  className={`relative flex aspect-square w-full max-w-10 flex-col items-center justify-center rounded-full font-serif text-lg font-bold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand
+                  className={`relative flex aspect-square w-full max-w-10 flex-col items-center justify-center rounded-full text-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand
                     ${isToday ? 'bg-[#D7142A] text-white' : ''}
                     ${isSelected ? 'ring-2 ring-[#262E40] ring-offset-2' : ''}
                     ${isSelected && !isToday ? 'bg-[#D7142A]/10 text-[#1C1C1C]' : ''}
@@ -171,17 +171,17 @@ export default function ShiftCalendar({ shifts, loading = false, error = null }:
       {/* Selected date and shifts */}
       <div className="mt-2 shrink-0 border-t border-neutral-200 pt-3">
         {error ? (
-          <p className="text-xs text-red-600">{error}</p>
+          <p className="text-sm text-red-600">{error}</p>
         ) : loading ? (
-          <p className="text-xs text-gray-500">
+          <p className="text-sm text-muted">
             Loading shifts...
           </p>
         ) : selectedDate === null ? (
-          <p className="text-xs text-gray-500">
+          <p className="text-sm text-muted">
             Select a date to view shifts
           </p>
         ) : selectedShifts.length === 0 ? (
-          <p className="text-xs text-gray-500">
+          <p className="text-sm text-muted">
             No shifts on {selectedDate}{' '}
             {currentMonth.toLocaleDateString('en-US', {
               month: 'long',
@@ -190,7 +190,7 @@ export default function ShiftCalendar({ shifts, loading = false, error = null }:
         ) : (
           <div className="max-h-20 space-y-2 overflow-y-auto">
             {selectedShifts.map((shift) => (
-              <div key={shift.id} className="text-xs">
+              <div key={shift.id} className="text-sm">
                 <p className="font-semibold text-gray-900">
                   {shift.title}
                 </p>
