@@ -9,6 +9,7 @@ export type ShiftBooking = {
   id: string;
   shift_id: string;
   status: string;
+  guests?: { id: string; full_name: string }[];
   event: {
     id: string;
     title?: string | null;
@@ -155,6 +156,13 @@ export default function MyShifts({
                     {' · '}
                     {booking.shift.title || t("Volunteer shift")}
                   </p>
+
+                  {booking.guests && booking.guests.length > 0 && (
+                    <p className="mt-1 text-sm text-neutral-700">
+                      <span className="font-medium">{t("Bringing")}:</span>{' '}
+                      {booking.guests.map(guest => guest.full_name).join(', ')}
+                    </p>
+                  )}
                 </div>
 
               <button

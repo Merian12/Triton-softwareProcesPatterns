@@ -3,6 +3,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { DummyProfileRepository } from '@/repositories/dummyProfileRepo';
 import { SupabaseAdminRepository } from '@/repositories/supabaseAdminRepo';
 import { SupabaseMessageRepository } from '@/repositories/supabaseMessageRepo';
+import { SupabaseRegistrationRepository } from '@/repositories/supabaseRegistrationRepo';
 
 const mockRpc = vi.fn();
 
@@ -127,5 +128,75 @@ describe('DummyProfileRepository', () => {
     expect(await repo.getCreditsPerEvent()).toBeGreaterThan(0);
     expect((await repo.getMyEvents()).length).toBeGreaterThan(0);
     expect((await repo.getUpcomingEvents()).length).toBeGreaterThan(0);
+  });
+});
+
+describe('SupabaseRegistrationRepository', () => {
+  it('registers a shift with guests and maps RPC errors', async () => {
+    const clientRpc = vi
+      .fn()
+      .mockResolvedValueOnce({ data: 'reg-42', error: null })
+      .mockResolvedValueOnce({ data: null, error: { message: 'Not enough places available for everyone.' } })
+      .mockResolvedValueOnce({ data: null, error: { message: 'unknown db error' } });
+    const repo = new SupabaseRegistrationRepository({ rpc: clientRpc } as unknown as SupabaseClient);
+
+    await expect(repo.registerShiftWithGuests('s1', ['Emil'])).resolves.toBe('reg-42');
+    expect(clientRpc).toHaveBeenNthCalledWith(1, 'register_shift_with_guests', {
+      p_shift_id: 's1',
+      p_guest_names: ['Emil'],
+    });
+
+    await expect(repo.registerShiftWithGuests('s1', ['Emil'])).rejects.toThrow(
+      'Not enough places available for everyone.'
+    );
+    await expect(repo.registerShiftWithGuests('s1', ['Emil'])).rejects.toThrow(
+      'Could not complete your registration. Please try again.'
+    );
+  });
+
+  it('adds guests to an existing registration and maps RPC errors', async () => {
+    const clientRpc = vi
+      .fn()
+      .mockResolvedValueOnce({ error: null })
+      .mockResolvedValueOnce({ error: { message: 'You can bring at most 5 guests per shift.' } })
+      .mockResolvedValueOnce({ error: { message: 'unexpected' } });
+    const repo = new SupabaseRegistrationRepository({ rpc: clientRpc } as unknown as SupabaseClient);
+
+    await expect(repo.addGuestsToRegistration('reg-42', ['Sofia'])).resolves.toBeUndefined();
+    expect(clientRpc).toHaveBeenNthCalledWith(1, 'add_registration_guests', {
+      p_registration_id: 'reg-42',
+      p_guest_names: ['Sofia'],
+    });
+
+    await expect(repo.addGuestsToRegistration('reg-42', ['Sofia'])).rejects.toThrow(
+      'You can bring at most 5 guests per shift.'
+    );
+    await expect(repo.addGuestsToRegistration('reg-42', ['Sofia'])).rejects.toThrow(
+      'Could not add guests. Please try again.'
+    );
+  });
+
+  it('lists guests for registration IDs and throws on query error', async () => {
+    const order = vi
+      .fn()
+      .mockResolvedValueOnce({
+        data: [{ id: 'g1', registration_id: 'reg-42', full_name: 'Emil' }],
+        error: null,
+      })
+      .mockResolvedValueOnce({ data: null, error: { message: 'RLS denied' } });
+    const from = vi.fn(() => ({
+      select: vi.fn(() => ({
+        in: vi.fn(() => ({ order })),
+      })),
+    }));
+    const repo = new SupabaseRegistrationRepository({ from } as unknown as SupabaseClient);
+
+    await expect(repo.listGuestsForRegistrations([])).resolves.toEqual([]);
+    expect(from).not.toHaveBeenCalled();
+
+    await expect(repo.listGuestsForRegistrations(['reg-42'])).resolves.toEqual([
+      { id: 'g1', registration_id: 'reg-42', full_name: 'Emil' },
+    ]);
+    await expect(repo.listGuestsForRegistrations(['reg-42'])).rejects.toThrow('RLS denied');
   });
 });

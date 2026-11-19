@@ -59,6 +59,10 @@ describe('MyShiftNotes', () => {
         id: 'b-earlier',
         shift_id: 's1',
         status: 'registered',
+        guests: [
+          { id: 'g1', full_name: 'Emil Hansen' },
+          { id: 'g2', full_name: 'Sofia Holm' },
+        ],
         event: { id: 'e1', title: 'Earlier Event' },
         shift: {
           id: 's1',
@@ -81,6 +85,7 @@ describe('MyShiftNotes', () => {
     );
 
     expect(await screen.findByText('Meet at main entrance')).toBeInTheDocument();
+    expect(screen.getByText(/Emil Hansen, Sofia Holm/)).toBeInTheDocument();
 
     const headings = screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent);
     expect(headings).toEqual(['Earlier Event', 'Later Event']);

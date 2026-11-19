@@ -1,16 +1,23 @@
 'use client';
 import { useLanguage } from '@/components/LanguageProvider';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
   portalButton as button,
   portalPrimary as primary,
+  input,
   navTab,
   portalNav,
 } from './portalStyles';
 import type { UserProfile } from '@/services/authService';
+import {
+  maxAdditionalGuests,
+  RegistrationService,
+  type RegistrationGuest,
+} from '@/services/registrationService';
+import { SupabaseRegistrationRepository } from '@/repositories/supabaseRegistrationRepo';
 import { AccountIdentity } from '@/components/AccountIdentity';
 import { Logo } from '@/components/Logo';
 import VolunteerCalendar from '@/components/VolunteerCalendar';
@@ -54,6 +61,7 @@ type Booking = {
   id: string;
   shift_id: string;
   status: string;
+  guests: RegistrationGuest[];
   event: Event;
   shift: Shift;
 };
@@ -115,6 +123,10 @@ export default function VolunteerDashboard({
     return `${formatTime(shift.starts_at)} – ${formatTime(shift.ends_at)}`;
   }
   const searchParams = useSearchParams();
+  const registrationService = useMemo(
+    () => new RegistrationService(new SupabaseRegistrationRepository()),
+    []
+  );
 
   const [view, setView] = useState<View>('Overview');
   const [events, setEvents] = useState<Event[]>([]);
@@ -127,10 +139,12 @@ export default function VolunteerDashboard({
   } | null>(null);
 
   const [accepted, setAccepted] = useState(false);
+  const [guestNames, setGuestNames] = useState<string[]>([]);
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
   const [loggingOut, setLoggingOut] = useState(false);
   const [registering, setRegistering] = useState(false);
+  const [addingGuests, setAddingGuests] = useState(false);
   const [loading, setLoading] = useState(true);
   const [logoSpin, setLogoSpin] = useState(0);
 
@@ -176,8 +190,15 @@ export default function VolunteerDashboard({
         registrationsResult.data ?? []
       ) as RegistrationRow[];
 
-      const registeredBookings: Booking[] = registrations
-        .filter(row => row.status === 'registered')
+      const activeRegistrations = registrations.filter(
+        row => row.status === 'registered'
+      );
+
+      const allGuests = await registrationService.listGuests(
+        activeRegistrations.map(row => row.id)
+      );
+
+      const registeredBookings: Booking[] = activeRegistrations
         .flatMap(row => {
           const shift = allShifts.find(
             item => item.id === row.shift_id
@@ -195,6 +216,9 @@ export default function VolunteerDashboard({
             id: row.id,
             shift_id: row.shift_id,
             status: row.status,
+            guests: allGuests.filter(
+              guest => guest.registration_id === row.id
+            ),
             event: matchingEvent,
             shift,
           }];
@@ -211,7 +235,7 @@ export default function VolunteerDashboard({
     } finally {
       setLoading(false);
     }
-  }, [profile.id]);
+  }, [profile.id, registrationService]);
 
   useEffect(() => {
     void loadData();
@@ -229,10 +253,24 @@ export default function VolunteerDashboard({
     }
   }, [searchParams]);
 
-  const registered = (shift: Shift) =>
-    bookings.some(
+  const getBookingForShift = (shift: Shift) =>
+    bookings.find(
       booking => booking.shift_id === shift.id
     );
+
+  const registered = (shift: Shift) =>
+    Boolean(getBookingForShift(shift));
+
+  const selectedShift = selection
+    ? events
+        .flatMap(item => item.shifts)
+        .find(item => item.id === selection.shift.id) ??
+      selection.shift
+    : null;
+
+  const selectedBooking = selectedShift
+    ? getBookingForShift(selectedShift)
+    : undefined;
 
   const next = [...bookings]
     .filter(
@@ -250,6 +288,7 @@ export default function VolunteerDashboard({
     setView(nextView);
     setEvent(null);
     setSelection(null);
+    setGuestNames([]);
     setNotice('');
     setError('');
     setAccepted(false);
@@ -261,20 +300,40 @@ export default function VolunteerDashboard({
       shift,
     });
 
+    setGuestNames([]);
     setAccepted(false);
     setNotice('');
     setError('');
   }
 
-  async function confirm() {
-    if (!selection || !accepted || registering) return;
+  function addGuestField(maxAllowed: number) {
+    if (guestNames.length >= maxAllowed) return;
+    setGuestNames(prev => [...prev, '']);
+    setError('');
+  }
 
-    if (registered(selection.shift)) {
+  function updateGuestName(index: number, value: string) {
+    setGuestNames(prev =>
+      prev.map((name, i) => (i === index ? value : name))
+    );
+    setError('');
+  }
+
+  function removeGuestField(index: number) {
+    setGuestNames(prev => prev.filter((_, i) => i !== index));
+    setError('');
+  }
+
+  async function confirm() {
+    if (!selection || !selectedShift || !accepted || registering) return;
+
+    if (registered(selectedShift)) {
       setError('You are already registered for this shift.');
       return;
     }
 
-    if (availablePlaces(selection.shift) === 0) {
+    const available = availablePlaces(selectedShift);
+    if (available === 0) {
       setError('This shift is unavailable.');
       return;
     }
@@ -282,36 +341,59 @@ export default function VolunteerDashboard({
     setRegistering(true);
     setError('');
 
-    console.log('REGISTERING SHIFT:', selection.shift.id);
-    console.log('VOLUNTEER ID:', profile.id);
+    try {
+      await registrationService.registerWithGuests(
+        selectedShift.id,
+        guestNames,
+        available
+      );
 
-    const { data, error: registrationError } = await supabase
-      .from('registrations')
-      .insert({
-        shift_id: selection.shift.id,
-        volunteer_id: profile.id,
-        status: 'registered',
-      })
-      .select();
-
-    console.log('REGISTRATION RESULT:', data);
-    console.log('REGISTRATION ERROR:', registrationError);
-
-    if (registrationError) {
-      setError(registrationError.message);
-      setRegistering(false);
       await loadData();
-      return;
+
+      navigate('My shifts');
+      setNotice(
+        'Registration confirmed. Your shift has been saved.'
+      );
+    } catch (err) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : 'Could not complete your registration. Please try again.';
+      await loadData();
+      setError(message);
+    } finally {
+      setRegistering(false);
     }
+  }
 
-    await loadData();
+  async function addMoreGuests() {
+    if (!selectedShift || !selectedBooking || addingGuests) return;
 
-    navigate('My shifts');
-    setNotice(
-      'Registration confirmed. Your shift has been saved.'
-    );
+    setAddingGuests(true);
+    setError('');
+    setNotice('');
 
-    setRegistering(false);
+    try {
+      await registrationService.addGuests(
+        selectedBooking.id,
+        guestNames,
+        selectedBooking.guests.length,
+        availablePlaces(selectedShift)
+      );
+
+      setGuestNames([]);
+      await loadData();
+      setNotice('Guests added to your registration.');
+    } catch (err) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : 'Could not add guests. Please try again.';
+      await loadData();
+      setError(message);
+    } finally {
+      setAddingGuests(false);
+    }
   }
 
   async function logout() {
@@ -577,79 +659,281 @@ export default function VolunteerDashboard({
             </p>
           )}
 
-          {selection ? (
-            <section className="mt-8 max-w-2xl">
-              <h2 className="mt-7 text-xl font-semibold">
-                {shiftName(selection.shift)}
-              </h2>
+          {selection && selectedShift ? (
+            (() => {
+              const available = availablePlaces(selectedShift);
+              const maxNewBeforeRegister = maxAdditionalGuests(
+                available,
+                0,
+                true
+              );
+              const maxNewAfterRegister = selectedBooking
+                ? maxAdditionalGuests(
+                    available,
+                    selectedBooking.guests.length,
+                    false
+                  )
+                : 0;
 
-              <dl className="mt-5 grid grid-cols-[90px_1fr] gap-4 text-sm sm:grid-cols-[120px_1fr]">
-                {Object.entries({
-                  Event: eventName(selection.event),
-                  Date: formatDate(selection.shift.starts_at),
-                  Time: shiftTime(selection.shift),
-                  Location:
-                    selection.shift.location ||
-                    selection.event.location ||
-                    t('TBA'),
-                  Task:
-                    selection.shift.description ||
-                    t('No description provided.'),
-                }).map(([key, value]) => (
-                  <div key={key} className="contents">
-                    <dt className="text-neutral-600">
-                      {t(key)}
-                    </dt>
-                    <dd>{value}</dd>
-                  </div>
-                ))}
-              </dl>
+              return (
+                <section className="mt-8 max-w-2xl">
+                  <h2 className="mt-7 text-xl font-semibold">
+                    {shiftName(selectedShift)}
+                  </h2>
 
-              {registered(selection.shift) ? (
-                <div className="mt-6">
-                  <p>{t("You are registered for this shift.")}</p>
+                  <dl className="mt-5 grid grid-cols-[90px_1fr] gap-4 text-sm sm:grid-cols-[120px_1fr]">
+                    {Object.entries({
+                      Event: eventName(selection.event),
+                      Date: formatDate(selectedShift.starts_at),
+                      Time: shiftTime(selectedShift),
+                      Location:
+                        selectedShift.location ||
+                        selection.event.location ||
+                        t('TBA'),
+                      Task:
+                        selectedShift.description ||
+                        t('No description provided.'),
+                    }).map(([key, value]) => (
+                      <div key={key} className="contents">
+                        <dt className="text-neutral-600">
+                          {t(key)}
+                        </dt>
+                        <dd>{value}</dd>
+                      </div>
+                    ))}
+                  </dl>
 
-                  <button
-                    type="button"
-                    className={`${button} mt-4`}
-                    onClick={() => navigate('Messages')}
-                  >
-                    {t("Message coordinator")} </button>
+                  {selectedBooking ? (
+                    <div className="mt-6">
+                      <p>{t("You are registered for this shift.")}</p>
 
-                  <p className="mt-3 text-sm text-neutral-600">
-                    {t("To change or cancel a shift, contact your coordinator.")} </p>
-                </div>
-              ) : (
-                <>
-                  <label className="mt-6 flex items-start gap-3 text-sm">
-                    <input
-                      type="checkbox"
-                      className="mt-1 accent-[#FF0000]"
-                      checked={accepted}
-                      onChange={e =>
-                        setAccepted(e.target.checked)
-                      }
-                    />
-                    {t("I have read the task description and can attend the entire shift.")} </label>
+                      {selectedBooking.guests.length > 0 && (
+                        <div className="mt-4 rounded-xl border border-neutral-200 p-4">
+                          <h3 className="text-sm font-semibold">
+                            {t("Bringing")}
+                          </h3>
+                          <ul className="mt-2 list-inside list-disc space-y-1 text-sm text-neutral-700">
+                            {selectedBooking.guests.map(guest => (
+                              <li key={guest.id}>{guest.full_name}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
 
-                  <button
-                    type="button"
-                    className={`${primary} mt-5`}
-                    disabled={
-                      !accepted ||
-                      registering ||
-                      loading ||
-                      availablePlaces(selection.shift) === 0
-                    }
-                    onClick={confirm}
-                  >
-                    {registering
-                      ? t("Registering...")
-                      : t("Confirm registration")}
-                  </button>
-                </>
-              )}
-            </section>
+                      {maxNewAfterRegister > 0 && (
+                        <div className="mt-6 rounded-xl border border-neutral-200 p-4">
+                          <h3 className="text-sm font-semibold">
+                            {t("Bring more people")}
+                          </h3>
+                          <p className="mt-1 text-sm text-neutral-600">
+                            {maxNewAfterRegister === 1
+                              ? t("You can add 1 more guest to this shift.")
+                              : t("You can add up to {value0} more guests to this shift.", {
+                                  value0: maxNewAfterRegister,
+                                })}
+                          </p>
+
+                          {guestNames.length > 0 && (
+                            <div className="mt-4 space-y-3">
+                              {guestNames.map((guestName, index) => (
+                                <div
+                                  key={index}
+                                  className="flex items-end gap-2"
+                                >
+                                  <div className="flex-1">
+                                    <label
+                                      htmlFor={`extra-guest-${index}`}
+                                      className="mb-1 block text-sm text-neutral-700"
+                                    >
+                                      {t("Guest {value0} name", {
+                                        value0:
+                                          selectedBooking.guests.length +
+                                          index +
+                                          1,
+                                      })}
+                                    </label>
+                                    <input
+                                      id={`extra-guest-${index}`}
+                                      type="text"
+                                      maxLength={120}
+                                      placeholder={t("Full name")}
+                                      value={guestName}
+                                      onChange={e =>
+                                        updateGuestName(index, e.target.value)
+                                      }
+                                      className={input}
+                                    />
+                                  </div>
+                                  <button
+                                    type="button"
+                                    aria-label={t("Remove guest {value0}", {
+                                      value0:
+                                        selectedBooking.guests.length +
+                                        index +
+                                        1,
+                                    })}
+                                    className={button}
+                                    onClick={() => removeGuestField(index)}
+                                  >
+                                    {t("Remove")}
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          <div className="mt-4 flex flex-wrap gap-3">
+                            <button
+                              type="button"
+                              className={button}
+                              disabled={
+                                guestNames.length >= maxNewAfterRegister ||
+                                addingGuests ||
+                                loading
+                              }
+                              onClick={() => addGuestField(maxNewAfterRegister)}
+                            >
+                              {t("+ Add guest")}
+                            </button>
+
+                            {guestNames.length > 0 && (
+                              <button
+                                type="button"
+                                className={primary}
+                                disabled={addingGuests || loading}
+                                onClick={addMoreGuests}
+                              >
+                                {addingGuests
+                                  ? t("Adding guests...")
+                                  : t("Add guests")}
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      <button
+                        type="button"
+                        className={`${button} mt-6`}
+                        onClick={() => navigate('Messages')}
+                      >
+                        {t("Message coordinator")} </button>
+
+                      <p className="mt-3 text-sm text-neutral-600">
+                        {t("To change or cancel a shift, contact your coordinator.")} </p>
+                    </div>
+                  ) : (
+                    <>
+                      {maxNewBeforeRegister > 0 && (
+                        <div className="mt-6 rounded-xl border border-neutral-200 p-4">
+                          <h3 className="text-sm font-semibold">
+                            {t("Bringing someone? (optional)")}
+                          </h3>
+                          <p className="mt-1 text-sm text-neutral-600">
+                            {t("You can bring up to {value0} guests without an account. Each person takes 1 spot.", {
+                              value0: maxNewBeforeRegister,
+                            })}
+                          </p>
+
+                          {guestNames.length > 0 && (
+                            <div className="mt-4 space-y-3">
+                              {guestNames.map((guestName, index) => (
+                                <div
+                                  key={index}
+                                  className="flex items-end gap-2"
+                                >
+                                  <div className="flex-1">
+                                    <label
+                                      htmlFor={`guest-name-${index}`}
+                                      className="mb-1 block text-sm text-neutral-700"
+                                    >
+                                      {t("Guest {value0} name", {
+                                        value0: index + 1,
+                                      })}
+                                    </label>
+                                    <input
+                                      id={`guest-name-${index}`}
+                                      type="text"
+                                      maxLength={120}
+                                      placeholder={t("Full name")}
+                                      value={guestName}
+                                      onChange={e =>
+                                        updateGuestName(index, e.target.value)
+                                      }
+                                      className={input}
+                                    />
+                                  </div>
+                                  <button
+                                    type="button"
+                                    aria-label={t("Remove guest {value0}", {
+                                      value0: index + 1,
+                                    })}
+                                    className={button}
+                                    onClick={() => removeGuestField(index)}
+                                  >
+                                    {t("Remove")}
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          <div className="mt-4 flex flex-wrap items-center gap-3">
+                            <button
+                              type="button"
+                              className={button}
+                              disabled={
+                                guestNames.length >= maxNewBeforeRegister ||
+                                registering ||
+                                loading
+                              }
+                              onClick={() => addGuestField(maxNewBeforeRegister)}
+                            >
+                              {t("+ Add guest")}
+                            </button>
+
+                            {guestNames.length > 0 && (
+                              <span className="text-sm text-neutral-600">
+                                {t("Total spots: {value0}", {
+                                  value0: 1 + guestNames.length,
+                                })}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      <label className="mt-6 flex items-start gap-3 text-sm">
+                        <input
+                          type="checkbox"
+                          className="mt-1 accent-[#FF0000]"
+                          checked={accepted}
+                          onChange={e =>
+                            setAccepted(e.target.checked)
+                          }
+                        />
+                        {t("I have read the task description and can attend the entire shift.")} </label>
+
+                      <button
+                        type="button"
+                        className={`${primary} mt-5`}
+                        disabled={
+                          !accepted ||
+                          registering ||
+                          loading ||
+                          available === 0
+                        }
+                        onClick={confirm}
+                      >
+                        {registering
+                          ? t("Registering...")
+                          : t("Confirm registration")}
+                      </button>
+                    </>
+                  )}
+                </section>
+              );
+            })()
           ) : event ? (
             <section className="mt-8 max-w-3xl">
               <p className="my-6 text-neutral-600">
@@ -728,6 +1012,18 @@ export default function VolunteerDashboard({
                         {' · '}
                         {shiftName(next.shift)}
                       </p>
+
+                      {next.guests.length > 0 && (
+                        <p className="mt-1 text-sm text-neutral-700">
+                          {next.guests.length === 1
+                            ? t("+ 1 guest")
+                            : t("+ {value0} guests", {
+                                value0: next.guests.length,
+                              })}
+                          {': '}
+                          {next.guests.map(guest => guest.full_name).join(', ')}
+                        </p>
+                      )}
 
                       <button
                         type="button"
