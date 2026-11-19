@@ -75,7 +75,7 @@ export default function InformationPage({ topic }: { topic: Topic }) {
           <p className="max-w-2xl pb-6 text-sm leading-7 text-muted">{body}</p>
         </details> : <section key={heading} className="py-7"><h2 className="text-lg font-semibold">{heading}</h2><p className="mt-3 text-sm leading-7 text-muted">{body}</p></section>)}
       </div>
-      <div className="mt-8 flex flex-wrap gap-3"><Link className={button} href="/login">{language === 'da' ? 'Gå til login' : 'Go to login'}</Link>{topic !== 'faq' && <Link className={button} href="/faq">FAQ</Link>}</div>
+      <div className="mt-8 flex flex-wrap gap-3"><Link className={button} href="/">{language === 'da' ? 'Gå til forsiden' : 'Go to home'}</Link>{topic !== 'faq' && <Link className={button} href="/faq">FAQ</Link>}</div>
     </main>
   </div>;
 }
