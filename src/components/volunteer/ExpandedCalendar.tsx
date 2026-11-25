@@ -1,5 +1,5 @@
-
 'use client';
+import { useLanguage } from '@/components/LanguageProvider';
 
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
@@ -86,14 +86,14 @@ function makeDate(year: number, month: number, day: number) {
   return new Date(year, month, day);
 }
 
-function formatTime(value: string) {
-  return new Date(value).toLocaleTimeString('en-GB', {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
-
 export default function ExpandedCalendar() {
+  const { t, locale } = useLanguage();
+  function formatTime(value: string) {
+    return new Date(value).toLocaleTimeString(locale, {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }
   const [currentMonth, setCurrentMonth] = useState(() => {
     const today = new Date();
     return makeDate(today.getFullYear(), today.getMonth(), 1);
@@ -113,7 +113,7 @@ export default function ExpandedCalendar() {
   const month = currentMonth.getMonth();
   const todayKey = dateKey(new Date());
 
-  const monthTitle = currentMonth.toLocaleDateString('en-GB', {
+  const monthTitle = currentMonth.toLocaleDateString(locale, {
     month: 'long',
     year: 'numeric',
   });
@@ -351,7 +351,7 @@ export default function ExpandedCalendar() {
         Number(selectedDate.slice(0, 4)),
         Number(selectedDate.slice(5, 7)) - 1,
         Number(selectedDate.slice(8, 10))
-      ).toLocaleDateString('en-GB', {
+      ).toLocaleDateString(locale, {
         weekday: 'short',
         day: 'numeric',
         month: 'short',
@@ -369,8 +369,7 @@ export default function ExpandedCalendar() {
           </h2>
 
           <p className="mt-1 text-xs text-neutral-500 sm:text-sm">
-            Select a date to view shifts or add a note.
-          </p>
+            {t("Select a date to view shifts or add a note.")} </p>
         </div>
 
         <div className="flex items-center gap-2">
@@ -395,12 +394,11 @@ export default function ExpandedCalendar() {
             }}
             className="rounded-md border border-neutral-300 px-3 py-2 text-xs hover:bg-neutral-50 sm:px-4 sm:text-sm"
           >
-            Today
-          </button>
+            {t("Today")} </button>
 
           <button
             type="button"
-            aria-label="Previous month"
+            aria-label={t("Previous month")}
             onClick={() => changeMonth(-1)}
             className="rounded-md border border-neutral-300 px-3 py-2 hover:bg-neutral-50"
           >
@@ -409,7 +407,7 @@ export default function ExpandedCalendar() {
 
           <button
             type="button"
-            aria-label="Next month"
+            aria-label={t("Next month")}
             onClick={() => changeMonth(1)}
             className="rounded-md border border-neutral-300 px-3 py-2 hover:bg-neutral-50"
           >
@@ -469,7 +467,7 @@ export default function ExpandedCalendar() {
                   key={key}
                   type="button"
                   onClick={() => selectDay(day)}
-                  aria-label={`Select ${key}`}
+                  aria-label={t("Select {value0}", { value0: key })}
                   aria-pressed={isSelected}
                   className={`h-[50px] min-w-0 overflow-hidden border-b border-r border-neutral-100 p-1 text-left transition-colors hover:bg-neutral-50 sm:h-[60px] sm:p-1.5 lg:h-[70px] ${
                     isSelected
@@ -498,7 +496,7 @@ export default function ExpandedCalendar() {
 
                       {dayShifts.length > 0 && (
                         <span
-                          title="Registered shift"
+                          title={t("Registered shift")}
                           className="h-2 w-2 shrink-0 rounded-full bg-[#D7142A]"
                         />
                       )}
@@ -507,7 +505,7 @@ export default function ExpandedCalendar() {
 
                   {dayShifts.length > 0 && (
                    <p className="mt-1 hidden truncate rounded bg-[#F3F4F6] px-1 py-0.5 text-[10px] font-medium text-neutral-700 sm:block">
-                      {dayShifts[0].title || 'Volunteer shift'}
+                      {dayShifts[0].title || t("Volunteer shift")}
                     </p>
                   )}
                 </button>
@@ -529,16 +527,14 @@ export default function ExpandedCalendar() {
                 onClick={() => setSelectedDate(null)}
                 className="shrink-0 text-sm text-neutral-500 hover:text-neutral-900"
               >
-                Close
-              </button>
+                {t("Close")} </button>
             </div>
 
             {/* Registered shifts */}
             {selectedShifts.length > 0 && (
               <div className="mt-4 space-y-2">
                 <h4 className="text-sm font-semibold">
-                  Registered shifts
-                </h4>
+                  {t("Registered shifts")} </h4>
 
                 {selectedShifts.map(shift => (
                   <div
@@ -546,7 +542,7 @@ export default function ExpandedCalendar() {
                     className="rounded-md border border-neutral-200 bg-neutral-50 p-3"
                   >
                     <p className="text-sm font-semibold text-neutral-900">
-                      {shift.title || 'Volunteer shift'}
+                      {shift.title || t("Volunteer shift")}
                     </p>
 
                     <p className="mt-1 text-xs text-neutral-600 sm:text-sm">
@@ -558,8 +554,7 @@ export default function ExpandedCalendar() {
                     {shift.location && (
                       <p className="mt-2 break-words text-xs text-neutral-700 sm:text-sm">
                         <span className="font-semibold text-neutral-500">
-                          Location:
-                        </span>{' '}
+                          {t("Location:")} </span>{' '}
                         {shift.location}
                       </p>
                     )}
@@ -567,8 +562,7 @@ export default function ExpandedCalendar() {
                     {shift.description && (
                       <p className="mt-1 whitespace-pre-wrap break-words text-xs text-neutral-700 sm:text-sm">
                         <span className="font-semibold text-neutral-500">
-                          Description:
-                        </span>{' '}
+                          {t("Description:")} </span>{' '}
                         {shift.description}
                       </p>
                     )}
@@ -581,8 +575,7 @@ export default function ExpandedCalendar() {
             <div className="mt-4 flex min-h-0 flex-1 flex-col">
               <div className="mb-2 flex items-center justify-between">
                 <h4 className="text-sm font-semibold">
-                  My notes
-                </h4>
+                  {t("My notes")} </h4>
 
                 <div className="flex items-center gap-3">
                   <button
@@ -591,8 +584,8 @@ export default function ExpandedCalendar() {
                       setIsEditing(true);
                       setMessage('');
                     }}
-                    aria-label="Edit note"
-                    title="Edit note"
+                    aria-label={t("Edit note")}
+                    title={t("Edit note")}
                     className="text-neutral-500 hover:text-[#D7142A]"
                   >
                     <Pencil size={17} />
@@ -602,14 +595,14 @@ export default function ExpandedCalendar() {
                     <button
                       type="button"
                       onClick={async () => {
-                        if (!window.confirm('Delete this note?')) {
+                        if (!window.confirm(t("Delete this note?"))) {
                           return;
                         }
 
                         await deleteNote();
                       }}
-                      aria-label="Delete note"
-                      title="Delete note"
+                      aria-label={t("Delete note")}
+                      title={t("Delete note")}
                       disabled={saving}
                       className="text-neutral-500 hover:text-[#D7142A] disabled:opacity-50"
                     >
@@ -625,7 +618,7 @@ export default function ExpandedCalendar() {
                   setNoteText(event.target.value);
                   setMessage('');
                 }}
-                placeholder="Write your notes for this day..."
+                placeholder={t("Write your notes for this day...")}
                 rows={3}
                 maxLength={5000}
                 disabled={!!selectedNote && !isEditing}
@@ -644,7 +637,7 @@ export default function ExpandedCalendar() {
                     disabled={saving || !noteText.trim()}
                     className="rounded-md bg-[#D7142A] px-4 py-2 text-xs font-medium text-white hover:bg-[#B91023] disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm"
                   >
-                    {saving ? 'Saving...' : 'Save note'}
+                    {saving ? t("Saving...") : t("Save note")}
                   </button>
                 )}
 
@@ -653,13 +646,13 @@ export default function ExpandedCalendar() {
                     role="status"
                     className="text-xs text-[#D7142A] sm:text-sm"
                   >
-                    ✓ {message}
+                    ✓ {t(message)}
                   </p>
                 )}
 
                 {error && (
                   <p role="alert" className="text-xs text-red-600">
-                    {error}
+                    {t(error)}
                   </p>
                 )}
               </div>
@@ -671,13 +664,12 @@ export default function ExpandedCalendar() {
       {/* Loading and calendar errors */}
       {loading && (
         <p className="mt-3 text-sm text-neutral-500">
-          Loading calendar...
-        </p>
+          {t("Loading calendar...")} </p>
       )}
 
       {!selectedDate && error && (
         <p role="alert" className="mt-4 text-sm text-red-700">
-          {error}
+          {t(error)}
         </p>
       )}
     </div>

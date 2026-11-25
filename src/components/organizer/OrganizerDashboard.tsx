@@ -1,5 +1,6 @@
 'use client';
 
+import { useLanguage } from '@/components/LanguageProvider';
 import { useEffect, useMemo, useState } from 'react';
 import { SupabaseEventRepository } from '@/repositories/supabaseEventRepo';
 import type { UserProfile } from '@/services/authService';
@@ -26,7 +27,7 @@ import {
   button,
   card,
   checkbox,
-  dateLabel,
+  dateLabel as formatDateLabel,
   portalContainer,
   portalShell,
   primary,
@@ -39,6 +40,13 @@ export default function OrganizerDashboard({
   profile: UserProfile;
   onLogout: () => Promise<void>;
 }) {
+  const { t, locale, language } = useLanguage();
+
+  const dateLabel = (value: string) =>
+    value
+      ? formatDateLabel(value, locale)
+      : t('Not specified');
+
   const userId = profile.id;
 
   const service = useMemo(() => {
@@ -103,25 +111,25 @@ export default function OrganizerDashboard({
   const stats = overview(events, today);
 
   const displayed = events
-  .filter(
-    event =>
-      view === 'Find events' ||
-      (
-        event.status === 'published' &&
-        event.startDate >= today
-      )
-  )
-  .filter(
-    event =>
-      !onlyOpen ||
-      event.shifts.some(
-        shift =>
-          shift.capacity > shift.registrations.length
-      )
-  )
-  .sort((a, b) =>
-    a.startDate.localeCompare(b.startDate)
-  );
+    .filter(
+      event =>
+        view === 'Find events' ||
+        (
+          event.status === 'published' &&
+          event.startDate >= today
+        )
+    )
+    .filter(
+      event =>
+        !onlyOpen ||
+        event.shifts.some(
+          shift =>
+            shift.capacity > shift.registrations.length
+        )
+    )
+    .sort((a, b) =>
+      a.startDate.localeCompare(b.startDate)
+    );
 
   const calendarShifts = events
     .filter(event => event.status === 'published')
@@ -140,7 +148,7 @@ export default function OrganizerDashboard({
 
     return (
       !dirty ||
-      window.confirm('Discard your unsaved changes?')
+      window.confirm(t('Discard your unsaved changes?'))
     );
   }
 
@@ -214,13 +222,10 @@ export default function OrganizerDashboard({
   }
 
   // Expand or collapse the selected event card.
-function showShifts(event: ClubEvent) {
-  setSelected(previous =>
-    previous === event.id ? null : event.id
-  );
-
-
-    setOnlyOpen(false);
+  function showShifts(event: ClubEvent) {
+    setSelected(previous =>
+      previous === event.id ? null : event.id
+    );
   }
 
   async function logout() {
@@ -233,6 +238,7 @@ function showShifts(event: ClubEvent) {
       await onLogout();
     } catch {
       setError('Could not log out. Please try again.');
+    } finally {
       setLoggingOut(false);
     }
   }
@@ -249,7 +255,7 @@ function showShifts(event: ClubEvent) {
           className={checkbox}
         />
 
-        Show only shifts with available places
+        {t('Only shifts with available places')}
       </label>
     );
   }
@@ -287,13 +293,16 @@ function showShifts(event: ClubEvent) {
               <StaffingIcons
                 filled={shift.registrations.length}
                 capacity={shift.capacity}
-                label={`${shift.task} volunteer places`}
+                label={t('{value0} volunteer places', {
+                  value0: shift.task,
+                })}
               />
             </div>
 
             <details className="mt-3">
               <summary className="min-h-10 cursor-pointer py-2 text-sm hover:underline focus-visible:outline-2 focus-visible:outline-brand">
-                View volunteers ({shift.registrations.length})
+                {t('View volunteers (')}
+                {shift.registrations.length})
               </summary>
 
               {shift.registrations.length > 0 ? (
@@ -315,7 +324,7 @@ function showShifts(event: ClubEvent) {
                 </ul>
               ) : (
                 <p className="py-3 text-sm text-neutral-600">
-                  No volunteers signed up yet.
+                  {t('No volunteers signed up yet.')}
                 </p>
               )}
             </details>
@@ -325,8 +334,8 @@ function showShifts(event: ClubEvent) {
         {!shifts.length && (
           <p className="py-4 text-sm text-neutral-600">
             {onlyOpen
-              ? 'No shifts with available places.'
-              : 'No shifts yet.'}
+              ? t('No shifts with available places.')
+              : t('No shifts yet.')}
           </p>
         )}
       </>
@@ -334,12 +343,12 @@ function showShifts(event: ClubEvent) {
   }
 
   return (
-    <div lang="en" className={portalShell}>
+    <div lang={language} className={portalShell}>
       <a
         href="#admin-main"
         className="sr-only focus:not-sr-only focus:block focus:p-4"
       >
-        Skip to content
+        {t('Skip to content')}
       </a>
 
       <OrganizerTopbar
@@ -364,7 +373,7 @@ function showShifts(event: ClubEvent) {
               role="status"
               className="mb-5 text-sm text-neutral-600"
             >
-              Loading events...
+              {t('Loading events...')}
             </p>
           )}
 
@@ -373,7 +382,7 @@ function showShifts(event: ClubEvent) {
               role="alert"
               className="mb-5 text-sm text-red-800"
             >
-              {error}
+              {t(error)}
             </p>
           )}
 
@@ -382,7 +391,7 @@ function showShifts(event: ClubEvent) {
               role="status"
               className="mb-5 text-sm text-neutral-700"
             >
-              {notice}
+              {t(notice)}
             </p>
           )}
 
@@ -412,226 +421,244 @@ function showShifts(event: ClubEvent) {
             <>
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <h1 className="text-2xl font-semibold tracking-tight">
-                  {view}
+                  {t(view)}
                 </h1>
 
                 {(view === 'Overview' ||
                   view === 'Find events') && (
-                  <button
-                    className={primary}
-                    onClick={create}
-                    disabled={loading || saving}
-                  >
-                    + Create event
-                  </button>
-                )}
+                    <button
+                      className={primary}
+                      onClick={create}
+                      disabled={loading || saving}
+                    >
+                      {t('+ Create event')}
+                    </button>
+                  )}
               </div>
 
               {(view === 'Overview' ||
                 view === 'Find events') && (
-                <>
-                  <div
-                    className={`mt-7 grid gap-10 ${
-                      view === 'Overview'
-                        ? 'lg:grid-cols-[minmax(0,1fr)_400px]'
-                        : ''
-                    }`}
-                  >
-                    <section
-                      aria-labelledby="events-heading"
-                      className="min-w-0 max-w-3xl"
+                  <>
+                    <div
+                      className={`mt-7 grid gap-10 ${
+                        view === 'Overview'
+                          ? 'lg:grid-cols-[minmax(0,1fr)_400px]'
+                          : ''
+                      }`}
                     >
-                      <div className="flex items-center justify-between gap-3">
-                        <h2
-                          id="events-heading"
-                          className="text-base font-semibold"
-                        >
-                          {view === 'Overview'
-                            ? 'Upcoming events'
-                            : 'All events'}
-                        </h2>
-
-                        <span className="text-xs text-neutral-500">
-                          {displayed.length}{' '}
-                          {displayed.length === 1
-                            ? 'event'
-                            : 'events'}
-                        </span>
-                      </div>
-
-                 {openFilter()}
-
-{displayed.map(event => {
-                        const staff = staffing(event);
-
-                        const expanded = selected === event.id;
-
-                        const date = event.startDate
-                          ? new Date(
-                              `${event.startDate}T12:00:00`
-                            )
-                          : null;
-
-                        return (
-                          <article
-                            key={event.id}
-                            className={`mt-4 ${card} p-4 sm:p-5`}
+                      <section
+                        aria-labelledby="events-heading"
+                        className="min-w-0 max-w-3xl"
+                      >
+                        <div className="flex items-center justify-between gap-3">
+                          <h2
+                            id="events-heading"
+                            className="text-base font-semibold"
                           >
+                            {view === 'Overview'
+                              ? t('Upcoming events')
+                              : t('All events')}
+                          </h2>
 
-                            {/* Original event card header */}
-                            <div className="grid grid-cols-[36px_minmax(0,1fr)] items-start gap-4 sm:grid-cols-[36px_minmax(0,1fr)_auto]">
+                          <span className="text-xs text-neutral-500">
+                            {displayed.length}{' '}
+                            {displayed.length === 1
+                              ? t('event')
+                              : t('events')}
+                          </span>
+                        </div>
 
-                              <div
-                                className="tabular-nums"
-                                aria-hidden="true"
-                              >
-                                <span className="block text-xl">
-                                  {date
-                                    ? date.getDate()
-                                    : '–'}
-                                </span>
+                        {openFilter()}
 
-                                <span className="text-xs text-neutral-500">
-                                  {date
-                                    ? date.toLocaleDateString(
-                                        'en-GB',
-                                        { month: 'short' }
-                                      )
-                                    : 'Draft'}
-                                </span>
-                              </div>
+                        {displayed.map(event => {
+                          const staff = staffing(event);
 
-                              <div className="min-w-0">
-                                <div className="flex flex-wrap items-center gap-2">
-                                  <h3 className="font-semibold">
-                                    {event.name}
-                                  </h3>
+                          const expanded =
+                            selected === event.id;
 
-                                  {event.status === 'draft' && (
-                                    <span className="rounded bg-neutral-100 px-2 py-0.5 text-xs text-neutral-600">
-                                      Draft
-                                    </span>
-                                  )}
+                          const date = event.startDate
+                            ? new Date(
+                                `${event.startDate}T12:00:00`
+                              )
+                            : null;
+
+                          return (
+                            <article
+                              key={event.id}
+                              className={`mt-4 ${card} p-4 sm:p-5`}
+                            >
+
+                              {/* Original event card header */}
+                              <div className="grid grid-cols-[36px_minmax(0,1fr)] items-start gap-4 sm:grid-cols-[36px_minmax(0,1fr)_auto]">
+
+                                <div
+                                  className="tabular-nums"
+                                  aria-hidden="true"
+                                >
+                                  <span className="block text-xl">
+                                    {date
+                                      ? date.getDate()
+                                      : '–'}
+                                  </span>
+
+                                  <span className="text-xs text-neutral-500">
+                                    {date
+                                      ? date.toLocaleDateString(
+                                          locale,
+                                          { month: 'short' }
+                                        )
+                                      : t('Draft')}
+                                  </span>
                                 </div>
 
-                                <p className="mt-1 text-sm text-neutral-600">
-                                  {event.location ||
-                                    'Location not specified'}
-                                </p>
+                                <div className="min-w-0">
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <h3 className="font-semibold">
+                                      {event.name}
+                                    </h3>
 
-                                <p className="mt-1 text-xs text-neutral-500">
-                                  {dateLabel(event.startDate)}
+                                    {event.status === 'draft' && (
+                                      <span className="rounded bg-neutral-100 px-2 py-0.5 text-xs text-neutral-600">
+                                        {t('Draft')}
+                                      </span>
+                                    )}
+                                  </div>
 
-                                  {event.endDate !==
-                                    event.startDate &&
-                                    ` – ${dateLabel(
-                                      event.endDate
-                                    )}`}
-                                </p>
+                                  <p className="mt-1 text-sm text-neutral-600">
+                                    {event.location ||
+                                      t('Location not specified')}
+                                  </p>
 
-                                <StaffingIcons
-                                  filled={staff.filled}
-                                  capacity={staff.capacity}
-                                  label={`${event.name} volunteer places`}
-                                />
+                                  <p className="mt-1 text-xs text-neutral-500">
+                                    {dateLabel(event.startDate)}
+
+                                    {event.endDate !==
+                                      event.startDate &&
+                                      ` – ${dateLabel(
+                                        event.endDate
+                                      )}`}
+                                  </p>
+
+                                  <StaffingIcons
+                                    filled={staff.filled}
+                                    capacity={staff.capacity}
+                                    label={t(
+                                      '{value0} volunteer places',
+                                      { value0: event.name }
+                                    )}
+                                  />
+                                </div>
+
+                                <div className="col-start-2 flex flex-wrap gap-2 sm:col-start-auto sm:flex-col">
+
+                                  <button
+                                    type="button"
+                                    aria-expanded={expanded}
+                                    aria-controls={`shifts-${event.id}`}
+                                    aria-label={
+                                      expanded
+                                        ? t(
+                                            'Hide shifts for {value0}',
+                                            { value0: event.name }
+                                          )
+                                        : t(
+                                            'View shifts for {value0}',
+                                            { value0: event.name }
+                                          )
+                                    }
+                                    className={button}
+                                    onClick={() =>
+                                      showShifts(event)
+                                    }
+                                  >
+                                    {expanded
+                                      ? t('Hide shifts')
+                                      : t('View shifts')}
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    aria-label={t(
+                                      'Edit {value0}',
+                                      { value0: event.name }
+                                    )}
+                                    className={button}
+                                    onClick={() => edit(event)}
+                                  >
+                                    {t('Edit')}
+                                  </button>
+
+                                </div>
                               </div>
 
-                              <div className="col-start-2 flex flex-wrap gap-2 sm:col-start-auto sm:flex-col">
+                              {/* Expanded shifts inside the event card */}
+                              <section
+                                id={`shifts-${event.id}`}
+                                hidden={!expanded}
+                                aria-label={t(
+                                  'Shifts for {value0}',
+                                  { value0: event.name }
+                                )}
+                                className="mt-5 border-t border-neutral-200 pt-2"
+                              >
+                                {expanded && shiftList(event)}
+                              </section>
 
-                                <button
-                                  type="button"
-                                  aria-expanded={expanded}
-                                  aria-controls={`shifts-${event.id}`}
-                                  aria-label={`${
-                                    expanded ? 'Hide' : 'View'
-                                  } shifts for ${event.name}`}
-                                  className={button}
-                                  onClick={() =>
-                                    showShifts(event)
-                                  }
-                                >
-                                  {expanded
-                                    ? 'Hide shifts'
-                                    : 'View shifts'}
-                                </button>
+                            </article>
+                          );
+                        })}
 
-                                <button
-                                  type="button"
-                                  aria-label={`Edit ${event.name}`}
-                                  className={button}
-                                  onClick={() => edit(event)}
-                                >
-                                  Edit
-                                </button>
+                        {!loading &&
+                          !error &&
+                          !displayed.length && (
+                            <p className="mt-5 text-sm text-neutral-600">
+                              {view === 'Overview'
+                                ? t('No upcoming events.')
+                                : t('No events yet.')}
+                            </p>
+                          )}
+                      </section>
 
+                      {view === 'Overview' && (
+                        <aside
+                          className="min-w-0"
+                          aria-label={t('Event calendar and staffing')}
+                        >
+                          <h2 className="mb-4 text-base font-semibold">
+                            {t('Your calendar')}
+                          </h2>
+
+                          <ShiftCalendar
+                            shifts={calendarShifts}
+                          />
+
+                          <dl className="mt-6 grid grid-cols-3 gap-3 border-t border-neutral-200 pt-5">
+                            {[
+                              [stats.upcoming, 'Events'],
+                              [stats.openShifts, 'Open shifts'],
+                              [stats.vacancies, 'Open places'],
+                            ].map(([value, label]) => (
+                              <div key={label}>
+                                <dd className="text-2xl font-semibold tabular-nums">
+                                  {value}
+                                </dd>
+
+                                <dt className="mt-1 text-xs text-neutral-500">
+                                  {t(String(label))}
+                                </dt>
                               </div>
-                            </div>
-
-                            {/* Expanded shifts inside the event card */}
-                            <section
-                              id={`shifts-${event.id}`}
-                              hidden={!expanded}
-                              aria-label={`Shifts for ${event.name}`}
-                              className="mt-5 border-t border-neutral-200 pt-2"
-                            >
-                             {expanded && shiftList(event)}
-                            </section>
-
-                          </article>
-                        );
-                      })}
-
-                      {!loading &&
-                        !error &&
-                        !displayed.length && (
-                          <p className="mt-5 text-sm text-neutral-600">
-                            {view === 'Overview'
-                              ? 'No upcoming events.'
-                              : 'No events yet.'}
-                          </p>
-                        )}
-                    </section>
-
-                    {view === 'Overview' && (
-                      <aside
-                        className="min-w-0"
-                        aria-label="Event calendar and staffing"
-                      >
-                        <h2 className="mb-4 text-base font-semibold">
-                          Your calendar
-                        </h2>
-
-                        <ShiftCalendar
-                          shifts={calendarShifts}
-                        />
-
-                        <dl className="mt-6 grid grid-cols-3 gap-3 border-t border-neutral-200 pt-5">
-                          {[
-                            [stats.upcoming, 'Events'],
-                            [stats.openShifts, 'Open shifts'],
-                            [stats.vacancies, 'Open places'],
-                          ].map(([value, label]) => (
-                            <div key={label}>
-                              <dd className="text-2xl font-semibold tabular-nums">
-                                {value}
-                              </dd>
-
-                              <dt className="mt-1 text-xs text-neutral-500">
-                                {label}
-                              </dt>
-                            </div>
-                          ))}
-                        </dl>
-                      </aside>
-                    )}
-                  </div>
-                </>
-              )}
+                            ))}
+                          </dl>
+                        </aside>
+                      )}
+                    </div>
+                  </>
+                )}
 
               {view === 'My shifts' && (
                 <section
                   className="mt-6 max-w-3xl"
-                  aria-label="Shift management"
+                  aria-label={t('Shift management')}
                 >
                   {openFilter()}
 
@@ -657,7 +684,7 @@ function showShifts(event: ClubEvent) {
                             className={button}
                             onClick={() => edit(event)}
                           >
-                            Edit event
+                            {t('Edit event')}
                           </button>
                         </div>
 
@@ -671,7 +698,7 @@ function showShifts(event: ClubEvent) {
                       event => event.shifts.length
                     ) && (
                       <p className="text-sm text-neutral-600">
-                        No shifts yet.
+                        {t('No shifts yet.')}
                       </p>
                     )}
                 </section>

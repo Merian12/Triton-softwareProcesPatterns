@@ -4,6 +4,17 @@ export function dashboardFor(role: UserRole): string {
   return role === 'admin' ? '/admin-dashboard' : role === 'organizer' ? '/organizer-dashboard' : '/volunteer-dashboard';
 }
 
+/**
+ * Resolves the display name for a user, preferring their trimmed username
+ * and falling back to the capitalized local-part prefix of their email.
+ */
+export function displayNameFor(email: string, username?: string): string {
+  const cleanUsername = username?.trim();
+  if (cleanUsername) return cleanUsername;
+  const emailName = email.split('@')[0].split(/[._+-]/)[0];
+  return emailName ? emailName[0].toLocaleUpperCase('en-GB') + emailName.slice(1) : 'My account';
+}
+
 export interface UserProfile {
   id: string;
   email: string;

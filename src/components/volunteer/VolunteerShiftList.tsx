@@ -1,5 +1,6 @@
-
 'use client';
+
+import { useLanguage } from '@/components/LanguageProvider';
 
 import type {
   Event,
@@ -22,27 +23,29 @@ type Props = {
   onChoose: (event: Event, shift: Shift) => void;
 };
 
-function formatDate(value: string) {
-  return new Date(value).toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
-}
-
-function formatTime(value: string) {
-  return new Date(value).toLocaleTimeString('en-GB', {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
-
 export default function VolunteerShiftList({
   event,
   registered,
   loading,
   onChoose,
 }: Props) {
+  const { t, locale } = useLanguage();
+
+  function formatDate(value: string) {
+    return new Date(value).toLocaleDateString(locale, {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+  }
+
+  function formatTime(value: string) {
+    return new Date(value).toLocaleTimeString(locale, {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }
+
   return (
     <section className="mt-8 max-w-3xl">
       <p className="my-6 text-neutral-600">
@@ -62,7 +65,7 @@ export default function VolunteerShiftList({
           >
             <div>
               <h2 className="font-semibold">
-                {shift.title || 'Volunteer shift'}
+                {shift.title || t('Volunteer shift')}
               </h2>
 
               <p className="mt-1 text-sm text-neutral-600">
@@ -74,19 +77,21 @@ export default function VolunteerShiftList({
                 {' · '}
                 {shift.location ||
                   event.location ||
-                  'TBA'}
+                  t('TBA')}
               </p>
 
               <p className="mt-2 text-sm">
                 {isRegistered
-                  ? 'Registered'
+                  ? t('Registered')
                   : closed
-                    ? 'Registration closed'
+                    ? t('Registration closed')
                     : unavailable
-                      ? 'Unavailable'
+                      ? t('Unavailable')
                       : available === null
-                        ? 'Places available'
-                        : `${available} places available`}
+                        ? t('Places available')
+                        : t('{value0} places available', {
+                            value0: available,
+                          })}
               </p>
             </div>
 
@@ -94,19 +99,18 @@ export default function VolunteerShiftList({
               type="button"
               className={button}
               disabled={
-                isRegistered ||
-                unavailable ||
-                loading
+                loading ||
+                (!isRegistered && unavailable)
               }
               onClick={() => onChoose(event, shift)}
             >
               {isRegistered
-                ? 'Registered'
+                ? t('View shift')
                 : closed
-                  ? 'Registration closed'
+                  ? t('Registration closed')
                   : unavailable
-                    ? 'Unavailable'
-                    : 'Choose shift'}
+                    ? t('Unavailable')
+                    : t('Choose shift')}
             </button>
           </article>
         );

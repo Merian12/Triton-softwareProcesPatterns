@@ -1,3 +1,4 @@
+import type { RegistrationGuest } from '@/services/registrationService';
 
 export type Shift = {
   id: string;
@@ -29,6 +30,7 @@ export type Booking = {
   id: string;
   shift_id: string;
   status: string;
+  guests: RegistrationGuest[];
   event: Event;
   shift: Shift;
 };

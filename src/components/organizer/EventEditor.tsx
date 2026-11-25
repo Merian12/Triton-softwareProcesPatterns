@@ -1,5 +1,6 @@
 'use client';
 
+import { useLanguage } from '@/components/LanguageProvider';
 import { useEffect, useRef, useState } from 'react';
 
 import {
@@ -17,7 +18,7 @@ import {
   button,
   card,
   checkbox,
-  dateLabel,
+  dateLabel as formatDateLabel,
   input,
   panel,
   primary,
@@ -39,6 +40,13 @@ export default function EventEditor({
   onCancel,
   onDirty,
 }: Props) {
+  const { t, locale } = useLanguage();
+
+  const dateLabel = (value: string) =>
+    value
+      ? formatDateLabel(value, locale)
+      : t('Not specified');
+
   const [event, setEvent] = useState<ClubEvent>(
     () => structuredClone(initial)
   );
@@ -63,51 +71,52 @@ export default function EventEditor({
     event
   );
 
- useEffect(() => {
-  let active = true;
+  useEffect(() => {
+    let active = true;
 
-  async function loadClubs() {
-    try {
-      const data = await getClubs();
+    async function loadClubs() {
+      try {
+        const data = await getClubs();
 
-      if (!active) return;
+        if (!active) return;
 
-      setClubs(data);
+        setClubs(data);
 
-      // Select Triton by default when creating an event.
-      if (!existing) {
-        const triton = data.find(club =>
-          club.name.toLowerCase().includes('triton')
-        );
+        // Select Triton by default when creating an event.
+        if (!existing) {
+          const triton = data.find(club =>
+            club.name.toLowerCase().includes('triton')
+          );
 
-        if (triton) {
-          setEvent(previous => ({
-            ...previous,
-            clubId: previous.clubId || triton.id,
-          }));
+          if (triton) {
+            setEvent(previous => ({
+              ...previous,
+              clubId: previous.clubId || triton.id,
+            }));
+          }
+        }
+      } catch (error) {
+        if (active) {
+          setClubsError(
+            error instanceof Error
+              ? error.message
+              : 'Could not load clubs.'
+          );
+        }
+      } finally {
+        if (active) {
+          setClubsLoading(false);
         }
       }
-    } catch (error) {
-      if (active) {
-        setClubsError(
-          error instanceof Error
-            ? error.message
-            : 'Could not load clubs.'
-        );
-      }
-    } finally {
-      if (active) {
-        setClubsLoading(false);
-      }
     }
-  }
 
-  loadClubs();
+    void loadClubs();
 
-  return () => {
-    active = false;
-  };
-}, [existing]);
+    return () => {
+      active = false;
+    };
+  }, [existing]);
+
   useEffect(() => {
     if (!dirty) return;
 
@@ -254,7 +263,7 @@ export default function EventEditor({
           htmlFor={key}
           className="mb-2 block text-sm"
         >
-          {label}
+          {t(label)}
         </label>
 
         {type === 'textarea' ? (
@@ -290,7 +299,7 @@ export default function EventEditor({
             id={`${key}-error`}
             className="mt-2 text-sm text-red-800"
           >
-            {errors[key]}
+            {t(errors[key])}
           </p>
         )}
       </div>
@@ -320,7 +329,9 @@ export default function EventEditor({
             tabIndex={-1}
             className="text-2xl font-semibold tracking-tight"
           >
-            {existing ? 'Edit event' : 'Create event'}
+            {existing
+              ? t('Edit event')
+              : t('Create event')}
           </h1>
         </div>
 
@@ -330,12 +341,12 @@ export default function EventEditor({
           onClick={onCancel}
           disabled={saving}
         >
-          Close form
+          {t('Close form')}
         </button>
       </div>
 
       <ol
-        aria-label="Event setup steps"
+        aria-label={t('Event setup steps')}
         className="mb-8 flex flex-wrap gap-6 border-b border-neutral-200"
       >
         {['Event details', 'Shifts', 'Review'].map(
@@ -349,7 +360,7 @@ export default function EventEditor({
                   : 'border-transparent text-neutral-600'
               }`}
             >
-              {i + 1}. {label}
+              {i + 1}. {t(label)}
             </li>
           )
         )}
@@ -360,7 +371,7 @@ export default function EventEditor({
           role="alert"
           className="mb-5 border-b border-neutral-300 py-4 text-red-800"
         >
-          {failure}
+          {t(failure)}
         </p>
       )}
 
@@ -369,7 +380,7 @@ export default function EventEditor({
           {step === 0 ? (
             <>
               <h2 className="mb-5 text-lg font-semibold">
-                Event details
+                {t('Event details')}
               </h2>
 
               <div className="grid gap-5 sm:grid-cols-2">
@@ -380,7 +391,7 @@ export default function EventEditor({
                     htmlFor="clubId"
                     className="mb-2 block text-sm"
                   >
-                    Club
+                    {t('Club')}
                   </label>
 
                   <select
@@ -403,8 +414,8 @@ export default function EventEditor({
                   >
                     <option value="">
                       {clubsLoading
-                        ? 'Loading clubs...'
-                        : 'Select a club'}
+                        ? t('Loading clubs...')
+                        : t('Select a club')}
                     </option>
 
                     {clubs.map(club => (
@@ -422,7 +433,7 @@ export default function EventEditor({
                       role="alert"
                       className="mt-2 text-sm text-red-800"
                     >
-                      {clubsError}
+                      {t(clubsError)}
                     </p>
                   )}
 
@@ -431,7 +442,7 @@ export default function EventEditor({
                       id="clubId-error"
                       className="mt-2 text-sm text-red-800"
                     >
-                      {errors.clubId}
+                      {t(errors.clubId)}
                     </p>
                   )}
 
@@ -439,7 +450,7 @@ export default function EventEditor({
                     !clubsError &&
                     clubs.length === 0 && (
                       <p className="mt-2 text-sm text-neutral-600">
-                        No clubs available.
+                        {t('No clubs available.')}
                       </p>
                     )}
                 </div>
@@ -506,12 +517,12 @@ export default function EventEditor({
           ) : step === 1 ? (
             <>
               <h2 className="text-lg font-semibold">
-                Plan shifts
+                {t('Plan shifts')}
               </h2>
 
               {errors.shifts && (
                 <p role="alert" className="text-red-800">
-                  {errors.shifts}
+                  {t(errors.shifts)}
                 </p>
               )}
 
@@ -521,8 +532,9 @@ export default function EventEditor({
                   className={`my-6 ${card}`}
                 >
                   <legend className="px-2 font-semibold">
-                    Shift {i + 1} · {s.registrations.length}{' '}
-                    signed up
+                    {t('Shift')} {i + 1} ·{' '}
+                    {s.registrations.length}{' '}
+                    {t('signed up')}
                   </legend>
 
                   <div className="grid gap-5 sm:grid-cols-2">
@@ -591,12 +603,12 @@ export default function EventEditor({
                       })
                     }
                   >
-                    Remove shift {i + 1}
+                    {t('Remove shift')} {i + 1}
                   </button>
 
                   {s.registrations.length > 0 && (
                     <p className="mt-2 text-sm text-neutral-600">
-                      A shift with registrations cannot be removed.
+                      {t('A shift with registrations cannot be removed.')}
                     </p>
                   )}
                 </fieldset>
@@ -624,13 +636,13 @@ export default function EventEditor({
                   })
                 }
               >
-                + Add shift
+                {t('+ Add shift')}
               </button>
             </>
           ) : (
             <>
               <h2 className="mb-5 text-lg font-semibold">
-                Review before saving
+                {t('Review before saving')}
               </h2>
 
               <h3 className="text-lg font-semibold">
@@ -638,7 +650,7 @@ export default function EventEditor({
               </h3>
 
               <p className="mt-2 text-sm text-neutral-600">
-                Club:{' '}
+                {t('Club:')}{' '}
                 {clubs.find(club => club.id === event.clubId)
                   ?.name ?? event.clubId}
               </p>
@@ -654,11 +666,12 @@ export default function EventEditor({
               </p>
 
               <p className="mt-2">
-                Registration deadline: {dateLabel(event.deadline)}
+                {t('Registration deadline:')}{' '}
+                {dateLabel(event.deadline)}
               </p>
 
               <p className="mt-2">
-                Contact: {event.contact}
+                {t('Contact:')} {event.contact}
               </p>
 
               <ul className="mt-5 divide-y divide-neutral-200">
@@ -672,15 +685,19 @@ export default function EventEditor({
                     </p>
 
                     <p className="mt-1 text-sm">
-                      {s.registrations.length} signed up /{' '}
-                      {s.capacity} volunteers needed
+                      {s.registrations.length}{' '}
+                      {t('signed up /')}{' '}
+                      {s.capacity}{' '}
+                      {t('volunteers needed')}
                     </p>
                   </li>
                 ))}
               </ul>
 
               {!event.shifts.length && (
-                <p className="mt-4">No shifts yet.</p>
+                <p className="mt-4">
+                  {t('No shifts yet.')}
+                </p>
               )}
             </>
           )}
@@ -689,17 +706,18 @@ export default function EventEditor({
         {affected.length > 0 && (
           <aside className="mt-6 border-l-2 border-brand py-2 pl-5">
             <h2 className="font-semibold">
-              Changes affect registrations
+              {t('Changes affect registrations')}
             </h2>
 
             <p className="mt-2 text-sm">
-              Review the volunteers affected by these changes.
+              {t('Review the volunteers affected by these changes.')}
             </p>
 
             <ul className="my-3 list-inside list-disc text-sm">
               {affected.map(s => (
                 <li key={s.id}>
-                  {s.task}: {s.registrations.length} registrations
+                  {s.task}: {s.registrations.length}{' '}
+                  {t('registrations')}
                 </li>
               ))}
             </ul>
@@ -714,8 +732,7 @@ export default function EventEditor({
                 className={`mt-1 ${checkbox}`}
               />
 
-              I have reviewed the changes and will inform
-              the affected volunteers.
+              {t('I have reviewed the changes and will inform the affected volunteers.')}
             </label>
           </aside>
         )}
@@ -727,7 +744,7 @@ export default function EventEditor({
               className={button}
               onClick={() => go(step - 1)}
             >
-              Back
+              {t('Back')}
             </button>
           )}
 
@@ -738,7 +755,7 @@ export default function EventEditor({
               disabled={saving || clubsLoading}
               onClick={() => void save('draft')}
             >
-              Save draft
+              {t('Save draft')}
             </button>
           )}
 
@@ -748,12 +765,12 @@ export default function EventEditor({
             disabled={saving || clubsLoading}
           >
             {saving
-              ? 'Saving...'
+              ? t('Saving...')
               : step < 2
-                ? 'Continue'
+                ? t('Continue')
                 : initial.status === 'published'
-                  ? 'Save changes'
-                  : 'Publish event'}
+                  ? t('Save changes')
+                  : t('Publish event')}
           </button>
         </div>
       </fieldset>

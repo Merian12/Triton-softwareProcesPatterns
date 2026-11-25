@@ -50,4 +50,19 @@ describe('Event administration rules', () => {
     service.save(edited);
     expect(service.list()[0].shifts[0].registrations).toHaveLength(3);
   });
+  it('rejects end dates before start dates, deadlines after start dates, empty shift fields, and reverting published events to draft', () => {
+    const service = new EventService(new DemoEventRepository());
+    const published = service.list()[0];
+    expect(() => service.save({ ...published, status: 'draft' })).toThrow('cannot be changed to a draft');
+
+    const invalid = structuredClone(published);
+    invalid.endDate = '2027-05-10';
+    invalid.deadline = '2027-05-20';
+    invalid.shifts[0] = { ...invalid.shifts[0], task: '   ', location: '' };
+    const errors = validateEvent(invalid, true);
+    expect(errors.endDate).toContain('on or after the start date');
+    expect(errors.deadline).toContain('on or before the start date');
+    expect(errors['shift.water.task']).toBe('Complete this field.');
+    expect(errors['shift.water.location']).toBe('Complete this field.');
+  });
 });

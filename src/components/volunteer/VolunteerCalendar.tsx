@@ -1,5 +1,5 @@
-
 'use client';
+import { useLanguage } from '@/components/LanguageProvider';
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
@@ -17,6 +17,7 @@ type Shift = {
 export default function VolunteerCalendar({
   onOpenCalendar,
 }: VolunteerCalendarProps) {
+  const { t, locale } = useLanguage();
   const [today, setToday] = useState<Date | null>(null);
   const [shiftsToday, setShiftsToday] = useState<Shift[]>([]);
 
@@ -92,7 +93,7 @@ export default function VolunteerCalendar({
 
   const weekday = today
     ? today
-        .toLocaleDateString('en-GB', {
+        .toLocaleDateString(locale, {
           weekday: 'long',
         })
         .toUpperCase()
@@ -111,7 +112,7 @@ export default function VolunteerCalendar({
     <button
       type="button"
       onClick={onOpenCalendar}
-      aria-label="Open calendar"
+      aria-label={t("Open calendar")}
       className="
         group relative block
         h-[125px] w-[130px]
@@ -190,7 +191,7 @@ export default function VolunteerCalendar({
         </div>
 
         <div className="mt-[-1.5px] text-[9px] leading-[10px] text-neutral-600">
-          {shiftText}
+          {t(shiftText)}
         </div>
 
         <div className="mt-auto mb-[5px] transition-transform duration-200 group-hover:translate-y-0.5">

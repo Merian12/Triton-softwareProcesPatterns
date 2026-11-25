@@ -1,5 +1,5 @@
 'use client';
-
+import { useLanguage } from '@/components/LanguageProvider';
 import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { AuthService, UserRole } from '@/services/authService';
@@ -7,6 +7,7 @@ import { SupabaseAuthRepository } from '@/repositories/supabaseAuthRepo';
 import { Logo } from '@/components/Logo';
 
 export const LoginForm: React.FC = () => {
+  const { t } = useLanguage();
   const router = useRouter();
   const [isSignUp, setIsSignUp] = useState(false);
   const [username, setUsername] = useState('');
@@ -75,21 +76,21 @@ export const LoginForm: React.FC = () => {
           </div>
 
           <p className="login-subtitle">
-            {isSignUp ? 'Create your account' : 'Sign in as a Volunteer or Organizer'}
+            {isSignUp ? t("Create your account") : t("Sign in as a Volunteer or Organizer")}
           </p>
         </header>
 
         <form onSubmit={handleSubmit} noValidate className="login-form">
           {isSignUp && (
             <div className="form-group">
-              <label htmlFor="username" className="form-label">Username</label>
+              <label htmlFor="username" className="form-label">{t("Username")}</label>
               <input
                 type="text"
                 id="username"
                 className="form-input"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="your_username"
+                placeholder={t("your_username")}
                 required
                 disabled={isLoading}
               />
@@ -97,28 +98,28 @@ export const LoginForm: React.FC = () => {
           )}
 
           <div className="form-group">
-            <label htmlFor="email" className="form-label">Email</label>
+            <label htmlFor="email" className="form-label">{t("Email")}</label>
             <input
               type="email"
               id="email"
               className="form-input"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
+              placeholder={t("you@example.com")}
               required
               disabled={isLoading}
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="password" className="form-label">Password</label>
+            <label htmlFor="password" className="form-label">{t("Password")}</label>
             <input
               type="password"
               id="password"
               className="form-input"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
+              placeholder={t("••••••••")}
               required
               disabled={isLoading}
             />
@@ -127,21 +128,21 @@ export const LoginForm: React.FC = () => {
           {isSignUp && (
             <>
               <div className="form-group">
-                <label htmlFor="confirmPassword" className="form-label">Confirm Password</label>
+                <label htmlFor="confirmPassword" className="form-label">{t("Confirm Password")}</label>
                 <input
                   type="password"
                   id="confirmPassword"
                   className="form-input"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="••••••••"
+                  placeholder={t("••••••••")}
                   required
                   disabled={isLoading}
                 />
               </div>
 
               <div className="form-group">
-                <label className="form-label">Role</label>
+                <label className="form-label">{t("Role")}</label>
                 <div className="role-selector">
                   <button
                     type="button"
@@ -149,16 +150,14 @@ export const LoginForm: React.FC = () => {
                     onClick={() => setRole('volunteer')}
                     disabled={isLoading}
                   >
-                    Volunteer
-                  </button>
+                    {t("Volunteer")} </button>
                   <button
                     type="button"
                     className={`role-option ${role === 'organizer' ? 'role-option-active' : ''}`}
                     onClick={() => setRole('organizer')}
                     disabled={isLoading}
                   >
-                    Organizer
-                  </button>
+                    {t("Organizer")} </button>
                 </div>
               </div>
             </>
@@ -166,27 +165,27 @@ export const LoginForm: React.FC = () => {
 
           {error && (
             <p className="login-error-banner" role="alert">
-              {error}
+              {t(error)}
             </p>
           )}
 
           {successMessage && (
             <p className="login-success-banner" role="status">
-              {successMessage}
+              {t(successMessage)}
             </p>
           )}
 
           <button type="submit" disabled={isLoading} className="login-submit-button">
             {isLoading
-              ? (isSignUp ? 'Creating account...' : 'Signing in...')
-              : (isSignUp ? 'Sign Up' : 'Log In')}
+              ? (isSignUp ? t('Creating account...') : t('Signing in...'))
+              : (isSignUp ? t('Sign Up') : t('Log In'))}
           </button>
         </form>
 
         <p className="login-toggle">
-          {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
+          {isSignUp ? t("Already have an account?") : t("Don't have an account?")}{' '}
           <button type="button" className="login-toggle-button" onClick={toggleMode} disabled={isLoading}>
-            {isSignUp ? 'Log In' : 'Sign Up'}
+            {isSignUp ? t("Log In") : t("Sign Up")}
           </button>
         </p>
       </div>

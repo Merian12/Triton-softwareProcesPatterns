@@ -1,5 +1,13 @@
 import { supabase } from '@/lib/supabaseClient';
 
+import {
+  RegistrationService,
+} from '@/services/registrationService';
+
+import {
+  SupabaseRegistrationRepository,
+} from '@/repositories/supabaseRegistrationRepo';
+
 import type {
   Shift,
   Event,
@@ -12,7 +20,11 @@ export type VolunteerData = {
   bookings: Booking[];
 };
 
-// Load events, shifts and the volunteer's registrations
+const registrationService = new RegistrationService(
+  new SupabaseRegistrationRepository()
+);
+
+// Load events, shifts and the volunteer's registrations.
 export async function getVolunteerData(
   volunteerId: string
 ): Promise<VolunteerData> {
@@ -36,6 +48,7 @@ export async function getVolunteerData(
 
   if (eventsResult.error) throw eventsResult.error;
   if (shiftsResult.error) throw shiftsResult.error;
+
   if (registrationsResult.error) {
     throw registrationsResult.error;
   }
@@ -55,8 +68,17 @@ export async function getVolunteerData(
     registrationsResult.data ?? []
   ) as RegistrationRow[];
 
-  const bookings: Booking[] = registrations
-    .filter(row => row.status === 'registered')
+  const activeRegistrations = registrations.filter(
+    row => row.status === 'registered'
+  );
+
+  const allGuests = activeRegistrations.length
+    ? await registrationService.listGuests(
+        activeRegistrations.map(row => row.id)
+      )
+    : [];
+
+  const bookings: Booking[] = activeRegistrations
     .flatMap(row => {
       const shift = allShifts.find(
         item => item.id === row.shift_id
@@ -74,6 +96,9 @@ export async function getVolunteerData(
         id: row.id,
         shift_id: row.shift_id,
         status: row.status,
+        guests: allGuests.filter(
+          guest => guest.registration_id === row.id
+        ),
         event,
         shift,
       }];
@@ -87,7 +112,7 @@ export async function getVolunteerData(
   };
 }
 
-// Check whether the volunteer is already registered
+// Check whether the volunteer is already registered.
 export function isRegistered(
   shift: Shift,
   bookings: Booking[]
@@ -97,7 +122,7 @@ export function isRegistered(
   );
 }
 
-// Check the registration deadline
+// Check the registration deadline.
 export function registrationClosed(
   shift: Shift
 ): boolean {
@@ -109,7 +134,7 @@ export function registrationClosed(
   );
 }
 
-// Calculate available places
+// Calculate available places.
 export function availablePlaces(
   shift: Shift
 ): number | null {
@@ -125,10 +150,11 @@ export function availablePlaces(
   );
 }
 
-// Register a volunteer for a shift
+// Register a volunteer and their optional guests.
 export async function registerForShift(
   shift: Shift,
-  volunteerId: string
+  volunteerId: string,
+  guestNames: string[] = []
 ): Promise<void> {
   if (shift.status !== 'open') {
     throw new Error('This shift is not open.');
@@ -138,17 +164,49 @@ export async function registerForShift(
     throw new Error('The registration deadline has passed.');
   }
 
-  if (availablePlaces(shift) === 0) {
+  const available = availablePlaces(shift);
+
+  if (available === 0) {
     throw new Error('This shift has no available places.');
   }
 
-  const { error } = await supabase
-    .from('registrations')
-    .insert({
-      shift_id: shift.id,
-      volunteer_id: volunteerId,
-      status: 'registered',
-    });
+  const { data, error } = await supabase.auth.getUser();
 
   if (error) throw error;
+
+  if (data.user?.id !== volunteerId) {
+    throw new Error('Could not verify volunteer identity.');
+  }
+
+  await registrationService.registerWithGuests(
+    shift.id,
+    guestNames,
+    available
+  );
+}
+
+// Add guests to an existing registration.
+export async function addGuestsToBooking(
+  booking: Booking,
+  shift: Shift,
+  guestNames: string[]
+): Promise<void> {
+  if (registrationClosed(shift)) {
+    throw new Error('The registration deadline has passed.');
+  }
+
+  if (shift.status !== 'open') {
+    throw new Error('This shift is not open.');
+  }
+
+  if (booking.shift_id !== shift.id) {
+    throw new Error('Registration does not match this shift.');
+  }
+
+  await registrationService.addGuests(
+    booking.id,
+    guestNames,
+    booking.guests.length,
+    availablePlaces(shift)
+  );
 }

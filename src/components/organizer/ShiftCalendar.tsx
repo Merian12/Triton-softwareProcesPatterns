@@ -1,5 +1,5 @@
 'use client';
-
+import { useLanguage } from '@/components/LanguageProvider';
 import { useState } from 'react';
 
 export type CalendarShift = {
@@ -21,6 +21,7 @@ export default function ShiftCalendar({
   loading = false,
   error = null,
 }: Props) {
+   const { t, locale, language } = useLanguage();
   const [today] = useState(() => new Date());
 
   const [currentMonth, setCurrentMonth] = useState(
@@ -63,7 +64,7 @@ export default function ShiftCalendar({
   }
 
   function formatTime(date: string) {
-    return new Date(date).toLocaleTimeString('en-GB', {
+    return new Date(date).toLocaleTimeString(locale, {
       hour: '2-digit',
       minute: '2-digit',
     });
@@ -73,14 +74,8 @@ export default function ShiftCalendar({
     selectedDate !== null ? getShiftsForDay(selectedDate) : [];
 
   return (
-    <div
-      role="region"
-      aria-label={`${currentMonth.toLocaleDateString('en-US', {
-        month: 'long',
-        year: 'numeric',
-      })} shift calendar`}
-      className="relative flex w-full max-w-[400px] flex-col overflow-hidden rounded-[30px] border border-neutral-200 bg-white px-5 pb-5 pt-[88px] sm:px-6 sm:pb-6"
-    >
+    <div role="region" aria-label={t("{value0} shift calendar", { value0: currentMonth.toLocaleDateString(locale, { month: 'long', year: 'numeric' }) })} className="relative flex w-full max-w-[400px] flex-col overflow-hidden rounded-[30px] border border-neutral-200 bg-white px-5 pb-5 pt-[88px] sm:px-6 sm:pb-6">
+
       {/* Same signature curves as the volunteer calendar. */}
       <svg
         viewBox="0 0 260 100"
@@ -106,8 +101,8 @@ export default function ShiftCalendar({
 
       {/* Month navigation */}
       <div className="relative mb-3 flex shrink-0 items-center justify-between gap-2">
-        <h2 className="text-lg font-bold text-[#1C1C1C]">
-          {currentMonth.toLocaleDateString('en-US', {
+        <h2 className="text-base font-semibold text-foreground">
+          {currentMonth.toLocaleDateString(locale, {
             month: 'long',
             year: 'numeric',
           })}
@@ -117,7 +112,7 @@ export default function ShiftCalendar({
           <button
             type="button"
             onClick={() => changeMonth(-1)}
-            aria-label="Previous month"
+            aria-label={t("Previous month")}
             className="flex size-9 items-center justify-center rounded-full text-xl text-[#262E40] transition-colors hover:bg-[#D7142A]/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
           >
             ‹
@@ -126,7 +121,7 @@ export default function ShiftCalendar({
           <button
             type="button"
             onClick={() => changeMonth(1)}
-            aria-label="Next month"
+            aria-label={t("Next month")}
             className="flex size-9 items-center justify-center rounded-full text-xl text-[#262E40] transition-colors hover:bg-[#D7142A]/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
           >
             ›
@@ -136,10 +131,11 @@ export default function ShiftCalendar({
 
       {/* Calendar */}
       <div className="grid min-h-[260px] grid-cols-7 grid-rows-7 gap-1 text-center">
-        {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, i) => (
+
+        {(language === 'da' ? ['M', 'T', 'O', 'T', 'F', 'L', 'S'] : ['M', 'T', 'W', 'T', 'F', 'S', 'S']).map((day, i) => (
           <div
             key={`weekday-${i}`}
-            className="flex min-h-0 items-center justify-center text-xs font-bold tracking-[0.08em] text-[#262E40]"
+            className="flex min-h-0 items-center justify-center text-xs font-medium text-muted"
           >
             {day}
           </div>
@@ -166,13 +162,13 @@ export default function ShiftCalendar({
                 <button
                   type="button"
                   onClick={() => setSelectedDate(day)}
-                  aria-label={`${day} ${currentMonth.toLocaleDateString('en-US', {
+                  aria-label={`${day} ${currentMonth.toLocaleDateString(locale, {
                     month: 'long',
                     year: 'numeric',
-                  })}${isToday ? ', today' : ''}${dayShifts.length ? `, ${dayShifts.length} shifts` : ''}`}
+                  })}${isToday ? t(', today') : ''}${dayShifts.length ? t(", {value0} shifts", { value0: dayShifts.length }) : ''}`}
                   aria-current={isToday ? 'date' : undefined}
                   aria-pressed={isSelected}
-                  className={`relative flex aspect-square w-full max-w-10 flex-col items-center justify-center rounded-full font-serif text-lg font-bold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand
+                  className={`relative flex aspect-square w-full max-w-10 flex-col items-center justify-center rounded-full text-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand
                     ${isToday ? 'bg-[#D7142A] text-white' : ''}
                     ${isSelected ? 'ring-2 ring-[#262E40] ring-offset-2' : ''}
                     ${isSelected && !isToday ? 'bg-[#D7142A]/10 text-[#1C1C1C]' : ''}
@@ -200,26 +196,24 @@ export default function ShiftCalendar({
       {/* Selected date and shifts */}
       <div className="mt-2 shrink-0 border-t border-neutral-200 pt-3">
         {error ? (
-          <p className="text-xs text-red-600">{error}</p>
+          <p className="text-sm text-red-600">{t(error)}</p>
         ) : loading ? (
-          <p className="text-xs text-gray-500">
-            Loading shifts...
-          </p>
+          <p className="text-sm text-muted">
+            {t("Loading shifts...")} </p>
         ) : selectedDate === null ? (
-          <p className="text-xs text-gray-500">
-            Select a date to view shifts
-          </p>
+          <p className="text-sm text-muted">
+            {t("Select a date to view shifts")} </p>
         ) : selectedShifts.length === 0 ? (
-          <p className="text-xs text-gray-500">
-            No shifts on {selectedDate}{' '}
-            {currentMonth.toLocaleDateString('en-US', {
+          <p className="text-sm text-muted">
+            {t("No shifts on")} {selectedDate}{' '}
+            {currentMonth.toLocaleDateString(locale, {
               month: 'long',
             })}
           </p>
         ) : (
           <div className="max-h-20 space-y-2 overflow-y-auto">
             {selectedShifts.map((shift) => (
-              <div key={shift.id} className="text-xs">
+              <div key={shift.id} className="text-sm">
                 <p className="font-semibold text-gray-900">
                   {shift.title}
                 </p>
