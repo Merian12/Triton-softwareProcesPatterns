@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import MyShiftNotes, { type ShiftBooking } from '@/components/MyShiftNotes';
+import MyShiftNotes, { type ShiftBooking } from '@/components/volunteer/MyShiftNotes';
 
 let notesResponse: { data: { note_date: string; content: string }[] | null; error: { message: string } | null };
 

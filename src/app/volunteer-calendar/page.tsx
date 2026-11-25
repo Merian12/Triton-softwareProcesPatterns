@@ -1,7 +1,7 @@
 
 'use client';
 import { useLanguage } from '@/components/LanguageProvider';
-import ExpandedCalendar from '@/components/ExpandedCalendar';
+import ExpandedCalendar from '@/components/volunteer/ExpandedCalendar';
 import { useState } from 'react';
 import Link from 'next/link';
 import RoleGuard from '@/components/RoleGuard';

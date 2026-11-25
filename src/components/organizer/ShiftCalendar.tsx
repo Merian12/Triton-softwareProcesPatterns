@@ -10,15 +10,26 @@ export type CalendarShift = {
   ends_at: string;
 };
 
-type Props = { shifts: CalendarShift[]; loading?: boolean; error?: string | null };
+type Props = {
+  shifts: CalendarShift[];
+  loading?: boolean;
+  error?: string | null;
+};
 
-export default function ShiftCalendar({ shifts, loading = false, error = null }: Props) {
-  const { t, locale, language } = useLanguage();
+export default function ShiftCalendar({
+  shifts,
+  loading = false,
+  error = null,
+}: Props) {
+   const { t, locale, language } = useLanguage();
   const [today] = useState(() => new Date());
+
   const [currentMonth, setCurrentMonth] = useState(
     () => new Date(today.getFullYear(), today.getMonth(), 1)
   );
+
   const [selectedDate, setSelectedDate] = useState<number | null>(null);
+
   const year = currentMonth.getFullYear();
   const month = currentMonth.getMonth();
 
@@ -72,9 +83,20 @@ export default function ShiftCalendar({ shifts, loading = false, error = null }:
         className="pointer-events-none absolute inset-x-0 top-0 h-[90px] w-full"
         aria-hidden="true"
       >
-        <path d="M 0 0 H 260 V 42 C 190 10, 100 48, 0 100 Z" fill="#D7142A" />
-        <path d="M 0 55 C 22 67, 52 56, 100 43 C 65 62, 25 83, 0 100 Z" fill="#262E40" />
-        <path d="M 0 100 C 38 62, 91 45, 145 34 C 90 51, 37 75, 0 100 Z" fill="#C8101E" />
+        <path
+          d="M 0 0 H 260 V 42 C 190 10, 100 48, 0 100 Z"
+          fill="#D7142A"
+        />
+
+        <path
+          d="M 0 55 C 22 67, 52 56, 100 43 C 65 62, 25 83, 0 100 Z"
+          fill="#262E40"
+        />
+
+        <path
+          d="M 0 100 C 38 62, 91 45, 145 34 C 90 51, 37 75, 0 100 Z"
+          fill="#C8101E"
+        />
       </svg>
 
       {/* Month navigation */}
@@ -155,10 +177,12 @@ export default function ShiftCalendar({ shifts, loading = false, error = null }:
                 >
                   <span>{day}</span>
 
+                  {/* Larger red shift indicator */}
                   {dayShifts.length > 0 && (
                     <span
-                      className={`absolute bottom-0.5 h-1 w-1 rounded-full ${
-                        isToday ? 'bg-white' : 'bg-[#262E40]'
+                      aria-hidden="true"
+                      className={`absolute bottom-0.5 left-1/2 h-2 w-2 -translate-x-1/2 rounded-full ${
+                        isToday ? 'bg-white' : 'bg-[#D7142A]'
                       }`}
                     />
                   )}
@@ -193,6 +217,7 @@ export default function ShiftCalendar({ shifts, loading = false, error = null }:
                 <p className="font-semibold text-gray-900">
                   {shift.title}
                 </p>
+
                 <p className="text-gray-500">
                   {formatTime(shift.starts_at)} –{' '}
                   {formatTime(shift.ends_at)}

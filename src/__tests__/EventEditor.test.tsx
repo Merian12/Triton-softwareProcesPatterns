@@ -6,6 +6,7 @@ import type { ClubEvent } from '@/services/eventService';
 function createDraft(overrides: Partial<ClubEvent> = {}): ClubEvent {
   return {
     id: 'e-new',
+    clubId: 'test-club-id',
     name: '',
     description: '',
     location: '',

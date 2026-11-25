@@ -1,6 +1,6 @@
 import { render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import VolunteerDashboard from '@/components/VolunteerDashboard';
+import VolunteerDashboard from '@/components/volunteer/VolunteerDashboard';
 import PortalTopbar from '@/components/PortalTopbar';
 
 let currentSearchParams = new URLSearchParams();

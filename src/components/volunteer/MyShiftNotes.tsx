@@ -3,7 +3,7 @@ import { useLanguage } from '@/components/LanguageProvider';
 
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-import { portalButton as button } from './portalStyles';
+import { portalButton as button } from '@/components/portalStyles';
 
 export type ShiftBooking = {
   id: string;
@@ -146,6 +146,7 @@ export default function MyShifts({
                       booking.event.name ||
                       t("Untitled event")}
                   </h2>
+                  
 
                   <p className="mt-2 text-sm text-neutral-600">
                     {formatDate(booking.shift.starts_at)}

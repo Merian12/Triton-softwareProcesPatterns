@@ -1,7 +1,7 @@
 'use client';
 
 import RoleGuard from '@/components/RoleGuard';
-import VolunteerDashboard from '@/components/VolunteerDashboard';
+import VolunteerDashboard from '@/components/volunteer/VolunteerDashboard';
 
 export default function VolunteerDashboardPage() {
   return (

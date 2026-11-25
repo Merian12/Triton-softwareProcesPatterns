@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import ExpandedCalendar from '@/components/ExpandedCalendar';
+import ExpandedCalendar from '@/components/volunteer/ExpandedCalendar';
 
 type MockNote = {
   id: string;
