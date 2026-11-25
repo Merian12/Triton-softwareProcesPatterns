@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import VolunteerDashboard from '@/components/VolunteerDashboard';
+import VolunteerDashboard from '@/components/volunteer/VolunteerDashboard';
 import OrganizerDashboard from '@/components/organizer/OrganizerDashboard';
 
 vi.mock('next/navigation', () => ({ useSearchParams: () => null }));

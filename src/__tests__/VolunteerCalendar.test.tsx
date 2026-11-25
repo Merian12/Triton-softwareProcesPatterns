@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import VolunteerCalendar from '@/components/VolunteerCalendar';
+import VolunteerCalendar from '@/components/volunteer/VolunteerCalendar';
 
 let mockUser: { id: string } | null = { id: 'v1' };
 let mockRegistrations: { shift_id: string }[] = [];
