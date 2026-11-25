@@ -1,20 +1,53 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { SupabaseEventRepository } from '@/repositories/supabaseEventRepo';
 import type { UserProfile } from '@/services/authService';
-import { ClubEvent, EventService, overview, staffing } from '@/services/eventService';
-import { DemoEventRepository } from '@/repositories/demoEventRepo';
+
+import {
+  ClubEvent,
+  EventService,
+  overview,
+  staffing,
+} from '@/services/eventService';
+
 import Messages from '@/components/Messages';
 import OrganizerManagement from '@/components/OrganizerManagement';
-import ShiftCalendar from '@/components/ShiftCalendar';
+import ShiftCalendar from '@/components/organizer/ShiftCalendar';
 import EventEditor from './EventEditor';
-import OrganizerTopbar, { type OrganizerView } from './OrganizerTopbar';
-import StaffingIcons from './StaffingIcons';
-import { button, card, checkbox, dateLabel, panel, portalContainer, portalShell, primary } from '@/components/portalStyles';
 
-export default function OrganizerDashboard({ profile, onLogout }: { profile: UserProfile; onLogout: () => Promise<void> }) {
-  const service = useMemo(() => new EventService(new DemoEventRepository()), []);
-  const [events, setEvents] = useState(() => service.list());
+import OrganizerTopbar, {
+  type OrganizerView,
+} from './OrganizerTopbar';
+
+import StaffingIcons from './StaffingIcons';
+
+import {
+  button,
+  card,
+  checkbox,
+  dateLabel,
+  portalContainer,
+  portalShell,
+  primary,
+} from '@/components/portalStyles';
+
+export default function OrganizerDashboard({
+  profile,
+  onLogout,
+}: {
+  profile: UserProfile;
+  onLogout: () => Promise<void>;
+}) {
+  const userId = profile.id;
+
+  const service = useMemo(() => {
+    const repository = new SupabaseEventRepository(userId);
+    return new EventService(repository);
+  }, [userId]);
+
+  const [events, setEvents] = useState<ClubEvent[]>([]);
+  const [loading, setLoading] = useState(true);
   const [view, setView] = useState<OrganizerView>('Overview');
   const [editor, setEditor] = useState<ClubEvent | null>(null);
   const [dirty, setDirty] = useState(false);
@@ -23,147 +56,634 @@ export default function OrganizerDashboard({ profile, onLogout }: { profile: Use
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
   const [loggingOut, setLoggingOut] = useState(false);
-  const [today] = useState(() => new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Copenhagen' }).format(new Date()));
-  const stats = overview(events, today);
-  const selectedEvent = events.find(event => event.id === selected);
-  const displayed = events.filter(event => view === 'Find events' || (event.status === 'published' && event.startDate >= today))
-    .sort((a, b) => a.startDate.localeCompare(b.startDate));
-  const calendarShifts = events.flatMap(event => event.shifts.map(shift => ({
-    id: `${event.id}-${shift.id}`, title: shift.task, location: shift.location,
-    starts_at: `${shift.date}T${shift.start}:00`, ends_at: `${shift.date}T${shift.end}:00`,
-  })));
+  const [saving, setSaving] = useState(false);
 
-  function canLeave() { return !dirty || window.confirm('Discard your unsaved changes?'); }
+  const [today] = useState(() =>
+    new Intl.DateTimeFormat('sv-SE', {
+      timeZone: 'Europe/Copenhagen',
+    }).format(new Date())
+  );
+
+  // Load events only when the service changes.
+  useEffect(() => {
+    let active = true;
+
+    async function loadEvents() {
+      setLoading(true);
+      setError('');
+
+      try {
+        const data = await service.list();
+
+        if (active) {
+          setEvents(data);
+        }
+      } catch (err) {
+        if (active) {
+          setError(
+            err instanceof Error
+              ? err.message
+              : 'Could not load events.'
+          );
+        }
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    }
+
+    void loadEvents();
+
+    return () => {
+      active = false;
+    };
+  }, [service]);
+
+  const stats = overview(events, today);
+
+  const displayed = events
+  .filter(
+    event =>
+      view === 'Find events' ||
+      (
+        event.status === 'published' &&
+        event.startDate >= today
+      )
+  )
+  .filter(
+    event =>
+      !onlyOpen ||
+      event.shifts.some(
+        shift =>
+          shift.capacity > shift.registrations.length
+      )
+  )
+  .sort((a, b) =>
+    a.startDate.localeCompare(b.startDate)
+  );
+
+  const calendarShifts = events
+    .filter(event => event.status === 'published')
+    .flatMap(event =>
+      event.shifts.map(shift => ({
+        id: shift.id,
+        title: shift.task,
+        location: shift.location,
+        starts_at: `${shift.date}T${shift.start}:00`,
+        ends_at: `${shift.date}T${shift.end}:00`,
+      }))
+    );
+
+  function canLeave() {
+    if (saving) return false;
+
+    return (
+      !dirty ||
+      window.confirm('Discard your unsaved changes?')
+    );
+  }
+
   function navigate(next: OrganizerView) {
     if (!canLeave()) return;
-    setEditor(null); setDirty(false); setView(next); setSelected(null); setOnlyOpen(false); setNotice('');
+
+    setEditor(null);
+    setDirty(false);
+    setView(next);
+    setSelected(null);
+    setOnlyOpen(false);
+    setNotice('');
+    setError('');
   }
+
   function edit(event: ClubEvent) {
     if (!canLeave()) return;
-    setEditor(event); setDirty(false); setNotice(''); window.scrollTo({ top: 0 });
+
+    setEditor(event);
+    setDirty(false);
+    setNotice('');
+    setError('');
+
+    window.scrollTo({ top: 0 });
   }
-  function create() { edit({ id: crypto.randomUUID(), name: '', description: '', location: '', startDate: '', endDate: '', deadline: '', contact: '', status: 'draft', shifts: [] }); }
-  function save(event: ClubEvent) {
-    service.save(event); setEvents(service.list()); setEditor(null); setDirty(false); setView('Find events');
-    setNotice(event.status === 'draft' ? 'Draft updated.' : 'Event updated.');
+
+  function create() {
+    edit({
+      id: crypto.randomUUID(),
+      clubId: '',
+      name: '',
+      description: '',
+      location: '',
+      startDate: '',
+      endDate: '',
+      deadline: '',
+      contact: '',
+      status: 'draft',
+      shifts: [],
+    });
   }
-  function showShifts(event: ClubEvent) {
-    setSelected(event.id); setOnlyOpen(false);
-    setTimeout(() => document.getElementById('shifts-heading')?.focus(), 0);
+
+  async function save(event: ClubEvent): Promise<void> {
+    setSaving(true);
+    setError('');
+
+    try {
+      await service.save(event);
+
+      setEditor(null);
+      setDirty(false);
+      setView('Find events');
+
+      setNotice(
+        event.status === 'draft'
+          ? 'Draft saved.'
+          : 'Event saved.'
+      );
+
+      try {
+        const updatedEvents = await service.list();
+        setEvents(updatedEvents);
+      } catch {
+        setError(
+          'Event saved, but the event list could not be refreshed.'
+        );
+      }
+    } finally {
+      setSaving(false);
+    }
   }
+
+  // Expand or collapse the selected event card.
+function showShifts(event: ClubEvent) {
+  setSelected(previous =>
+    previous === event.id ? null : event.id
+  );
+
+
+    setOnlyOpen(false);
+  }
+
   async function logout() {
     if (!canLeave()) return;
-    setLoggingOut(true); setError('');
-    try { await onLogout(); } catch { setError('Could not log out. Please try again.'); setLoggingOut(false); }
+
+    setLoggingOut(true);
+    setError('');
+
+    try {
+      await onLogout();
+    } catch {
+      setError('Could not log out. Please try again.');
+      setLoggingOut(false);
+    }
   }
+
   function openFilter() {
-    return <label className="my-5 flex items-center gap-3 text-sm">
-      <input type="checkbox" checked={onlyOpen} onChange={event => setOnlyOpen(event.target.checked)} className={checkbox} />
-      Only shifts with available places
-    </label>;
+    return (
+      <label className="my-5 flex items-center gap-3 text-sm">
+        <input
+          type="checkbox"
+          checked={onlyOpen}
+          onChange={event =>
+            setOnlyOpen(event.target.checked)
+          }
+          className={checkbox}
+        />
+
+        Show only shifts with available places
+      </label>
+    );
   }
+
   function shiftList(event: ClubEvent) {
-    const shifts = event.shifts.filter(shift => !onlyOpen || shift.capacity > shift.registrations.length);
-    return <>
-      {shifts.map(shift => <article key={shift.id} className="border-b border-neutral-200 py-5 last:border-b-0">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <h3 className="font-semibold">{shift.task}</h3>
-            <p className="mt-1 text-sm text-neutral-600">{shift.location}</p>
-            <p className="mt-1 text-sm text-neutral-600">{dateLabel(shift.date)} · {shift.start}–{shift.end}</p>
-          </div>
-          <StaffingIcons filled={shift.registrations.length} capacity={shift.capacity} label={`${shift.task} volunteer places`} />
-        </div>
-        <details className="mt-3">
-          <summary className="min-h-10 cursor-pointer py-2 text-sm hover:underline focus-visible:outline-2 focus-visible:outline-brand">View volunteers ({shift.registrations.length})</summary>
-          {shift.registrations.length ? <ul className="divide-y divide-neutral-200">
-            {shift.registrations.map(registration => <li key={registration.id} className="flex flex-wrap justify-between gap-2 py-3 text-sm">
-              <span>{registration.name}</span><span className="break-all text-neutral-600">{registration.email}</span>
-            </li>)}
-          </ul> : <p className="py-3 text-sm text-neutral-600">No volunteers signed up yet.</p>}
-        </details>
-      </article>)}
-      {!shifts.length && <p className="py-4 text-sm text-neutral-600">{onlyOpen ? 'No shifts with available places.' : 'No shifts yet.'}</p>}
-    </>;
+    const shifts = event.shifts.filter(
+      shift =>
+        !onlyOpen ||
+        shift.capacity > shift.registrations.length
+    );
+
+    return (
+      <>
+        {shifts.map(shift => (
+          <article
+            key={shift.id}
+            className="border-b border-neutral-200 py-5 last:border-b-0"
+          >
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <h3 className="font-semibold">
+                  {shift.task}
+                </h3>
+
+                <p className="mt-1 text-sm text-neutral-600">
+                  {shift.location}
+                </p>
+
+                <p className="mt-1 text-sm text-neutral-600">
+                  {dateLabel(shift.date)} · {shift.start}–
+                  {shift.end}
+                </p>
+              </div>
+
+              <StaffingIcons
+                filled={shift.registrations.length}
+                capacity={shift.capacity}
+                label={`${shift.task} volunteer places`}
+              />
+            </div>
+
+            <details className="mt-3">
+              <summary className="min-h-10 cursor-pointer py-2 text-sm hover:underline focus-visible:outline-2 focus-visible:outline-brand">
+                View volunteers ({shift.registrations.length})
+              </summary>
+
+              {shift.registrations.length > 0 ? (
+                <ul className="divide-y divide-neutral-200">
+                  {shift.registrations.map(registration => (
+                    <li
+                      key={registration.id}
+                      className="flex flex-wrap justify-between gap-2 py-3 text-sm"
+                    >
+                      <span>
+                        {registration.name}
+                      </span>
+
+                      <span className="break-all text-neutral-600">
+                        {registration.email}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="py-3 text-sm text-neutral-600">
+                  No volunteers signed up yet.
+                </p>
+              )}
+            </details>
+          </article>
+        ))}
+
+        {!shifts.length && (
+          <p className="py-4 text-sm text-neutral-600">
+            {onlyOpen
+              ? 'No shifts with available places.'
+              : 'No shifts yet.'}
+          </p>
+        )}
+      </>
+    );
   }
 
-  return <div lang="en" className={portalShell}>
-    <a href="#admin-main" className="sr-only focus:not-sr-only focus:block focus:p-4">Skip to content</a>
-    <OrganizerTopbar roleLabel={profile.role === 'admin' ? 'Admin' : 'Organizer'} email={profile.email} username={profile.username} activeView={editor ? null : view} loggingOut={loggingOut} onNavigate={navigate} onLogout={logout} />
-    <div className={portalContainer}>
-      <main id="admin-main" className="py-7 sm:py-8">
-        {error && <p role="alert" className="mb-5 text-sm text-red-800">{error}</p>}
-        {notice && <p role="status" className="mb-5 text-sm text-neutral-700">{notice}</p>}
-        {profile.role === 'admin' && !editor && view === 'Overview' && <OrganizerManagement />}
-        {editor ? <EventEditor key={editor.id} initial={editor} existing={events.some(event => event.id === editor.id)} onSave={save}
-          onCancel={() => { if (canLeave()) { setEditor(null); setDirty(false); } }} onDirty={setDirty} /> : <>
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <h1 className="text-2xl font-semibold tracking-tight">{view}</h1>
-            {(view === 'Overview' || view === 'Find events') && <button className={primary} onClick={create}>+ Create event</button>}
-          </div>
+  return (
+    <div lang="en" className={portalShell}>
+      <a
+        href="#admin-main"
+        className="sr-only focus:not-sr-only focus:block focus:p-4"
+      >
+        Skip to content
+      </a>
 
-          {(view === 'Overview' || view === 'Find events') && <>
-            <div className={`mt-7 grid gap-10 ${view === 'Overview' ? 'lg:grid-cols-[minmax(0,1fr)_400px]' : ''}`}>
-              <section aria-labelledby="events-heading" className="min-w-0 max-w-3xl">
-                <div className="flex items-center justify-between gap-3">
-                  <h2 id="events-heading" className="text-base font-semibold">{view === 'Overview' ? 'Upcoming events' : 'All events'}</h2>
-                  <span className="text-xs text-neutral-500">{displayed.length} {displayed.length === 1 ? 'event' : 'events'}</span>
-                </div>
-                {displayed.map(event => {
-                  const staff = staffing(event);
-                  const date = event.startDate ? new Date(`${event.startDate}T12:00:00`) : null;
-                  return <article key={event.id} className={`mt-4 grid grid-cols-[36px_minmax(0,1fr)] items-start gap-4 ${card} p-4 sm:grid-cols-[36px_minmax(0,1fr)_auto] sm:p-5`}>
-                    <div className="tabular-nums" aria-hidden="true">
-                      <span className="block text-xl">{date ? date.getDate() : '–'}</span>
-                      <span className="text-xs text-neutral-500">{date ? date.toLocaleDateString('en-GB', { month: 'short' }) : 'Draft'}</span>
-                    </div>
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2"><h3 className="font-semibold">{event.name}</h3>
-                        {event.status === 'draft' && <span className="rounded bg-neutral-100 px-2 py-0.5 text-xs text-neutral-600">Draft</span>}
-                      </div>
-                      <p className="mt-1 text-sm text-neutral-600">{event.location || 'Location not specified'}</p>
-                      <p className="mt-1 text-xs text-neutral-500">{dateLabel(event.startDate)}{event.endDate !== event.startDate && ` – ${dateLabel(event.endDate)}`}</p>
-                      <StaffingIcons filled={staff.filled} capacity={staff.capacity} label={`${event.name} volunteer places`} />
-                    </div>
-                    <div className="col-start-2 flex flex-wrap gap-2 sm:col-start-auto sm:flex-col">
-                      <button aria-label={`View shifts for ${event.name}`} className={button} onClick={() => showShifts(event)}>View shifts</button>
-                      <button aria-label={`Edit ${event.name}`} className={button} onClick={() => edit(event)}>Edit</button>
-                    </div>
-                  </article>;
-                })}
-                {!displayed.length && <p className="mt-5 text-sm text-neutral-600">No upcoming events.</p>}
-              </section>
-              {view === 'Overview' && <aside className="min-w-0" aria-label="Event calendar and staffing">
-                <h2 className="mb-4 text-base font-semibold">Your calendar</h2>
-                <ShiftCalendar shifts={calendarShifts} />
-                <dl className="mt-6 grid grid-cols-3 gap-3 border-t border-neutral-200 pt-5">
-                  {[[stats.upcoming, 'Events'], [stats.openShifts, 'Open shifts'], [stats.vacancies, 'Open places']].map(([value, label]) => <div key={label}>
-                    <dd className="text-2xl font-semibold tabular-nums">{value}</dd>
-                    <dt className="mt-1 text-xs text-neutral-500">{label}</dt>
-                  </div>)}
-                </dl>
-              </aside>}
-            </div>
-            {selectedEvent && <section className={`${panel} mt-8 max-w-3xl`} aria-labelledby="shifts-heading">
+      <OrganizerTopbar
+        roleLabel={
+          profile.role === 'admin'
+            ? 'Admin'
+            : 'Organizer'
+        }
+        email={profile.email}
+        username={profile.username}
+        activeView={editor ? null : view}
+        loggingOut={loggingOut}
+        onNavigate={navigate}
+        onLogout={logout}
+      />
+
+      <div className={portalContainer}>
+        <main id="admin-main" className="py-7 sm:py-8">
+
+          {loading && (
+            <p
+              role="status"
+              className="mb-5 text-sm text-neutral-600"
+            >
+              Loading events...
+            </p>
+          )}
+
+          {error && (
+            <p
+              role="alert"
+              className="mb-5 text-sm text-red-800"
+            >
+              {error}
+            </p>
+          )}
+
+          {notice && (
+            <p
+              role="status"
+              className="mb-5 text-sm text-neutral-700"
+            >
+              {notice}
+            </p>
+          )}
+
+          {profile.role === 'admin' &&
+            !editor &&
+            view === 'Overview' && (
+              <OrganizerManagement />
+            )}
+
+          {editor ? (
+            <EventEditor
+              key={editor.id}
+              initial={editor}
+              existing={events.some(
+                event => event.id === editor.id
+              )}
+              onSave={save}
+              onCancel={() => {
+                if (canLeave()) {
+                  setEditor(null);
+                  setDirty(false);
+                }
+              }}
+              onDirty={setDirty}
+            />
+          ) : (
+            <>
               <div className="flex flex-wrap items-center justify-between gap-4">
-                <h2 id="shifts-heading" tabIndex={-1} className="text-lg font-semibold">{selectedEvent.name}</h2>
-                <button className={button} onClick={() => edit(selectedEvent)}>Edit event</button>
-              </div>
-              {openFilter()}{shiftList(selectedEvent)}
-            </section>}
-          </>}
+                <h1 className="text-2xl font-semibold tracking-tight">
+                  {view}
+                </h1>
 
-          {view === 'My shifts' && <section className="mt-6 max-w-3xl" aria-label="Shift management">
-            {openFilter()}
-            {[...events].sort((a, b) => a.startDate.localeCompare(b.startDate)).filter(event => event.shifts.length > 0).map(event => <section key={event.id} className={`mb-7 ${card}`} aria-label={event.name}>
-              <div className="flex items-center justify-between gap-4"><h2 className="font-semibold">{event.name}</h2><button className={button} onClick={() => edit(event)}>Edit event</button></div>
-              {shiftList(event)}
-            </section>)}
-            {!events.some(event => event.shifts.length) && <p className="text-sm text-neutral-600">No shifts yet.</p>}
-          </section>}
-          {view === 'Messages' && <Messages userId={profile.id} />}
-        </>}
-      </main>
+                {(view === 'Overview' ||
+                  view === 'Find events') && (
+                  <button
+                    className={primary}
+                    onClick={create}
+                    disabled={loading || saving}
+                  >
+                    + Create event
+                  </button>
+                )}
+              </div>
+
+              {(view === 'Overview' ||
+                view === 'Find events') && (
+                <>
+                  <div
+                    className={`mt-7 grid gap-10 ${
+                      view === 'Overview'
+                        ? 'lg:grid-cols-[minmax(0,1fr)_400px]'
+                        : ''
+                    }`}
+                  >
+                    <section
+                      aria-labelledby="events-heading"
+                      className="min-w-0 max-w-3xl"
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <h2
+                          id="events-heading"
+                          className="text-base font-semibold"
+                        >
+                          {view === 'Overview'
+                            ? 'Upcoming events'
+                            : 'All events'}
+                        </h2>
+
+                        <span className="text-xs text-neutral-500">
+                          {displayed.length}{' '}
+                          {displayed.length === 1
+                            ? 'event'
+                            : 'events'}
+                        </span>
+                      </div>
+
+                 {openFilter()}
+
+{displayed.map(event => {
+                        const staff = staffing(event);
+
+                        const expanded = selected === event.id;
+
+                        const date = event.startDate
+                          ? new Date(
+                              `${event.startDate}T12:00:00`
+                            )
+                          : null;
+
+                        return (
+                          <article
+                            key={event.id}
+                            className={`mt-4 ${card} p-4 sm:p-5`}
+                          >
+
+                            {/* Original event card header */}
+                            <div className="grid grid-cols-[36px_minmax(0,1fr)] items-start gap-4 sm:grid-cols-[36px_minmax(0,1fr)_auto]">
+
+                              <div
+                                className="tabular-nums"
+                                aria-hidden="true"
+                              >
+                                <span className="block text-xl">
+                                  {date
+                                    ? date.getDate()
+                                    : '–'}
+                                </span>
+
+                                <span className="text-xs text-neutral-500">
+                                  {date
+                                    ? date.toLocaleDateString(
+                                        'en-GB',
+                                        { month: 'short' }
+                                      )
+                                    : 'Draft'}
+                                </span>
+                              </div>
+
+                              <div className="min-w-0">
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <h3 className="font-semibold">
+                                    {event.name}
+                                  </h3>
+
+                                  {event.status === 'draft' && (
+                                    <span className="rounded bg-neutral-100 px-2 py-0.5 text-xs text-neutral-600">
+                                      Draft
+                                    </span>
+                                  )}
+                                </div>
+
+                                <p className="mt-1 text-sm text-neutral-600">
+                                  {event.location ||
+                                    'Location not specified'}
+                                </p>
+
+                                <p className="mt-1 text-xs text-neutral-500">
+                                  {dateLabel(event.startDate)}
+
+                                  {event.endDate !==
+                                    event.startDate &&
+                                    ` – ${dateLabel(
+                                      event.endDate
+                                    )}`}
+                                </p>
+
+                                <StaffingIcons
+                                  filled={staff.filled}
+                                  capacity={staff.capacity}
+                                  label={`${event.name} volunteer places`}
+                                />
+                              </div>
+
+                              <div className="col-start-2 flex flex-wrap gap-2 sm:col-start-auto sm:flex-col">
+
+                                <button
+                                  type="button"
+                                  aria-expanded={expanded}
+                                  aria-controls={`shifts-${event.id}`}
+                                  aria-label={`${
+                                    expanded ? 'Hide' : 'View'
+                                  } shifts for ${event.name}`}
+                                  className={button}
+                                  onClick={() =>
+                                    showShifts(event)
+                                  }
+                                >
+                                  {expanded
+                                    ? 'Hide shifts'
+                                    : 'View shifts'}
+                                </button>
+
+                                <button
+                                  type="button"
+                                  aria-label={`Edit ${event.name}`}
+                                  className={button}
+                                  onClick={() => edit(event)}
+                                >
+                                  Edit
+                                </button>
+
+                              </div>
+                            </div>
+
+                            {/* Expanded shifts inside the event card */}
+                            <section
+                              id={`shifts-${event.id}`}
+                              hidden={!expanded}
+                              aria-label={`Shifts for ${event.name}`}
+                              className="mt-5 border-t border-neutral-200 pt-2"
+                            >
+                             {expanded && shiftList(event)}
+                            </section>
+
+                          </article>
+                        );
+                      })}
+
+                      {!loading &&
+                        !error &&
+                        !displayed.length && (
+                          <p className="mt-5 text-sm text-neutral-600">
+                            {view === 'Overview'
+                              ? 'No upcoming events.'
+                              : 'No events yet.'}
+                          </p>
+                        )}
+                    </section>
+
+                    {view === 'Overview' && (
+                      <aside
+                        className="min-w-0"
+                        aria-label="Event calendar and staffing"
+                      >
+                        <h2 className="mb-4 text-base font-semibold">
+                          Your calendar
+                        </h2>
+
+                        <ShiftCalendar
+                          shifts={calendarShifts}
+                        />
+
+                        <dl className="mt-6 grid grid-cols-3 gap-3 border-t border-neutral-200 pt-5">
+                          {[
+                            [stats.upcoming, 'Events'],
+                            [stats.openShifts, 'Open shifts'],
+                            [stats.vacancies, 'Open places'],
+                          ].map(([value, label]) => (
+                            <div key={label}>
+                              <dd className="text-2xl font-semibold tabular-nums">
+                                {value}
+                              </dd>
+
+                              <dt className="mt-1 text-xs text-neutral-500">
+                                {label}
+                              </dt>
+                            </div>
+                          ))}
+                        </dl>
+                      </aside>
+                    )}
+                  </div>
+                </>
+              )}
+
+              {view === 'My shifts' && (
+                <section
+                  className="mt-6 max-w-3xl"
+                  aria-label="Shift management"
+                >
+                  {openFilter()}
+
+                  {[...events]
+                    .sort((a, b) =>
+                      a.startDate.localeCompare(b.startDate)
+                    )
+                    .filter(
+                      event => event.shifts.length > 0
+                    )
+                    .map(event => (
+                      <section
+                        key={event.id}
+                        className={`mb-7 ${card}`}
+                        aria-label={event.name}
+                      >
+                        <div className="flex items-center justify-between gap-4">
+                          <h2 className="font-semibold">
+                            {event.name}
+                          </h2>
+
+                          <button
+                            className={button}
+                            onClick={() => edit(event)}
+                          >
+                            Edit event
+                          </button>
+                        </div>
+
+                        {shiftList(event)}
+                      </section>
+                    ))}
+
+                  {!loading &&
+                    !error &&
+                    !events.some(
+                      event => event.shifts.length
+                    ) && (
+                      <p className="text-sm text-neutral-600">
+                        No shifts yet.
+                      </p>
+                    )}
+                </section>
+              )}
+
+              {view === 'Messages' && (
+                <Messages userId={profile.id} />
+              )}
+            </>
+          )}
+        </main>
+      </div>
     </div>
-  </div>;
+  );
 }

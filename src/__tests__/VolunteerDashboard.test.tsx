@@ -1,6 +1,6 @@
 import { act, render, screen, fireEvent, within } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
-import VolunteerDashboard from '@/components/VolunteerDashboard';
+import VolunteerDashboard from '@/components/volunteer/VolunteerDashboard';
 
 vi.mock('@/lib/supabaseClient', () => ({
   supabase: { auth: { getUser: vi.fn().mockResolvedValue({ data: { user: null }, error: null }) } },

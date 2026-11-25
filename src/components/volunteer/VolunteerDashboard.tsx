@@ -3,19 +3,34 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import VolunteerShiftList from '@/components/volunteer/VolunteerShiftList';
+import VolunteerShiftDetails from '@/components/volunteer/VolunteerShiftDetails';
+import type { UserProfile } from '@/services/authService';
+import type {
+  Shift,
+  Event,
+  Booking,
+} from '@/services/volunteerTypes';
+
+import {
+  getVolunteerData,
+  isRegistered,
+  availablePlaces,
+  registerForShift,
+} from '@/services/volunteerService';
+
 import {
   portalButton as button,
   portalPrimary as primary,
   navTab,
   portalNav,
-} from './portalStyles';
-import type { UserProfile } from '@/services/authService';
+} from '../portalStyles';
+
 import { Logo } from '@/components/Logo';
-import VolunteerCalendar from '@/components/VolunteerCalendar';
-import ExpandedCalendar from '@/components/ExpandedCalendar';
-import { supabase } from '@/lib/supabaseClient';
+import VolunteerCalendar from '@/components/volunteer/VolunteerCalendar';
+import ExpandedCalendar from '@/components/volunteer/ExpandedCalendar';
 import Messages from '@/components/Messages';
-import MyShiftNotes from '@/components/MyShiftNotes';
+import MyShiftNotes from '@/components/volunteer/MyShiftNotes';
 
 type View =
   | 'Overview'
@@ -24,43 +39,6 @@ type View =
   | 'Calendar'
   | 'Messages'
   | 'My profile';
-
-type Shift = {
-  id: string;
-  event_id: string;
-  title: string | null;
-  description: string | null;
-  location: string | null;
-  starts_at: string;
-  ends_at: string;
-  capacity: number | null;
-  registered_count: number;
-  status: string;
-};
-
-type Event = {
-  id: string;
-  title?: string | null;
-  name?: string | null;
-  description?: string | null;
-  location?: string | null;
-  starts_at?: string | null;
-  shifts: Shift[];
-};
-
-type Booking = {
-  id: string;
-  shift_id: string;
-  status: string;
-  event: Event;
-  shift: Shift;
-};
-
-type RegistrationRow = {
-  id: string;
-  shift_id: string;
-  status: string;
-};
 
 const views: View[] = [
   'Overview',
@@ -98,17 +76,6 @@ function shiftTime(shift: Shift) {
   return `${formatTime(shift.starts_at)} – ${formatTime(shift.ends_at)}`;
 }
 
-function availablePlaces(shift: Shift) {
-  if (shift.status !== 'open') return 0;
-
-  if (shift.capacity === null) return null;
-
-  return Math.max(
-    0,
-    shift.capacity - shift.registered_count
-  );
-}
-
 export default function VolunteerDashboard({
   profile,
   onLogout,
@@ -123,7 +90,6 @@ export default function VolunteerDashboard({
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [event, setEvent] = useState<Event | null>(null);
   const [selection, setSelection] = useState<{
-
     event: Event;
     shift: Shift;
   } | null>(null);
@@ -136,74 +102,16 @@ export default function VolunteerDashboard({
   const [loading, setLoading] = useState(true);
   const [logoSpin, setLogoSpin] = useState(0);
 
+  // Load data from Supabase through the service
   const loadData = useCallback(async () => {
     setLoading(true);
     setError('');
 
     try {
-      const [
-        eventsResult,
-        shiftsResult,
-        registrationsResult,
-      ] = await Promise.all([
-        supabase.from('events').select('*'),
-        supabase
-          .from('shifts')
-          .select('*')
-          .order('starts_at', { ascending: true }),
-        supabase
-          .from('registrations')
-          .select('id, shift_id, status')
-          .eq('volunteer_id', profile.id),
-      ]);
+      const data = await getVolunteerData(profile.id);
 
-      if (eventsResult.error) throw eventsResult.error;
-      if (shiftsResult.error) throw shiftsResult.error;
-      if (registrationsResult.error) {
-        throw registrationsResult.error;
-      }
-
-      const allShifts = (shiftsResult.data ?? []) as Shift[];
-
-      const allEvents: Event[] = (
-        eventsResult.data ?? []
-      ).map(row => ({
-        ...row,
-        shifts: allShifts.filter(
-          shift => shift.event_id === row.id
-        ),
-      }));
-
-      const registrations = (
-        registrationsResult.data ?? []
-      ) as RegistrationRow[];
-
-      const registeredBookings: Booking[] = registrations
-        .filter(row => row.status === 'registered')
-        .flatMap(row => {
-          const shift = allShifts.find(
-            item => item.id === row.shift_id
-          );
-
-          if (!shift) return [];
-
-          const matchingEvent = allEvents.find(
-            item => item.id === shift.event_id
-          );
-
-          if (!matchingEvent) return [];
-
-          return [{
-            id: row.id,
-            shift_id: row.shift_id,
-            status: row.status,
-            event: matchingEvent,
-            shift,
-          }];
-        });
-
-      setEvents(allEvents);
-      setBookings(registeredBookings);
+      setEvents(data.events);
+      setBookings(data.bookings);
     } catch (err) {
       setError(
         err instanceof Error
@@ -221,6 +129,7 @@ export default function VolunteerDashboard({
 
   useEffect(() => {
     const requestedView = searchParams?.get('view');
+
     if (
       requestedView &&
       views.includes(requestedView as View)
@@ -232,9 +141,7 @@ export default function VolunteerDashboard({
   }, [searchParams]);
 
   const registered = (shift: Shift) =>
-    bookings.some(
-      booking => booking.shift_id === shift.id
-    );
+    isRegistered(shift, bookings);
 
   const next = [...bookings]
     .filter(
@@ -268,6 +175,7 @@ export default function VolunteerDashboard({
     setError('');
   }
 
+  // Register for a shift using volunteerService
   async function confirm() {
     if (!selection || !accepted || registering) return;
 
@@ -284,36 +192,28 @@ export default function VolunteerDashboard({
     setRegistering(true);
     setError('');
 
-    console.log('REGISTERING SHIFT:', selection.shift.id);
-    console.log('VOLUNTEER ID:', profile.id);
+    try {
+      await registerForShift(
+        selection.shift,
+        profile.id
+      );
 
-    const { data, error: registrationError } = await supabase
-      .from('registrations')
-      .insert({
-        shift_id: selection.shift.id,
-        volunteer_id: profile.id,
-        status: 'registered',
-      })
-      .select();
-
-    console.log('REGISTRATION RESULT:', data);
-    console.log('REGISTRATION ERROR:', registrationError);
-
-    if (registrationError) {
-      setError(registrationError.message);
-      setRegistering(false);
       await loadData();
-      return;
+
+      navigate('My shifts');
+
+      setNotice(
+        'Registration confirmed. Your shift has been saved.'
+      );
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Could not register for this shift.'
+      );
+    } finally {
+      setRegistering(false);
     }
-
-    await loadData();
-
-    navigate('My shifts');
-    setNotice(
-      'Registration confirmed. Your shift has been saved.'
-    );
-
-    setRegistering(false);
   }
 
   async function logout() {
@@ -337,10 +237,15 @@ export default function VolunteerDashboard({
       )
       .sort((a, b) => {
         const aDate = Math.min(
-          ...a.shifts.map(s => new Date(s.starts_at).getTime())
+          ...a.shifts.map(s =>
+            new Date(s.starts_at).getTime()
+          )
         );
+
         const bDate = Math.min(
-          ...b.shifts.map(s => new Date(s.starts_at).getTime())
+          ...b.shifts.map(s =>
+            new Date(s.starts_at).getTime()
+          )
         );
 
         return aDate - bDate;
@@ -391,10 +296,14 @@ export default function VolunteerDashboard({
             </h3>
 
             <p className="mt-1 text-sm text-neutral-600">
-              {e.location || firstShift.location || 'Location TBA'}
+              {e.location ||
+                firstShift.location ||
+                'Location TBA'}
               {' · '}
               {e.shifts.length}
-              {e.shifts.length === 1 ? ' shift' : ' shifts'}
+              {e.shifts.length === 1
+                ? ' shift'
+                : ' shifts'}
             </p>
 
             <p className="mt-1 text-sm text-neutral-600">
@@ -421,83 +330,84 @@ export default function VolunteerDashboard({
     <div className="min-h-screen bg-white text-neutral-900">
       <div className="mx-auto max-w-6xl px-5 sm:px-9">
 
-       
-{/* Original header */}
-<header className="flex flex-wrap items-center gap-4 py-7">
-  <button
-    type="button"
-    onClick={() => {
-      setLogoSpin(c => c + 1);
-      navigate('Overview');
-    }}
-    className="flex cursor-pointer items-center gap-3 rounded-sm text-left focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#FF0000]"
-  >
-    <Logo
-      variant="symbol"
-      hoverAnimation="none"
-      spinTrigger={logoSpin}
-      className="h-9 w-9 shrink-0"
-    />
+        {/* Original header */}
+        <header className="flex flex-wrap items-center gap-4 py-7">
+          <button
+            type="button"
+            onClick={() => {
+              setLogoSpin(c => c + 1);
+              navigate('Overview');
+            }}
+            className="flex cursor-pointer items-center gap-3 rounded-sm text-left focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#FF0000]"
+          >
+            <Logo
+              variant="symbol"
+              hoverAnimation="none"
+              spinTrigger={logoSpin}
+              className="h-9 w-9 shrink-0"
+            />
 
-    <span className="text-lg font-semibold">
-      <span className="text-[#262E40]">Volunteer</span>
-      <span className="text-[#D7142A]">Portal</span>
-    </span>
-  </button>
+            <span className="text-lg font-semibold">
+              <span className="text-[#262E40]">
+                Volunteer
+              </span>
+              <span className="text-[#D7142A]">
+                Portal
+              </span>
+            </span>
+          </button>
 
-  <span className="text-sm text-neutral-600">
-    Triton Swim Ballerup · demo club
-  </span>
+          <span className="text-sm text-neutral-600">
+            Triton Swim Ballerup · demo club
+          </span>
 
-  <div className="ml-auto flex gap-3">
-    <button
-      type="button"
-      className={button}
-      onClick={() => navigate('My profile')}
-    >
-      My profile
-    </button>
+          <div className="ml-auto flex gap-3">
+            <button
+              type="button"
+              className={button}
+              onClick={() => navigate('My profile')}
+            >
+              My profile
+            </button>
 
-    <button
-      type="button"
-      className={button}
-      disabled={loggingOut}
-      onClick={logout}
-    >
-      {loggingOut ? 'Logging out…' : 'Log out'}
-    </button>
-  </div>
-</header>
+            <button
+              type="button"
+              className={button}
+              disabled={loggingOut}
+              onClick={logout}
+            >
+              {loggingOut ? 'Logging out…' : 'Log out'}
+            </button>
+          </div>
+        </header>
 
-{/* Navigation */}
-<nav
-  aria-label="Main navigation"
-  className={portalNav}
->
-  {(
-    [
-      'Overview',
-      'Find events',
-      'My shifts',
-      'Calendar',
-      'Messages',
-    ] as const
-  ).map(item => (
-    <button
-      type="button"
-      key={item}
-      aria-current={view === item ? 'page' : undefined}
-      className={navTab(view === item)}
-      onClick={() => navigate(item)}
-    >
-      {item}
-    </button>
-  ))}
-</nav>
-
-
-   
-      
+        {/* Navigation */}
+        <nav
+          aria-label="Main navigation"
+          className={portalNav}
+        >
+          {(
+            [
+              'Overview',
+              'Find events',
+              'My shifts',
+              'Calendar',
+              'Messages',
+            ] as const
+          ).map(item => (
+            <button
+              type="button"
+              key={item}
+              aria-current={
+                view === item ? 'page' : undefined
+              }
+              className={navTab(view === item)}
+              onClick={() => navigate(item)}
+            >
+              {item}
+            </button>
+          ))}
+        </nav>
 
         <main className="py-9">
 
@@ -534,7 +444,15 @@ export default function VolunteerDashboard({
                 </button>
               )}
 
-              <div className={view === 'Overview' && !event && !selection ? 'relative pr-[150px]' : undefined}>
+              <div
+                className={
+                  view === 'Overview' &&
+                  !event &&
+                  !selection
+                    ? 'relative pr-[150px]'
+                    : undefined
+                }
+              >
                 <div className="min-w-0">
                   <h1 className="text-3xl font-semibold tracking-tight">
                     {selection
@@ -548,13 +466,18 @@ export default function VolunteerDashboard({
                     Signed in as {profile.email}
                   </p>
                 </div>
-                {view === 'Overview' && !event && !selection && (
-                  <div className="absolute right-0 top-0">
-                    <VolunteerCalendar
-                      onOpenCalendar={() => navigate('Calendar')}
-                    />
-                  </div>
-                )}
+
+                {view === 'Overview' &&
+                  !event &&
+                  !selection && (
+                    <div className="absolute right-0 top-0">
+                      <VolunteerCalendar
+                        onOpenCalendar={() =>
+                          navigate('Calendar')
+                        }
+                      />
+                    </div>
+                  )}
               </div>
             </>
           )}
@@ -575,148 +498,39 @@ export default function VolunteerDashboard({
           )}
 
           {error && (
-            <p role="alert" className="mt-6 text-red-800">
+            <p
+              role="alert"
+              className="mt-6 text-red-800"
+            >
               {error}
             </p>
           )}
 
-          {selection ? (
-            <section className="mt-8 max-w-2xl">
-              <h2 className="mt-7 text-xl font-semibold">
-                {shiftName(selection.shift)}
-              </h2>
+         
+{selection ? (
+  <VolunteerShiftDetails
+    event={selection.event}
+    shift={selection.shift}
+    isRegistered={registered(selection.shift)}
+    accepted={accepted}
+    registering={registering}
+    loading={loading}
+    onAcceptedChange={setAccepted}
+    onConfirm={confirm}
+    onMessages={() => navigate('Messages')}
+  />
 
-              <dl className="mt-5 grid grid-cols-[90px_1fr] gap-4 text-sm sm:grid-cols-[120px_1fr]">
-                {Object.entries({
-                  Event: eventName(selection.event),
-                  Date: formatDate(selection.shift.starts_at),
-                  Time: shiftTime(selection.shift),
-                  Location:
-                    selection.shift.location ||
-                    selection.event.location ||
-                    'TBA',
-                  Task:
-                    selection.shift.description ||
-                    'No description provided.',
-                }).map(([key, value]) => (
-                  <div key={key} className="contents">
-                    <dt className="text-neutral-600">
-                      {key}
-                    </dt>
-                    <dd>{value}</dd>
-                  </div>
-                ))}
-              </dl>
+) : event ? (
+  <VolunteerShiftList
+    event={event}
+    registered={registered}
+    loading={loading}
+    onChoose={choose}
+  />
+) : view === 'Overview' ? (
+         
 
-              {registered(selection.shift) ? (
-                <div className="mt-6">
-                  <p>You are registered for this shift.</p>
-
-                  <button
-                    type="button"
-                    className={`${button} mt-4`}
-                    onClick={() => navigate('Messages')}
-                  >
-                    Message coordinator
-                  </button>
-
-                  <p className="mt-3 text-sm text-neutral-600">
-                    To change or cancel a shift,
-                    contact your coordinator.
-                  </p>
-                </div>
-              ) : (
-                <>
-                  <label className="mt-6 flex items-start gap-3 text-sm">
-                    <input
-                      type="checkbox"
-                      className="mt-1 accent-[#FF0000]"
-                      checked={accepted}
-                      onChange={e =>
-                        setAccepted(e.target.checked)
-                      }
-                    />
-                    I have read the task description
-                    and can attend the entire shift.
-                  </label>
-
-                  <button
-                    type="button"
-                    className={`${primary} mt-5`}
-                    disabled={
-                      !accepted ||
-                      registering ||
-                      loading ||
-                      availablePlaces(selection.shift) === 0
-                    }
-                    onClick={confirm}
-                  >
-                    {registering
-                      ? 'Registering...'
-                      : 'Confirm registration'}
-                  </button>
-                </>
-              )}
-            </section>
-          ) : event ? (
-            <section className="mt-8 max-w-3xl">
-              <p className="my-6 text-neutral-600">
-                {event.description || ''}
-              </p>
-
-              {event.shifts.map(s => {
-                const available = availablePlaces(s);
-                const isRegistered = registered(s);
-                const full = available === 0;
-
-                return (
-                  <article
-                    key={s.id}
-                    className="flex flex-wrap items-center justify-between gap-4 border-b border-neutral-200 py-5"
-                  >
-                    <div>
-                      <h2 className="font-semibold">
-                        {shiftName(s)}
-                      </h2>
-
-                      <p className="mt-1 text-sm text-neutral-600">
-                        {formatDate(s.starts_at)}
-                        {' · '}
-                        {shiftTime(s)}
-                        {' · '}
-                        {s.location || event.location || 'TBA'}
-                      </p>
-
-                      <p className="mt-2 text-sm">
-                        {isRegistered
-                          ? 'Registered'
-                          : full
-                            ? 'Fully booked'
-                            : available === null
-                              ? 'Places available'
-                              : `${available} places available`}
-                      </p>
-                    </div>
-
-                    <button
-                      type="button"
-                      className={button}
-                      disabled={
-                        isRegistered || full || loading
-                      }
-                      onClick={() => choose(event, s)}
-                    >
-                      {isRegistered
-                        ? 'Registered'
-                        : full
-                          ? 'Fully booked'
-                          : 'Choose shift'}
-                    </button>
-                  </article>
-                );
-              })}
-            </section>
-          ) : view === 'Overview' ? (
+            /* Overview */
             <div className="mt-9">
               <section className="border-b border-neutral-200 pb-7">
                 <div className="min-w-0">
@@ -731,7 +545,9 @@ export default function VolunteerDashboard({
                       </h3>
 
                       <p className="mt-2 text-sm text-neutral-600">
-                        {formatDate(next.shift.starts_at)}
+                        {formatDate(
+                          next.shift.starts_at
+                        )}
                         {' · '}
                         {shiftTime(next.shift)}
                         {' · '}
@@ -742,7 +558,10 @@ export default function VolunteerDashboard({
                         type="button"
                         className={`${button} mt-4`}
                         onClick={() =>
-                          choose(next.event, next.shift)
+                          choose(
+                            next.event,
+                            next.shift
+                          )
                         }
                       >
                         View shift
@@ -772,11 +591,15 @@ export default function VolunteerDashboard({
                 {eventList()}
               </section>
             </div>
+
           ) : view === 'Find events' ? (
+
             <section className="mt-8 max-w-3xl">
               {eventList()}
             </section>
+
           ) : view === 'My shifts' ? (
+
             <MyShiftNotes
               bookings={bookings}
               userId={profile.id}
@@ -786,18 +609,30 @@ export default function VolunteerDashboard({
                 );
 
                 if (booking) {
-                  choose(booking.event, booking.shift);
+                  choose(
+                    booking.event,
+                    booking.shift
+                  );
                 }
               }}
-              onFindEvents={() => navigate('Find events')}
+              onFindEvents={() =>
+                navigate('Find events')
+              }
             />
+
           ) : view === 'Calendar' ? (
+
             <section className="mt-4">
               <ExpandedCalendar />
             </section>
+
           ) : view === 'Messages' ? (
+
             <Messages userId={profile.id} />
+
           ) : (
+
+            /* My profile */
             <section className="mt-8">
               <h2 className="font-semibold">
                 Account details
