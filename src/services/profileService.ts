@@ -43,3 +43,8 @@ export interface IProfileEventRepository {
   getRegisteredEvents(volunteerId: string): Promise<RegisteredEvents>;
   cancelRegistration(volunteerId: string, registrationId: string): Promise<void>;
 }
+
+// Skift adgangskode for den bruger, der er logget ind.
+export interface IPasswordRepository {
+  changePassword(email: string, currentPassword: string, newPassword: string): Promise<void>;
+}
