@@ -1,6 +1,6 @@
 
 'use client';
-import { useLanguage } from '@/components/LanguageProvider';
+import { LanguageSwitcher, useLanguage } from '@/components/LanguageProvider';
 import ExpandedCalendar from '@/components/volunteer/ExpandedCalendar';
 import { useState } from 'react';
 import Link from 'next/link';
@@ -60,7 +60,7 @@ export default function VolunteerCalendarPage() {
                 </Link>
 
                 <span className="text-sm text-neutral-600">
-                  Triton Swim Ballerup · demo club
+                  {t("Triton Swim Ballerup · demo club")}
                 </span>
 
                 <div className="ml-auto flex flex-wrap items-center gap-3">
@@ -72,6 +72,7 @@ export default function VolunteerCalendarPage() {
                     />
                   </div>
 
+                  <LanguageSwitcher />
                   <Link
                     href="/profile"
                     className={button}
@@ -85,7 +86,7 @@ export default function VolunteerCalendarPage() {
                     disabled={loggingOut}
                     onClick={logout}
                   >
-                    {loggingOut ? 'Logging out…' : 'Log out'}
+                    {t(loggingOut ? 'Logging out…' : 'Log out')}
                   </button>
                 </div>
               </header>

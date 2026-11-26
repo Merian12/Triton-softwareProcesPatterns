@@ -1,5 +1,7 @@
 'use client';
 
+import { LanguageSwitcher, useLanguage } from '@/components/LanguageProvider';
+
 import { createContext, ReactNode, useContext, useState } from 'react';
 import Link from 'next/link';
 import RoleGuard from '@/components/RoleGuard';
@@ -26,6 +28,7 @@ export function useSignedInProfile() {
 
 // Samme header, navigation og footer som volunteer-dashboardet og kalenderen.
 export default function ProfileShell({ children }: { children: ReactNode }) {
+  const { t } = useLanguage();
   const [loggingOut, setLoggingOut] = useState(false);
   const [error, setError] = useState('');
   const [logoSpin, setLogoSpin] = useState(0);
@@ -67,29 +70,30 @@ export default function ProfileShell({ children }: { children: ReactNode }) {
                   </span>
                 </Link>
 
-                <span className="text-sm text-neutral-600">Triton Swim Ballerup · demo club</span>
+                <span className="text-sm text-neutral-600">{t("Triton Swim Ballerup · demo club")}</span>
 
                 <div className="ml-auto flex gap-3">
+                  <LanguageSwitcher />
                   <Link href="/profile" aria-current="page" className={button}>
-                    My profile
+                    {t("My profile")}
                   </Link>
                   <button type="button" className={button} disabled={loggingOut} onClick={logout}>
-                    {loggingOut ? 'Logging out…' : 'Log out'}
+                    {t(loggingOut ? 'Logging out…' : 'Log out')}
                   </button>
                 </div>
               </header>
 
-              <nav aria-label="Main navigation" className={portalNav}>
+              <nav aria-label={t("Main navigation")} className={portalNav}>
                 {navItems.map((item) => (
                   <Link key={item} href={navHref(item)} className={navTab(false)}>
-                    {item}
+                    {t(item)}
                   </Link>
                 ))}
               </nav>
 
               {error && (
                 <p role="alert" className="mt-4 text-sm text-red-600">
-                  {error}
+                  {t(error)}
                 </p>
               )}
 

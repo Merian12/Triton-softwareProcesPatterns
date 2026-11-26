@@ -1,5 +1,5 @@
 'use client';
-import { useLanguage } from '@/components/LanguageProvider';
+import { LanguageSwitcher, useLanguage } from '@/components/LanguageProvider';
 import { useEffect, useRef, useState } from 'react';
 import { AccountIdentity } from '@/components/AccountIdentity';
 import { Logo } from '@/components/Logo';
@@ -64,56 +64,59 @@ export default function PortalTopbar({
             <Logo variant="symbol" colorScheme="white" hoverAnimation="none" spinTrigger={logoSpin} className="size-8 shrink-0" />
             <span className="text-base font-semibold tracking-tight sm:text-lg text-white">Volunteerportal</span>
           </button>
-          <details
-            ref={dropdown}
-            className="group relative border-l border-white/40 pl-4 sm:pl-5"
-            onKeyDown={event => {
-              if (event.key === 'Escape' && dropdown.current?.open) {
-                event.preventDefault();
-                dropdown.current.open = false;
-                trigger.current?.focus();
-              }
-            }}
-          >
-            <summary
-              ref={trigger}
-              className="flex min-h-11 cursor-pointer list-none items-center gap-2.5 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white [&::-webkit-details-marker]:hidden"
+          <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+            <LanguageSwitcher onDark />
+            <details
+              ref={dropdown}
+              className="group relative border-l border-white/40 pl-4 sm:pl-5"
+              onKeyDown={event => {
+                if (event.key === 'Escape' && dropdown.current?.open) {
+                  event.preventDefault();
+                  dropdown.current.open = false;
+                  trigger.current?.focus();
+                }
+              }}
             >
-              <AccountIdentity
-                email={email}
-                username={username}
-                roleLabel={roleLabel}
-                roleClassName="text-white/90"
-              />
-              <svg
-                aria-hidden="true"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                className="ml-1 size-4 transition-transform group-open:rotate-180"
+              <summary
+                ref={trigger}
+                className="flex min-h-11 cursor-pointer list-none items-center gap-2.5 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white [&::-webkit-details-marker]:hidden"
               >
-                <path d="m4 8 8 8 8-8" />
-              </svg>
-            </summary>
-            <div className="absolute right-0 top-full z-20 mt-2 w-64 max-w-[calc(100vw-2.5rem)] rounded-lg border border-border-subtle bg-surface-card py-2 text-foreground shadow-lg">
-              <p className="break-all border-b border-border-subtle px-4 py-3 text-sm text-muted">{email}</p>
-              {onProfile && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (dropdown.current) dropdown.current.open = false;
-                    onProfile();
-                  }}
-                  className={dropdownItem}
+                <AccountIdentity
+                  email={email}
+                  username={username}
+                  roleLabel={roleLabel}
+                  roleClassName="text-white/90"
+                />
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  className="ml-1 size-4 transition-transform group-open:rotate-180"
                 >
-                  {t("My profile")} </button>
-              )}
-              <button type="button" disabled={loggingOut} onClick={onLogout} className={dropdownItem}>
-                {loggingOut ? 'Logging out…' : 'Log out'}
-              </button>
-            </div>
-          </details>
+                  <path d="m4 8 8 8 8-8" />
+                </svg>
+              </summary>
+              <div className="absolute right-0 top-full z-20 mt-2 w-64 max-w-[calc(100vw-2.5rem)] rounded-lg border border-border-subtle bg-surface-card py-2 text-foreground shadow-lg">
+                <p className="break-all border-b border-border-subtle px-4 py-3 text-sm text-muted">{email}</p>
+                {onProfile && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (dropdown.current) dropdown.current.open = false;
+                      onProfile();
+                    }}
+                    className={dropdownItem}
+                  >
+                    {t("My profile")} </button>
+                )}
+                <button type="button" disabled={loggingOut} onClick={onLogout} className={dropdownItem}>
+                  {t(loggingOut ? 'Logging out…' : 'Log out')}
+                </button>
+              </div>
+            </details>
+          </div>
         </div>
       </header>
       <div className={portalContainer}>

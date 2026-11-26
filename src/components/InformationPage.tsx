@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useLanguage } from './LanguageProvider';
+import { LanguageSwitcher, useLanguage } from './LanguageProvider';
 import { button, portalContainer } from './portalStyles';
 
 type Topic = 'faq' | 'about' | 'contact' | 'help';
@@ -9,7 +9,7 @@ const content = {
   da: {
     faq: { title: 'Ofte stillede spørgsmål', intro: 'Godt at vide, før du bliver en del af fællesskabet.', sections: [
       ['Kan børn under 15 år få en frivilligkonto?', 'Børn under 15 år skal registreres af en forælder. Forælderen skal give tilladelse til, at barnet får en frivilligkonto (volunteer account), og give barnet rettigheder til selv at tilmelde sig events.'],
-      ['Hvordan tilmelder jeg mig et event?', 'Opret en konto som frivillig, og log ind. Under Find events kan du vælge et event og se vagterne. Vælg en ledig vagt, læs opgavebeskrivelsen, og bekræft din tilmelding.'],
+      ['Hvordan tilmelder jeg mig et event?', 'Opret en konto som frivillig, og log ind. Under Find arrangementer kan du vælge et event og se vagterne. Vælg en ledig vagt, læs opgavebeskrivelsen, og bekræft din tilmelding.'],
       ['Hvor finder jeg mine vagter?', 'Dine tilmeldinger vises under Mine vagter. I kalenderen kan du se dine vagter og skrive personlige noter.'],
       ['Hvordan ændrer eller afmelder jeg en vagt?', 'Kontakt eventets arrangør eller koordinator. Brug kontaktoplysningerne ved eventet, eller send en besked via Beskeder, hvis du kender deres registrerede e-mailadresse.'],
       ['Hvordan fungerer beskeder?', 'Under Beskeder kan du skrive til andre registrerede brugere ved at indtaste deres e-mailadresse. Beskederne vises på hjemmesiden og sendes ikke til en ekstern e-mailindbakke.'],
@@ -26,10 +26,10 @@ const content = {
     ] },
     help: { title: 'Hjælp og vejledning', intro: 'Kom godt i gang med Volunteerportal.', sections: [
       ['1. Opret din konto', 'Vælg Opret konto på loginsiden. Indtast brugernavn, e-mail og adgangskode, og vælg rollen Frivillig eller Arrangør. Børn under 15 år skal registreres af en forælder med tilladelse til kontoen og rettigheder til at tilmelde sig events.'],
-      ['2. Find et event som frivillig', 'Log ind, og gå til Find events. Se de ledige vagter, vælg en opgave, og bekræft, at du har læst beskrivelsen og kan deltage i hele vagten.'],
+      ['2. Find et event som frivillig', 'Log ind, og gå til Find arrangementer. Se de ledige vagter, vælg en opgave, og bekræft, at du har læst beskrivelsen og kan deltage i hele vagten.'],
       ['3. Hold overblik', 'Se tilmeldinger under Mine vagter, brug kalenderen til planlægning, og skriv til andre registrerede brugere under Beskeder.'],
       ['For arrangører', 'Vælg Opret event i dit overblik. Udfyld eventoplysningerne, planlæg vagter, og gennemgå eventet før offentliggørelse. Du kan også gemme en kladde og vende tilbage senere.'],
-      ['Skift sprog', 'Vælg Dansk eller English nederst på siden. Dit valg gælder på tværs af hjemmesiden og huskes i denne browser.'],
+      ['Skift sprog', 'Vælg Dansk eller English øverst på siden. Siden åbner på engelsk, når du besøger den igen eller genindlæser den.'],
     ] },
   },
   en: {
@@ -55,7 +55,7 @@ const content = {
       ['2. Find an event as a volunteer', 'Sign in and open Find events. Browse the available shifts, choose a task and confirm that you have read the description and can attend the whole shift.'],
       ['3. Stay organised', 'View registrations under My shifts, plan with the calendar and contact other registered users through Messages.'],
       ['For organisers', 'Select Create event in your overview. Enter the event details, plan shifts and review before publishing. You can also save a draft and return to it later.'],
-      ['Change language', 'Select Dansk or English at the bottom of the page. Your choice applies across the website and is remembered in this browser.'],
+      ['Change language', 'Select Dansk or English at the top of the page. The site opens in English on a new visit or after a reload.'],
     ] },
   },
 };
@@ -64,18 +64,21 @@ export default function InformationPage({ topic }: { topic: Topic }) {
   const { language } = useLanguage();
   const page = content[language][topic];
   return <div className={`${portalContainer} w-full flex-1 py-10 sm:py-14`}>
-    <Link href="/home" className="inline-flex min-h-11 items-center gap-2 text-sm text-muted underline-offset-4 hover:underline"><span aria-hidden="true">←</span>{language === 'da' ? 'Til forsiden' : 'Back to home'}</Link>
+    <div className="flex items-center justify-between gap-4">
+      <Link href="/home" className="inline-flex min-h-11 items-center gap-2 text-sm text-muted underline-offset-4 hover:underline"><span aria-hidden="true">←</span>{language === 'da' ? 'Til forsiden' : 'Back to home'}</Link>
+      <LanguageSwitcher />
+    </div>
     <main id="information-main" className="mt-7 max-w-3xl">
       <p className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-brand">Volunteerportal</p>
       <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{page.title}</h1>
       <p className="mt-4 text-lg leading-8 text-muted">{page.intro}</p>
       <div className="mt-9 divide-y divide-border-subtle border-y border-border-subtle">
-        {page.sections.map(([heading, body]) => topic === 'faq' ? <details key={heading} className="group py-1">
+        {page.sections.map(([heading, body], index) => topic === 'faq' ? <details key={index} className="group py-1">
           <summary className="flex min-h-16 cursor-pointer items-center justify-between gap-5 rounded-sm py-4 font-semibold focus-visible:outline-2 focus-visible:outline-brand">{heading}<span aria-hidden="true" className="text-xl text-brand group-open:rotate-45">+</span></summary>
           <p className="max-w-2xl pb-6 text-sm leading-7 text-muted">{body}</p>
-        </details> : <section key={heading} className="py-7"><h2 className="text-lg font-semibold">{heading}</h2><p className="mt-3 text-sm leading-7 text-muted">{body}</p></section>)}
+        </details> : <section key={index} className="py-7"><h2 className="text-lg font-semibold">{heading}</h2><p className="mt-3 text-sm leading-7 text-muted">{body}</p></section>)}
       </div>
-      {topic !== 'faq' && <div className="mt-8"><Link className={button} href="/faq">FAQ</Link></div>}
+      {topic !== 'faq' && <div className="mt-8"><Link className={button} href="/faq">{language === 'da' ? 'Ofte stillede spørgsmål' : 'FAQ'}</Link></div>}
     </main>
   </div>;
 }

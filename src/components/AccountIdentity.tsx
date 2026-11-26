@@ -1,3 +1,6 @@
+'use client';
+
+import { useLanguage } from '@/components/LanguageProvider';
 import { displayNameFor } from '@/services/authService';
 
 type AccountIdentityProps = {
@@ -16,6 +19,7 @@ export function AccountIdentity({
   roleLabel,
   roleClassName = 'text-neutral-600',
 }: AccountIdentityProps) {
+  const { t } = useLanguage();
   const name = displayNameFor(email, username);
 
   return (
@@ -26,7 +30,7 @@ export function AccountIdentity({
       </svg>
       <span className="text-left">
         <span className="block max-w-28 truncate text-sm font-semibold">{name}</span>
-        <span className={`block text-[11px] ${roleClassName}`}>{roleLabel}</span>
+        <span className={`block text-[11px] ${roleClassName}`}>{t(roleLabel)}</span>
       </span>
     </>
   );

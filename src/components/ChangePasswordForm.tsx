@@ -1,9 +1,12 @@
 'use client';
 
+import { useLanguage } from '@/components/LanguageProvider';
+
 import { FormEvent, useState } from 'react';
 import { input, portalPrimary as primary } from '@/components/portalStyles';
 
 export default function ChangePasswordForm() {
+  const { t } = useLanguage();
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -14,25 +17,25 @@ export default function ChangePasswordForm() {
     setMessage(null);
 
     if (newPassword.length < 6) {
-      setError('Adgangskoden skal være mindst 6 tegn.');
+      setError("Password must be at least 6 characters.");
       return;
     }
     if (newPassword !== confirmPassword) {
-      setError('De to adgangskoder er ikke ens.');
+      setError("Passwords do not match.");
       return;
     }
 
     setNewPassword('');
     setConfirmPassword('');
     setError(null);
-    setMessage('Prototype: adgangskoden er ikke blevet ændret.');
+    setMessage("Prototype: your password was not changed.");
   }
 
   return (
     <form onSubmit={handleSubmit} noValidate className="space-y-4">
       <div>
         <label htmlFor="new-password" className="block text-sm font-medium">
-          Ny adgangskode
+          {t("New password")}
         </label>
         <input
           id="new-password"
@@ -45,7 +48,7 @@ export default function ChangePasswordForm() {
       </div>
       <div>
         <label htmlFor="confirm-password" className="block text-sm font-medium">
-          Gentag ny adgangskode
+          {t("Repeat new password")}
         </label>
         <input
           id="confirm-password"
@@ -59,15 +62,15 @@ export default function ChangePasswordForm() {
 
       {error && (
         <p role="alert" className="text-sm text-red-600">
-          {error}
+          {t(error)}
         </p>
       )}
-      {message && <p className="text-sm text-neutral-600">{message}</p>}
+      {message && <p className="text-sm text-neutral-600">{t(message)}</p>}
 
-      <p className="text-xs text-neutral-600">Prototype: adgangskoden bliver ikke ændret eller gemt.</p>
+      <p className="text-xs text-neutral-600">{t("Prototype: your password won’t be changed or saved.")}</p>
 
       <button type="submit" className={primary}>
-        Gem adgangskode
+        {t("Save password")}
       </button>
     </form>
   );

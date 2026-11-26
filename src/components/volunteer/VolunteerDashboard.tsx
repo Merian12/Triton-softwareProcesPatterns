@@ -1,6 +1,6 @@
 'use client';
 
-import { useLanguage } from '@/components/LanguageProvider';
+import { LanguageSwitcher, useLanguage } from '@/components/LanguageProvider';
 import { useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -491,6 +491,7 @@ export default function VolunteerDashboard({
               />
             </div>
 
+            <LanguageSwitcher />
             <Link
               href="/profile"
               className={button}

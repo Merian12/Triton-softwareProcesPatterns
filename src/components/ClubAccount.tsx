@@ -1,5 +1,7 @@
 'use client';
 
+import { useLanguage } from '@/components/LanguageProvider';
+
 import { FormEvent, useState } from 'react';
 import { input, portalButton as button, portalPrimary as primary } from '@/components/portalStyles';
 
@@ -10,6 +12,7 @@ interface ClubAccountProps {
 }
 
 export default function ClubAccount({ club, creditsPerEvent, attendedEventsCount }: ClubAccountProps) {
+  const { t } = useLanguage();
   const [accountNumber, setAccountNumber] = useState('');
   const [linkedAccount, setLinkedAccount] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -21,7 +24,7 @@ export default function ClubAccount({ club, creditsPerEvent, attendedEventsCount
     const cleanAccountNumber = accountNumber.trim();
 
     if (!cleanAccountNumber) {
-      setError('Skriv et klubkontonummer.');
+      setError("Enter a club account number.");
       return;
     }
 
@@ -33,25 +36,25 @@ export default function ClubAccount({ club, creditsPerEvent, attendedEventsCount
   return (
     <div>
       <p className="text-sm text-neutral-600">
-        Du får {creditsPerEvent} credits for hvert event, du deltager i. Dem kan du bruge i {club}.
+        {t('You earn {credits} credits for each event you attend. You can use them at {club}.', { credits: creditsPerEvent, club })}
       </p>
 
       {linkedAccount ? (
         <>
           <dl className="mt-5 grid max-w-xl grid-cols-[90px_1fr] gap-4 text-sm">
-            <dt>Klubkonto</dt>
+            <dt>{t("Club account")}</dt>
             <dd className="break-all">{linkedAccount}</dd>
-            <dt>Saldo</dt>
-            <dd className="font-semibold">{earnedCredits} credits</dd>
+            <dt>{t("Balance")}</dt>
+            <dd className="font-semibold">{t('{credits} credits', { credits: earnedCredits })}</dd>
           </dl>
           <button type="button" onClick={() => setLinkedAccount(null)} className={`mt-4 ${button}`}>
-            Fjern klubkonto
+            {t("Remove club account")}
           </button>
         </>
       ) : (
         <form onSubmit={linkAccount} noValidate className="mt-4">
           <label htmlFor="club-account" className="block text-sm font-medium">
-            Klubkontonummer
+            {t("Club account number")}
           </label>
           <input
             id="club-account"
@@ -62,17 +65,17 @@ export default function ClubAccount({ club, creditsPerEvent, attendedEventsCount
           />
           {error && (
             <p role="alert" className="mt-1 text-sm text-red-600">
-              {error}
+              {t(error)}
             </p>
           )}
           <button type="submit" className={`mt-3 ${primary}`}>
-            Tilknyt klubkonto
+            {t("Link club account")}
           </button>
         </form>
       )}
 
       <p className="mt-3 text-xs text-neutral-600">
-        Prototype: skriv ikke rigtige kontooplysninger. Kontoen og saldoen er dummy og bliver ikke gemt.
+        {t("Prototype: use sample account details. The account and balance are for demonstration and won’t be saved.")}
       </p>
     </div>
   );

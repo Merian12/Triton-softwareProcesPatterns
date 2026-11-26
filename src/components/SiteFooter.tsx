@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { LanguageSwitcher, useLanguage } from './LanguageProvider';
+import { useLanguage } from './LanguageProvider';
 import { portalContainer } from './portalStyles';
 
 export default function SiteFooter() {
@@ -26,7 +26,6 @@ export default function SiteFooter() {
     <div className="border-t border-white/15">
       <div className={`${portalContainer} flex flex-wrap items-center justify-between gap-4 py-5`}>
         <p className="text-xs text-white/65">{da ? 'Et studieprojekt med fællesskabet i centrum.' : 'A student project with community at its heart.'}</p>
-        <LanguageSwitcher />
       </div>
     </div>
   </footer>;

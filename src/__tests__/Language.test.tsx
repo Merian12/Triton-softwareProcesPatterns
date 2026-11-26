@@ -11,8 +11,10 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), replace: 
 vi.mock('@/lib/supabaseClient', () => ({ supabase: {} }));
 
 describe('Site language and information', () => {
-  it('switches login text and validation without losing form input and remembers the choice', async () => {
-    const view = render(<LanguageProvider><LanguageSwitcher /><LoginForm /></LanguageProvider>);
+  it('switches login text and validation without losing form input and opens in English', async () => {
+    localStorage.setItem('triton-language', 'da');
+    const view = render(<LanguageProvider><LoginForm /></LanguageProvider>);
+    expect(screen.getByRole('button', { name: 'Log In' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Dansk' }));
     fireEvent.change(screen.getByLabelText('E-mail'), { target: { value: 'test@example.com' } });
     fireEvent.click(screen.getByRole('button', { name: 'Log ind' }));
@@ -20,8 +22,9 @@ describe('Site language and information', () => {
     fireEvent.click(screen.getByRole('button', { name: 'English' }));
     expect(screen.getByLabelText('Email')).toHaveValue('test@example.com');
     expect(screen.getByRole('alert')).toHaveTextContent('Password must be at least 6 characters.');
-    expect(localStorage.getItem('triton-language')).toBe('en');
     expect(document.documentElement.lang).toBe('en');
+    fireEvent.click(screen.getByRole('button', { name: 'Dansk' }));
+    expect(document.documentElement.lang).toBe('da');
     view.unmount();
     render(<LanguageProvider><LoginForm /></LanguageProvider>);
     expect(screen.getByRole('button', { name: 'Log In' })).toBeInTheDocument();
@@ -29,7 +32,7 @@ describe('Site language and information', () => {
 
   it('translates organizer navigation and event forms while retaining a draft and calendar locale', () => {
     vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
-    render(<LanguageProvider><LanguageSwitcher /><OrganizerDashboard profile={{ id: 'o1', email: 'organizer@example.com', role: 'organizer' }} onLogout={vi.fn()} /></LanguageProvider>);
+    render(<LanguageProvider><OrganizerDashboard profile={{ id: 'o1', email: 'organizer@example.com', role: 'organizer' }} onLogout={vi.fn()} /></LanguageProvider>);
     fireEvent.click(screen.getByRole('button', { name: 'Dansk' }));
     expect(screen.getByRole('button', { name: 'Mine vagter' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Forrige måned' })).toBeInTheDocument();
@@ -41,7 +44,7 @@ describe('Site language and information', () => {
   });
 
   it('shows the parental permission requirement in both languages without a rule for older children', () => {
-    render(<LanguageProvider><LanguageSwitcher /><InformationPage topic="faq" /></LanguageProvider>);
+    render(<LanguageProvider><InformationPage topic="faq" /></LanguageProvider>);
     fireEvent.click(screen.getByRole('button', { name: 'Dansk' }));
     expect(screen.getByText(/Børn under 15 år skal registreres af en forælder/)).toHaveTextContent('give barnet rettigheder til selv at tilmelde sig events');
     expect(screen.queryByText(/over 15 år/)).not.toBeInTheDocument();
@@ -50,7 +53,7 @@ describe('Site language and information', () => {
   });
 
   it('links to public information pages from the footer', () => {
-    render(<LanguageProvider><SiteFooter /></LanguageProvider>);
+    render(<LanguageProvider><LanguageSwitcher /><SiteFooter /></LanguageProvider>);
     fireEvent.click(screen.getByRole('button', { name: 'Dansk' }));
     for (const [name, href] of [['Ofte stillede spørgsmål', '/faq'], ['Om Volunteerportal', '/about'], ['Kontakt', '/contact'], ['Hjælp og vejledning', '/help']]) {
       expect(screen.getByRole('link', { name })).toHaveAttribute('href', href);

@@ -1,5 +1,7 @@
 'use client';
 
+import { useLanguage } from '@/components/LanguageProvider';
+
 import { ReactNode, useEffect, useMemo, useState } from 'react';
 import { RegisteredEvents, Volunteer } from '@/services/profileService';
 import { SupabaseProfileEventRepository } from '@/repositories/supabaseProfileEventRepo';
@@ -25,6 +27,7 @@ function Dropdown({ title, children }: { title: string; children: ReactNode }) {
 }
 
 export default function ProfileDetails({ user, clubs, creditsPerEvent }: ProfileDetailsProps) {
+  const { t } = useLanguage();
   const profile = useSignedInProfile();
   const eventRepo = useMemo(() => new SupabaseProfileEventRepository(), []);
 
@@ -45,7 +48,7 @@ export default function ProfileDetails({ user, clubs, creditsPerEvent }: Profile
         if (!ignore) setEvents(result);
       })
       .catch((err: unknown) => {
-        if (!ignore) setEventsError(err instanceof Error ? err.message : 'Ukendt fejl.');
+        if (!ignore) setEventsError(err instanceof Error ? err.message : "Unknown error.");
       })
       .finally(() => {
         if (!ignore) setLoadingEvents(false);
@@ -67,13 +70,13 @@ export default function ProfileDetails({ user, clubs, creditsPerEvent }: Profile
   return (
     <>
       <section className="mt-8">
-        <h2 className="font-semibold">Mine oplysninger</h2>
+        <h2 className="font-semibold">{t("My details")}</h2>
         <dl className="mt-5 grid max-w-xl grid-cols-[90px_1fr] gap-4 text-sm">
-          <dt>Mail</dt>
+          <dt>{t("Email")}</dt>
           <dd className="break-all">{user.email}</dd>
-          <dt>Telefon</dt>
+          <dt>{t("Phone")}</dt>
           <dd>{user.phone}</dd>
-          <dt>Klub</dt>
+          <dt>{t("Club")}</dt>
           <dd>{club}</dd>
         </dl>
       </section>
@@ -87,9 +90,9 @@ export default function ProfileDetails({ user, clubs, creditsPerEvent }: Profile
       />
 
       <div className="mt-10 space-y-3">
-        <Dropdown title="Skift klub">
+        <Dropdown title={t("Change club")}>
           <label htmlFor="club" className="block text-sm font-medium">
-            Vælg klub
+            {t("Choose a club")}
           </label>
           <select
             id="club"
@@ -103,17 +106,17 @@ export default function ProfileDetails({ user, clubs, creditsPerEvent }: Profile
               </option>
             ))}
           </select>
-          <p className="mt-1 text-xs text-neutral-600">Prototype: valget bliver ikke gemt.</p>
+          <p className="mt-1 text-xs text-neutral-600">{t("Prototype: your choice is not saved.")}</p>
           <button type="button" onClick={() => setClub(selectedClub)} className={`mt-3 ${primary}`}>
-            Gem klub
+            {t("Save club")}
           </button>
         </Dropdown>
 
-        <Dropdown title="Skift adgangskode">
+        <Dropdown title={t("Change password")}>
           <ChangePasswordForm />
         </Dropdown>
 
-        <Dropdown title="Klubkonto">
+        <Dropdown title={t("Club account")}>
           {/* key={club}: skifter man klub, skal kontoen tilknyttes igen. */}
           <ClubAccount
             key={club}

@@ -121,7 +121,7 @@ export class SupabaseProfileEventRepository implements IProfileEventRepository {
 
     // Hvis databasen ikke tillader sletningen, kommer der ingen rækker tilbage.
     if (!data || data.length === 0) {
-      throw new Error('Tilmeldingen kunne ikke afmeldes. Kontakt en organizer.');
+      throw new Error('Could not cancel your registration. Contact an organizer.');
     }
   }
 }

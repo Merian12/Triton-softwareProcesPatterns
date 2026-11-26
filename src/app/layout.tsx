@@ -16,13 +16,13 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Volunteerportal",
-  description: "Frivilligt arbejde ved sportsevents i Danmark · Volunteer at sporting events in Denmark",
+  description: "Volunteer at sporting events in Denmark",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
-      lang="da"
+      lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">

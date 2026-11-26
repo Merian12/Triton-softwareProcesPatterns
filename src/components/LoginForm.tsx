@@ -1,5 +1,5 @@
 'use client';
-import { useLanguage } from '@/components/LanguageProvider';
+import { LanguageSwitcher, useLanguage } from '@/components/LanguageProvider';
 import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { AuthService, UserRole } from '@/services/authService';
@@ -63,7 +63,8 @@ export const LoginForm: React.FC = () => {
   };
 
   return (
-    <main className="login-container">
+    <main className="login-container relative">
+      <div className="absolute right-6 top-2"><LanguageSwitcher /></div>
       <div className="login-card">
         <header className="login-header">
           <div className="login-logo-wrapper">
