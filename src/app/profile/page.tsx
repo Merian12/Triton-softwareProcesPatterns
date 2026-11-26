@@ -7,14 +7,13 @@ export default async function ProfilePage() {
   // Stævnerne hentes fra Supabase inde i ProfileDetails.
   const repo = new DummyProfileRepository();
   const currentUser = await repo.getCurrentVolunteer();
-  const clubs = await repo.getClubs();
   const creditsPerEvent = await repo.getCreditsPerEvent();
 
   return (
     <ProfileShell>
       <h1 className="text-3xl font-semibold tracking-tight">{currentUser.name}</h1>
 
-      <ProfileDetails user={currentUser} clubs={clubs} creditsPerEvent={creditsPerEvent} />
+      <ProfileDetails user={currentUser} creditsPerEvent={creditsPerEvent} />
     </ProfileShell>
   );
 }

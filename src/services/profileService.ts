@@ -35,7 +35,6 @@ export interface RegisteredEvents {
 // Profiloplysninger, som endnu ikke findes i databasen (dummy data).
 export interface IProfileRepository {
   getCurrentVolunteer(): Promise<Volunteer>;
-  getClubs(): Promise<string[]>;
   getCreditsPerEvent(): Promise<number>;
 }
 

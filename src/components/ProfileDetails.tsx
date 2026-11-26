@@ -9,11 +9,10 @@ import ChangePasswordForm from '@/components/ChangePasswordForm';
 import ClubAccount from '@/components/ClubAccount';
 import MyEvents from '@/components/MyEvents';
 import { useSignedInProfile } from '@/components/ProfileShell';
-import { card, input, portalPrimary as primary } from '@/components/portalStyles';
+import { card } from '@/components/portalStyles';
 
 interface ProfileDetailsProps {
   user: Volunteer;
-  clubs: string[];
   creditsPerEvent: number;
 }
 
@@ -26,13 +25,10 @@ function Dropdown({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-export default function ProfileDetails({ user, clubs, creditsPerEvent }: ProfileDetailsProps) {
+export default function ProfileDetails({ user, creditsPerEvent }: ProfileDetailsProps) {
   const { t } = useLanguage();
   const profile = useSignedInProfile();
   const eventRepo = useMemo(() => new SupabaseProfileEventRepository(), []);
-
-  const [club, setClub] = useState(user.club);
-  const [selectedClub, setSelectedClub] = useState(user.club);
 
   const [events, setEvents] = useState<RegisteredEvents>({ upcoming: [], past: [] });
   const [loadingEvents, setLoadingEvents] = useState(true);
@@ -77,7 +73,7 @@ export default function ProfileDetails({ user, clubs, creditsPerEvent }: Profile
           <dt>{t("Phone")}</dt>
           <dd>{user.phone}</dd>
           <dt>{t("Club")}</dt>
-          <dd>{club}</dd>
+          <dd>{user.club}</dd>
         </dl>
       </section>
 
@@ -90,37 +86,13 @@ export default function ProfileDetails({ user, clubs, creditsPerEvent }: Profile
       />
 
       <div className="mt-10 space-y-3">
-        <Dropdown title={t("Change club")}>
-          <label htmlFor="club" className="block text-sm font-medium">
-            {t("Choose a club")}
-          </label>
-          <select
-            id="club"
-            value={selectedClub}
-            onChange={(event) => setSelectedClub(event.target.value)}
-            className={`mt-1 ${input}`}
-          >
-            {clubs.map((clubName) => (
-              <option key={clubName} value={clubName}>
-                {clubName}
-              </option>
-            ))}
-          </select>
-          <p className="mt-1 text-xs text-neutral-600">{t("Prototype: your choice is not saved.")}</p>
-          <button type="button" onClick={() => setClub(selectedClub)} className={`mt-3 ${primary}`}>
-            {t("Save club")}
-          </button>
-        </Dropdown>
-
         <Dropdown title={t("Change password")}>
           <ChangePasswordForm />
         </Dropdown>
 
         <Dropdown title={t("Club account")}>
-          {/* key={club}: skifter man klub, skal kontoen tilknyttes igen. */}
           <ClubAccount
-            key={club}
-            club={club}
+            club={user.club}
             creditsPerEvent={creditsPerEvent}
             attendedEventsCount={events.past.length}
           />
