@@ -94,6 +94,6 @@ describe('SupabaseProfileEventRepository', () => {
     const client = clientWith({ registrations: { data: [], error: null } });
     const repo = new SupabaseProfileEventRepository(client);
 
-    await expect(repo.cancelRegistration('v1', 'r1')).rejects.toThrow('kunne ikke afmeldes');
+    await expect(repo.cancelRegistration('v1', 'r1')).rejects.toThrow('Could not cancel your registration');
   });
 });

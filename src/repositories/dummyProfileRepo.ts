@@ -11,17 +11,11 @@ const currentVolunteer: Volunteer = {
   club: 'Triton Swim Ballerup',
 };
 
-const clubs: string[] = ['Triton Swim Ballerup', 'Dummy Klub Nord', 'Dummy Klub Syd'];
-
 const creditsPerEvent = 50;
 
 export class DummyProfileRepository implements IProfileRepository {
   async getCurrentVolunteer(): Promise<Volunteer> {
     return currentVolunteer;
-  }
-
-  async getClubs(): Promise<string[]> {
-    return clubs;
   }
 
   async getCreditsPerEvent(): Promise<number> {

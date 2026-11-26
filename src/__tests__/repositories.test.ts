@@ -115,15 +115,12 @@ describe('SupabaseAdminRepository', () => {
 describe('DummyProfileRepository', () => {
   const repo = new DummyProfileRepository();
 
-  it('returns volunteer profile, clubs, and credits', async () => {
+  it('returns volunteer profile and credits', async () => {
     const volunteer = await repo.getCurrentVolunteer();
     expect(volunteer).toMatchObject({
       role: 'volunteer',
       club: 'Triton Swim Ballerup',
     });
-
-    const clubs = await repo.getClubs();
-    expect(clubs).toContain(volunteer.club);
 
     expect(await repo.getCreditsPerEvent()).toBeGreaterThan(0);
   });
