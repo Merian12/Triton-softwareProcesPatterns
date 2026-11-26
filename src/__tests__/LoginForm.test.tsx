@@ -103,15 +103,35 @@ describe('LoginForm Component', () => {
     expect(mockPush).not.toHaveBeenCalled();
   });
 
-  it('shows Username input when toggling to Sign Up mode', async () => {
+  it('shows Username input and 15+ declaration checkbox when toggling to Sign Up mode', async () => {
     const user = userEvent.setup();
     render(<LoginForm />);
 
     expect(screen.queryByLabelText(/username/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole('checkbox', { name: /15 years or older/i })).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: /sign up/i }));
 
     expect(screen.getByLabelText(/username/i)).toBeInTheDocument();
+    expect(screen.getByRole('checkbox', { name: /15 years or older/i })).not.toBeChecked();
+  });
+
+  it('displays validation error when submitting Sign Up without checking the 15+ declaration', async () => {
+    const user = userEvent.setup();
+    render(<LoginForm />);
+
+    await user.click(screen.getByRole('button', { name: /sign up/i }));
+    await user.type(screen.getByLabelText(/username/i), 'alex_org');
+    await user.type(screen.getByLabelText(/email/i), 'new@example.com');
+    await user.type(screen.getByLabelText(/^password$/i), 'password123');
+    await user.type(screen.getByLabelText(/confirm password/i), 'password123');
+    await user.click(screen.getByRole('button', { name: /^sign up$/i }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'You must confirm that you are 15 years or older.'
+    );
+    expect(mockSignUp).not.toHaveBeenCalled();
+    expect(mockPush).not.toHaveBeenCalled();
   });
 
   it('displays validation error when submitting Sign Up without a username', async () => {
@@ -131,7 +151,7 @@ describe('LoginForm Component', () => {
     expect(mockPush).not.toHaveBeenCalled();
   });
 
-  it('submits Sign Up with username and redirects to dashboard on success', async () => {
+  it('submits Sign Up with username and 15+ declaration and redirects to dashboard on success', async () => {
     const user = userEvent.setup();
     mockSignUp.mockResolvedValue({
       id: 'vol-2',
@@ -148,6 +168,7 @@ describe('LoginForm Component', () => {
     await user.type(screen.getByLabelText(/^password$/i), 'password123');
     await user.type(screen.getByLabelText(/confirm password/i), 'password123');
     await user.click(screen.getByRole('button', { name: /^organizer$/i }));
+    await user.click(screen.getByRole('checkbox', { name: /15 years or older/i }));
     await user.click(screen.getByRole('button', { name: /^sign up$/i }));
 
     await waitFor(() => {

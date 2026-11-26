@@ -39,6 +39,16 @@ describe('AuthService', () => {
       expect(mockAuthRepo.signUp).not.toHaveBeenCalled();
     });
 
+    it('throws an error when age 15+ declaration is not confirmed', async () => {
+      await expect(
+        authService.register('user@example.com', 'password123', 'password123', 'volunteer', 'alice', false)
+      ).rejects.toThrow('You must confirm that you are 15 years or older.');
+      await expect(
+        authService.register('user@example.com', 'password123', 'password123', 'volunteer', 'alice')
+      ).rejects.toThrow('You must confirm that you are 15 years or older.');
+      expect(mockAuthRepo.signUp).not.toHaveBeenCalled();
+    });
+
     it('trims username and email, calls signUp, and returns profile with redirectUrl', async () => {
       const profile: UserProfile = {
         id: 'vol-1',
@@ -53,7 +63,8 @@ describe('AuthService', () => {
         'password123',
         'password123',
         'volunteer',
-        '  alice_v  '
+        '  alice_v  ',
+        true
       );
 
       expect(mockAuthRepo.signUp).toHaveBeenCalledWith(
