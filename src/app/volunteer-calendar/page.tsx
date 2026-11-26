@@ -54,7 +54,7 @@ export default function VolunteerCalendarPage() {
                       Volunteer
                     </span>
                     <span className="text-[#D7142A]">
-                      portal
+                      Portal
                     </span>
                   </span>
                 </Link>

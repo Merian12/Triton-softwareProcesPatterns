@@ -47,6 +47,7 @@ describe('Volunteer dashboard username display', () => {
     const header = screen.getByRole('banner');
     expect(header).not.toHaveClass('bg-brand');
     expect(within(header).getByText('swim_alex')).toBeInTheDocument();
+    expect(within(header).getByText('Portal')).toBeInTheDocument();
     expect(within(header).getAllByText('Volunteer')).toHaveLength(2);
     expect(within(header).getByRole('link', { name: 'My profile' })).toHaveAttribute('href', '/profile');
 

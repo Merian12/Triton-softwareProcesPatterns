@@ -473,7 +473,7 @@ export default function VolunteerDashboard({
               </span>
 
               <span className="text-[#D7142A]">
-                portal
+                Portal
               </span>
             </span>
           </button>
