@@ -38,6 +38,7 @@ export class AuthService {
     confirmPassword: string,
     role: UserRole,
     username: string = '',
+    isAtLeast15: boolean = false,
   ): Promise<{ profile: UserProfile; redirectUrl: string }> {
     if (role !== 'volunteer' && role !== 'organizer') throw new Error('Admin accounts must be assigned by an administrator.');
     const cleanUsername = username.trim();
@@ -54,6 +55,9 @@ export class AuthService {
     }
     if (password !== confirmPassword) {
       throw new Error('Passwords do not match.');
+    }
+    if (!isAtLeast15) {
+      throw new Error('You must confirm that you are 15 years or older.');
     }
 
     const profile = await this.authRepo.signUp(cleanEmail, password, role, cleanUsername);

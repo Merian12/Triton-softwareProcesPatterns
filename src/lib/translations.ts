@@ -87,6 +87,8 @@ export const danish: Record<string, string> = {
   'Message sent, but the conversation could not refresh. It will retry automatically.': 'Beskeden er sendt, men samtalen kunne ikke opdateres. Der prøves automatisk igen.',
   'Please enter a username.': 'Indtast et brugernavn.', 'Please enter a valid email address.': 'Indtast en gyldig e-mailadresse.',
   'Password must be at least 6 characters.': 'Adgangskoden skal være på mindst 6 tegn.', 'Passwords do not match.': 'Adgangskoderne er ikke ens.',
+  'I declare that I am 15 years or older': 'Jeg erklærer, at jeg er 15 år eller ældre',
+  'You must confirm that you are 15 years or older.': 'Du skal bekræfte, at du er 15 år eller ældre.',
   'Sign-up failed.': 'Kunne ikke oprette kontoen.', 'Login failed.': 'Kunne ikke logge ind.', 'Invalid login credentials.': 'Forkert e-mail eller adgangskode.',
   'Invalid login credentials': 'Forkert e-mail eller adgangskode.', 'Email not confirmed': 'Din e-mailadresse er ikke bekræftet.', 'User already registered': 'Brugeren er allerede registreret.',
   'Could not create user profile.': 'Kunne ikke oprette brugerprofilen.', 'Could not load user role profile.': 'Kunne ikke indlæse brugerens rolle.',

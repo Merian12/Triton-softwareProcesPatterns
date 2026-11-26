@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { AuthService, UserRole } from '@/services/authService';
 import { SupabaseAuthRepository } from '@/repositories/supabaseAuthRepo';
 import { Logo } from '@/components/Logo';
+import { checkbox } from '@/components/portalStyles';
 
 export const LoginForm: React.FC = () => {
   const { t } = useLanguage();
@@ -15,6 +16,7 @@ export const LoginForm: React.FC = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [role, setRole] = useState<UserRole>('volunteer');
+  const [isAtLeast15, setIsAtLeast15] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -30,6 +32,7 @@ export const LoginForm: React.FC = () => {
     setPassword('');
     setConfirmPassword('');
     setRole('volunteer');
+    setIsAtLeast15(false);
     setError(null);
     setSuccessMessage(null);
   };
@@ -49,7 +52,7 @@ export const LoginForm: React.FC = () => {
 
     try {
       if (isSignUp) {
-        const result = await authService.register(email, password, confirmPassword, role, username);
+        const result = await authService.register(email, password, confirmPassword, role, username, isAtLeast15);
         router.push(result.redirectUrl);
       } else {
         const result = await authService.login(email, password);
@@ -160,6 +163,21 @@ export const LoginForm: React.FC = () => {
                   >
                     {t("Organizer")} </button>
                 </div>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="ageConfirmation" className="flex cursor-pointer items-start gap-2.5 text-sm text-foreground">
+                  <input
+                    type="checkbox"
+                    id="ageConfirmation"
+                    className={`mt-0.5 shrink-0 ${checkbox}`}
+                    checked={isAtLeast15}
+                    onChange={(e) => setIsAtLeast15(e.target.checked)}
+                    required
+                    disabled={isLoading}
+                  />
+                  <span>{t('I declare that I am 15 years or older')}</span>
+                </label>
               </div>
             </>
           )}
