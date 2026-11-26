@@ -8,6 +8,10 @@ type Topic = 'faq' | 'about' | 'contact' | 'help';
 const content = {
   da: {
     faq: { title: 'Ofte stillede spørgsmål', intro: 'Godt at vide, før du bliver en del af fællesskabet.', sections: [
+      ['Hvornår skal jeg ringe 112?', 'Ring 112 til alarmcentralen i Danmark, hvis du har akut brug for politi, ambulance eller brandvæsen, fx ved alvorlige ulykker, brand eller fare for liv.'],
+      ['Hvornår skal jeg ringe 114 til politiet?', 'Ring 114 til politiets landsdækkende servicenummer ved henvendelser, der ikke kræver akut udrykning, fx anmeldelse af et tyveri, hvor gerningspersonen har forladt stedet, eller generelle spørgsmål til politiet. Ved akut fare skal du ringe 112.'],
+      ['Hvad skal jeg oplyse, når jeg ringer 112?', 'Fortæl, hvad der er sket, hvor og hvornår det er sket, den præcise adresse, og hvor mange der er kommet til skade. Ved et event skal du beskrive placeringen på området så præcist som muligt. Følg alarmoperatørens anvisninger.'],
+      ['Hvem skal jeg kontakte ved en hændelse under et event?', 'Ved akut fare skal du ringe 112 med det samme. Orientér derefter eventets arrangør, koordinator eller sikkerhedspersonale, så de kan hjælpe redningspersonalet med at finde frem. Ved mindre, ikke-akutte hændelser kan du kontakte den ansvarlige via kontaktoplysningerne ved eventet.'],
       ['Kan børn under 15 år få en frivilligkonto?', 'Børn under 15 år skal registreres af en forælder. Forælderen skal give tilladelse til, at barnet får en frivilligkonto (volunteer account), og give barnet rettigheder til selv at tilmelde sig events.'],
       ['Hvordan tilmelder jeg mig et event?', 'Opret en konto som frivillig, og log ind. Under Find arrangementer kan du vælge et event og se vagterne. Vælg en ledig vagt, læs opgavebeskrivelsen, og bekræft din tilmelding.'],
       ['Hvor finder jeg mine vagter?', 'Dine tilmeldinger vises under Mine vagter. I kalenderen kan du se dine vagter og skrive personlige noter.'],
@@ -34,6 +38,10 @@ const content = {
   },
   en: {
     faq: { title: 'Frequently asked questions', intro: 'Good to know before you join the community.', sections: [
+      ['When should I call 112?', 'Call 112 for emergency services in Denmark if you urgently need the police, an ambulance or the fire brigade, for example after a serious accident, in a fire or when someone’s life is in danger.'],
+      ['When should I call the police on 114?', 'Call 114, the nationwide Danish police service number, for matters that do not require an emergency response, such as reporting a theft after the offender has left or asking general police questions. In immediate danger, call 112.'],
+      ['What information should I give when calling 112?', 'Explain what happened, where and when it happened, the exact address and how many people are injured. At an event, describe the location within the venue as precisely as possible. Follow the emergency operator’s instructions.'],
+      ['Who should I contact about an incident during an event?', 'In immediate danger, call 112 straight away. Then inform the event organiser, coordinator or security staff so they can help emergency responders find the location. For minor, non-emergency incidents, contact the person responsible using the contact details provided for the event.'],
       ['Can children under 15 have a volunteer account?', 'Children under 15 must be registered by a parent. The parent must give permission for the child to have a volunteer account and grant the child permission to sign up for events.'],
       ['How do I sign up for an event?', 'Create a volunteer account and sign in. Go to Find events, choose an event and view its shifts. Choose an available shift, read the task description and confirm your registration.'],
       ['Where can I find my shifts?', 'Your registrations appear under My shifts. Use the calendar to view your shifts and add personal notes.'],
@@ -72,6 +80,12 @@ export default function InformationPage({ topic }: { topic: Topic }) {
       <p className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-brand">Volunteerportal</p>
       <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{page.title}</h1>
       <p className="mt-4 text-lg leading-8 text-muted">{page.intro}</p>
+      {topic === 'faq' && <p className="mt-4 text-sm leading-7 text-muted">
+        {language === 'da' ? 'Officielle oplysninger: ' : 'Official information: '}
+        <a className="text-brand underline underline-offset-4" href="https://politi.dk/kontakt-politiet/alarm-112">{language === 'da' ? 'Alarm 112' : 'Emergency 112'}</a>
+        {' · '}
+        <a className="text-brand underline underline-offset-4" href="https://politi.dk/om-politiet/kontakt-politiet/service-114">{language === 'da' ? 'Politiets service 114' : 'Police service 114'}</a>
+      </p>}
       <div className="mt-9 divide-y divide-border-subtle border-y border-border-subtle">
         {page.sections.map(([heading, body], index) => topic === 'faq' ? <details key={index} className="group py-1">
           <summary className="flex min-h-16 cursor-pointer items-center justify-between gap-5 rounded-sm py-4 font-semibold focus-visible:outline-2 focus-visible:outline-brand">{heading}<span aria-hidden="true" className="text-xl text-brand group-open:rotate-45">+</span></summary>
